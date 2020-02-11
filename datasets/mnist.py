@@ -4,7 +4,7 @@ from scipy.io import loadmat
 base_dir = './data'
 def load_mnist(scale=True, usps=False, all_use=False):
     mnist_data = loadmat(base_dir + '/mnist_data.mat')
-    if scale
+    if scale:
         mnist_train = np.reshape(mnist_data['train_32'], (55000, 32, 32, 1))
         mnist_test = np.reshape(mnist_data['test_32'], (10000, 32, 32, 1))
         mnist_train = np.concatenate([mnist_train, mnist_train, mnist_train], 3)

@@ -218,7 +218,7 @@ class Solver(object):
             img, label = img.cuda(), label.long().cuda()
             img, label = Variable(img, volatile=True), Variable(label)
             feat = self.G(img)
-            print('feature.shape:{}'.format(feat.shape))
+            #print('feature.shape:{}'.format(feat.shape))
 
             if batch_idx == 0:
             	label_all = label.data.cpu().numpy().tolist()
@@ -229,11 +229,11 @@ class Solver(object):
             	feature_all = feature_all.data
             	label_all = label_all + label.data.cpu().numpy().tolist()
 
-            print(feature_all.shape)
+            #print(feature_all.shape)
             
             output1 = self.C1(feat)
             
-            test_loss += F.nll_loss(output1, label).data[0]
+            test_loss += F.nll_loss(output1, label).data.item()
             pred1 = output1.data.max(1)[1]
             k = label.data.size()[0]
             correct1 += pred1.eq(label.data).cpu().sum()
@@ -354,10 +354,10 @@ class Solver(object):
             if batch_idx % self.interval == 0:
                 print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss1: {:.6f}\t Loss2: {:.6f}\t  Discrepancy: {:.6f}'.format(
                     epoch, batch_idx, 100,
-                    100. * batch_idx / 70000, loss_s_c1.data[0], loss_s_c2.data[0], loss_dis.data[0]))
+                    100. * batch_idx / 70000, loss_s_c1.data.item(), loss_s_c2.data.item(), loss_dis.data.item()))
                 if record_file:
                     record = open(record_file, 'a')
-                    record.write('%s %s %s\n' % (loss_dis.data[0], loss_s_c1.data[0], loss_s_c2.data[0]))
+                    record.write('%s %s %s\n' % (loss_dis.data.item(), loss_s_c1.data.item(), loss_s_c2.data.item()))
                     record.close()
         return batch_idx
 

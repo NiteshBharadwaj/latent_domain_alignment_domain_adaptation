@@ -12,7 +12,7 @@ RECORD=$4
 #mkdir 'tmp/tmp'.$RECORD
 for i in `seq 1 1`
 do
-CUDA_VISIBLE_DEVICES=${GPUID} python main.py  --record_folder ${RECORD} --target ${TARGET}  --max_epoch ${EPOCH} 
+CUDA_VISIBLE_DEVICES=${GPUID} python3 main.py  --record_folder ${RECORD} --target ${TARGET}  --max_epoch ${EPOCH} 
 done
 
 #eg. ./experiment_do.sh  usps 100 0 record/usps_MSDA_beta
