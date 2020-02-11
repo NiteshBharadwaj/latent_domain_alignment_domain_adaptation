@@ -3,3 +3,4 @@ data/*
 record/*
 *.npz
 __pycache__/
+*.idea

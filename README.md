@@ -1,6 +1,41 @@
 # Moment Matching for Multi-Source Domain Adaptation
 <img src='https://github.com/VisionLearningGroup/VisionLearningGroup.github.io/blob/master/M3SDA/imgs/overview.png'>
 
+Ran on:
+Python 3.6, Torch 1.0. Pretty sure it will run on > 1.0, and they recommend >0.3
+
+GPU: 8Gi, CPU: 8Gi, Batch Size: 128, 
+    Training Time USPS: < 5min Acc 96% (Same as paper in 3 epochs) 
+    Training Time MNIST-M: < 2hrs Acc 73% (Same as in paper in 80 epochs)
+     
+
+Pip cmds:
+    
+    pip install git+https://github.com/pytorch/tnt.git@master
+
+
+To reproduce Digit-5 Results:
+
+i) Download dataset from here: https://drive.google.com/open?id=1A4RJOFj4BJkmliiEL7g9WzNIDUHLxfmm
+
+If you're running headless, use the following snippet: 
+
+    ggID='1A4RJOFj4BJkmliiEL7g9WzNIDUHLxfmm'  
+    ggURL='https://drive.google.com/uc?export=download'  
+    filename="$(curl -sc /tmp/gcokie "${ggURL}&id=${ggID}" | grep -o '="uc-name.*</span>' | sed 's/.*">//;s/<.a> .*//')"  
+    getcode="$(awk '/_warning_/ {print $NF}' /tmp/gcokie)"  
+    curl -Lb /tmp/gcokie "${ggURL}&confirm=${getcode}&id=${ggID}" -o "${filename}"  
+    
+ii) Create a folder "data" and "record" in main working directory, and extract contents of the downloaded zip file to data
+iii) Run the following bash script
+
+    bash experiment_do.sh  mnistm 100 0 record/mnistm_MSDA_beta
+
+Change second argument to usps/svhn/syn to reproduce the corresponding results
+
+
+
+Their README follows for reference:
 
 PyTorch implementation for **Moment Matching for Multi-Source Domain Adaptation** (**ICCV2019 Oral**). This repository contains some code from [Maximum Classifier Discrepancy for Domain Adaptation](https://github.com/mil-tokyo/MCD_DA). If you find this repository useful for you, please also consider cite the MCD paper!
 
