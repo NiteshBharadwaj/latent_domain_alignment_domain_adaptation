@@ -89,7 +89,7 @@ class Solver(object):
             for i in range(num_datasets):
                 img_s.append(Variable(data['S'][i]).cuda())
                 label_s.append(Variable(data['S'][i]).long().cuda())
-
+                
             if any(img_s[i].size()[0] < self.batch_size for i in range(num_datasets)) \
                     and img_t.size()[0] < self.batch_size:
                 break
@@ -229,26 +229,26 @@ class Solver(object):
 
     def feat_all_domain(self, img_s, img_t):
         feat_source = []
-        for i in len(img_s):
+        for i in range(len(img_s)):
             feat_source.append(self.G(img_s[i]))
         return feat_source, self.G(img_t)
 
     def C1_all_domain(self, feat_s, feat_t):
         C1_feat_source = []
-        for i in len(feat_s):
+        for i in range(len(feat_s)):
             C1_feat_source.append(self.C1(feat_s[i]))
         return C1_feat_source, self.C1(feat_t)
 
     def C2_all_domain(self, feat_s, feat_t):
         C2_feat_source = []
-        for i in len(feat_s):
+        for i in range(len(feat_s)):
             C2_feat_source.append(self.C2(feat_s[i]))
         return C2_feat_source, self.C2(feat_t)
 
     def softmax_loss_all_domain(self, output_s, label_s):
         criterion = nn.CrossEntropyLoss().cuda()
         softmax_loss = []
-        for i in len(output_s):
+        for i in range(len(output_s)):
             softmax_loss.append(criterion(output_s[i], label_s[i]))
         return softmax_loss
 
@@ -279,13 +279,14 @@ class Solver(object):
 
             for i in range(num_datasets):
                 img_s.append(Variable(data['S'][i]).cuda())
-                label_s.append(Variable(data['S'][i]).long().cuda())
+                label_s.append(Variable(data['S_label'][i]).long().cuda())
 
             if any(img_s[i].size()[0] < self.batch_size for i in range(num_datasets)) \
                     and img_t.size()[0] < self.batch_size:
                 break
 
             self.reset_grad()
+       
 
             loss_source_C1, loss_source_C2, loss_msda = self.loss_all_domain(img_s, img_t, label_s)
 
@@ -326,12 +327,12 @@ class Solver(object):
             if batch_idx % self.interval == 0:
                 print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss1: {:.6f}\t Loss2: {:.6f}\t  Discrepancy: {:.6f}'.format(
                     epoch, batch_idx, 100,
-                    100. * batch_idx / 70000, loss_source_C1.data.item(), loss_source_C2.data.item(),
+                    100. * batch_idx / 70000, sum(loss_source_C1).data.item(), sum(loss_source_C2).data.item(),
                     loss_dis.data.item()))
                 if record_file:
                     record = open(record_file, 'a')
                     record.write(
-                        '%s %s %s\n' % (loss_dis.data.item(), loss_source_C1.data.item(), loss_source_C2.data.item()))
+                        '%s %s %s\n' % (loss_dis.data.item(), sum(loss_source_C1).data.item(), sum(loss_source_C2).data.item()))
                     record.close()
 
         return batch_idx

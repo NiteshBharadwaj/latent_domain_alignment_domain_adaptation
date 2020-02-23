@@ -78,7 +78,7 @@ def dataset_hard_cluster(target, batch_size):
     # Number of components for PCA
     n_comp = 50
     # Number of hard clusters for K-Means algorithm
-    num_clus = 7
+    num_clus = 4
     scale = 32
 
     domain_all = ['mnistm', 'mnist', 'usps', 'svhn', 'syn']
@@ -110,6 +110,7 @@ def dataset_hard_cluster(target, batch_size):
 
         # S_train_std.append(StandardScaler().fit_transform(source_train.reshape(source_train.shape[0], -1)))
 
+    print("Hard Clustering Begins")
     X_combined = np.concatenate(S_train, axis=0)
     X_labels = np.concatenate(S_train_labels, axis=0)
     source_num_train_ex = X_combined.shape[0]
@@ -120,10 +121,11 @@ def dataset_hard_cluster(target, batch_size):
     pca_transformed = PCA(n_components=n_comp).fit_transform(X_vec)
     kmeans = KMeans(n_clusters=num_clus, n_init=1)
     predict = kmeans.fit(pca_transformed).predict(pca_transformed)
-
+    
+    print("Hard Clustering Ends")
     S = {}
     S_test = {}
-    for i in range(len(num_clus)):
+    for i in range(num_clus):
         S[i] = {}
         S[i]['imgs'] = X_combined[predict == i]
         S[i]['labels'] = X_labels[predict == i]

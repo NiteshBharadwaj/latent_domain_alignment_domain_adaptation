@@ -11,7 +11,7 @@ class PairedData(object):
         self.data_loader_t = data_loader_t
         self.num_datasets = len(data_loader_s)
         stop_source = []
-        for i in range(num_datasets):
+        for i in range(self.num_datasets):
             stop_source.append(False)
         self.stop_source = stop_source
 
