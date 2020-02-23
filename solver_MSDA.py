@@ -73,6 +73,9 @@ class Solver(object):
             self.opt_c2 = optim.SGD(self.C2.parameters(),
                                     lr=lr, weight_decay=0.0005,
                                     momentum=momentum)
+            self.opt_dp = optim.SGD(self.DP.parameters(),
+                                    lr=lr, weight_decay=0.0005,
+                                    momentum=momentum)
 
         if which_opt == 'adam':
             self.opt_g = optim.Adam(self.G.parameters(),
@@ -82,13 +85,16 @@ class Solver(object):
                                      lr=lr, weight_decay=0.0005)
             self.opt_c2 = optim.Adam(self.C2.parameters(),
                                      lr=lr, weight_decay=0.0005)
+            self.opt_dp = optim.Adam(self.DP.parameters(),
+                                     lr=lr, weight_decay=0.0005)
 
 
     def reset_grad(self):
         self.opt_g.zero_grad()
         self.opt_c1.zero_grad()
         self.opt_c2.zero_grad()
- 
+        self.opt_dp.zero_grad()
+
     def ent(self, output):
         return - torch.mean(output * torch.log(output + 1e-6))
 
@@ -435,6 +441,7 @@ class Solver(object):
             self.opt_g.step()
             self.opt_c1.step()
             self.opt_c2.step()
+            self.opt_dp.step()
             self.reset_grad()
 
             loss_s_c1, loss_s_c2, loss_msda, entropy_loss = self.loss_soft_all_domain(img_s, img_t, label_s)
