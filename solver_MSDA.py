@@ -9,6 +9,7 @@ from torch.autograd import Variable
 from model.build_gen import *
 from datasets.dataset_read import dataset_read, dataset_hard_cluster
 import numpy as np
+from itertools import combinations
 
 
 # Training settings
@@ -89,25 +90,22 @@ class Solver(object):
                 img_s.append(Variable(data['S'][i]).cuda())
                 label_s.append(Variable(data['S'][i]).long().cuda())
 
-            if any(img_s[i].size()[0] < self.batch_size for i in range(num_datasets))\
+            if any(img_s[i].size()[0] < self.batch_size for i in range(num_datasets)) \
                     and img_t.size()[0] < self.batch_size:
                 break
 
             self.reset_grad()
 
-            feat_s, output_s, loss_s = [], [], []
+            feat_s, feat_t = self.feat_all_domain(img_s, img_t)
+            output_s, output_t = self.C1_all_domain(feat_s, feat_t)
 
+            loss_s = []
             for i in range(num_datasets):
-                feat_s.append(self.G(img_s[i]))
-                output_s.append(self.C1(feat_s[i]))
                 loss_s.append(criterion(output_s[i], label_s[i]))
 
-            feat_t = self.G(img_t)
-            output_t = self.C1(feat_t)
+            loss_s_all = sum(loss_s) / num_datasets
 
-            loss_s_all = sum(loss_s)/num_datasets
-
-            loss_msda = 0.5 * msda.msda_regulizer(feat_s, feat_t, 5)/(self.batch_size * self.batch_size)
+            loss_msda = 0.5 * msda.msda_regulizer(feat_s, feat_t, 5) / (self.batch_size * self.batch_size)
             loss = loss_msda + loss_s_all
             loss_s_all.backward()
 
@@ -119,12 +117,13 @@ class Solver(object):
                 return batch_idx
 
             if batch_idx % self.interval == 0:
-                print_val = 'Train Epoch: {} [{}/{} ({:.0f}%)]' + '\tLoss : {:.6f}'*num_datasets + '\t Discrepancy: {:.6f}'
-                print(print_val.format(epoch, batch_idx, 100,100. * batch_idx / 70000, *loss_s.data[0],loss_msda.data[0]))
+                print_val = 'Train Epoch: {} [{}/{} ({:.0f}%)]' + '\tLoss : {:.6f}' * num_datasets + '\t Discrepancy: {:.6f}'
+                print(print_val.format(epoch, batch_idx, 100, 100. * batch_idx / 70000, *loss_s.data[0],
+                                       loss_msda.data[0]))
 
                 if record_file:
                     record = open(record_file, 'a')
-                    record_val = '%s '* (num_datasets+1) + '\n'
+                    record_val = '%s ' * (num_datasets + 1) + '\n'
                     record.write(record_val % (loss_msda.data[0], *loss_s.data[0]))
                     record.close()
 
@@ -195,7 +194,6 @@ class Solver(object):
 
             if batch_idx == 0:
                 label_all = label.data.cpu().numpy().tolist()
-
                 feature_all = feat.data.cpu().numpy()
             else:
                 feature_all = np.ma.row_stack((feature_all, feat.data.cpu().numpy()))
@@ -229,34 +227,43 @@ class Solver(object):
             record.write('%s\n' % (float(correct1) / size))
             record.close()
 
-    def feat_all_domain(self, img_s1, img_s2, img_s3, img_s4, img_t):
-        return self.G(img_s1), self.G(img_s2), self.G(img_s3), self.G(img_s4), self.G(img_t)
+    def feat_all_domain(self, img_s, img_t):
+        feat_source = []
+        for i in len(img_s):
+            feat_source.append(self.G(img_s[i]))
+        return feat_source, self.G(img_t)
 
-    def C1_all_domain(self, feat1, feat2, feat3, feat4, feat_t):
-        return self.C1(feat1), self.C1(feat2), self.C1(feat3), self.C1(feat4), self.C1(feat_t)
+    def C1_all_domain(self, feat_s, feat_t):
+        C1_feat_source = []
+        for i in len(feat_s):
+            C1_feat_source.append(self.C1(feat_s[i]))
+        return C1_feat_source, self.C1(feat_t)
 
-    def C2_all_domain(self, feat1, feat2, feat3, feat4, feat_t):
-        return self.C2(feat1), self.C2(feat2), self.C2(feat3), self.C2(feat4), self.C2(feat_t)
+    def C2_all_domain(self, feat_s, feat_t):
+        C2_feat_source = []
+        for i in len(feat_s):
+            C2_feat_source.append(self.C2(feat_s[i]))
+        return C2_feat_source, self.C2(feat_t)
 
-    def softmax_loss_all_domain(self, output1, output2, output3, output4, label_s1, label_s2, label_s3, label_s4):
+    def softmax_loss_all_domain(self, output_s, label_s):
         criterion = nn.CrossEntropyLoss().cuda()
-        return criterion(output1, label_s1), criterion(output2, label_s2), criterion(output3, label_s3), criterion(
-            output4, label_s4)
+        softmax_loss = []
+        for i in len(output_s):
+            softmax_loss.append(criterion(output_s[i], label_s[i]))
+        return softmax_loss
 
-    def loss_all_domain(self, img_s1, img_s2, img_s3, img_s4, img_t, label_s1, label_s2, label_s3, label_s4):
-        feat_s1, feat_s2, feat_s3, feat_s4, feat_t = self.feat_all_domain(img_s1, img_s2, img_s3, img_s4, img_t)
-        output_s1_c1, output_s2_c1, output_s3_c1, output_s4_c1, output_t_c1 = \
-            self.C1_all_domain(feat_s1, feat_s2, feat_s3, feat_s4, feat_t)
-        output_s1_c2, output_s2_c2, output_s3_c2, output_s4_c2, output_t_c2 = \
-            self.C2_all_domain(feat_s1, feat_s2, feat_s3, feat_s4, feat_t)
-        loss_msda = 0.0005 * msda.msda_regulizer(feat_s1, feat_s2, feat_s3, feat_s4, feat_t, 5)
-        loss_s1_c1, loss_s2_c1, loss_s3_c1, loss_s4_c1 = \
-            self.softmax_loss_all_domain(output_s1_c1, output_s2_c1, output_s3_c1, output_s4_c1, label_s1, label_s2,
-                                         label_s3, label_s4)
-        loss_s1_c2, loss_s2_c2, loss_s3_c2, loss_s4_c2 = \
-            self.softmax_loss_all_domain(output_s1_c2, output_s2_c2, output_s3_c2, output_s4_c2, label_s1, label_s2,
-                                         label_s3, label_s4)
-        return loss_s1_c1, loss_s2_c1, loss_s3_c1, loss_s4_c1, loss_s1_c2, loss_s2_c2, loss_s3_c2, loss_s4_c2, loss_msda
+    def loss_all_domain(self, img_s, img_t, label_s):
+
+        feat_s, feat_t = self.feat_all_domain(img_s, img_t)
+
+        C1_feat_s, C1_feat_t = self.C1_all_domain(feat_s, feat_t)
+        C2_feat_s, C2_feat_t = self.C2_all_domain(feat_s, feat_t)
+
+        loss_msda = 0.0005 * msda.msda_regulizer(feat_s, feat_t, 5)
+        loss_source_C1 = self.softmax_loss_all_domain(C1_feat_s, label_s)
+        loss_source_C2 = self.softmax_loss_all_domain(C2_feat_s, label_s)
+
+        return loss_source_C1, loss_source_C2, loss_msda
 
     def train_MSDA(self, epoch, record_file=None):
         criterion = nn.CrossEntropyLoss().cuda()
@@ -266,29 +273,23 @@ class Solver(object):
         torch.cuda.manual_seed(1)
 
         for batch_idx, data in enumerate(self.datasets):
+            img_s, label_s = [], []
             img_t = Variable(data['T'].cuda())
-            img_s1 = Variable(data['S1'].cuda())
-            img_s2 = Variable(data['S2'].cuda())
-            img_s3 = Variable(data['S3'].cuda())
-            img_s4 = Variable(data['S4'].cuda())
-            label_s1 = Variable(data['S1_label'].long().cuda())
-            label_s2 = Variable(data['S2_label'].long().cuda())
-            label_s3 = Variable(data['S3_label'].long().cuda())
-            label_s4 = Variable(data['S4_label'].long().cuda())
+            num_datasets = len(data['S'])
 
-            if img_s1.size()[0] < self.batch_size or img_s2.size()[0] < self.batch_size or img_s3.size()[
-                0] < self.batch_size or img_s4.size()[0] < self.batch_size or img_t.size()[0] < self.batch_size:
+            for i in range(num_datasets):
+                img_s.append(Variable(data['S'][i]).cuda())
+                label_s.append(Variable(data['S'][i]).long().cuda())
+
+            if any(img_s[i].size()[0] < self.batch_size for i in range(num_datasets)) \
+                    and img_t.size()[0] < self.batch_size:
                 break
 
             self.reset_grad()
 
-            loss_s1_c1, loss_s2_c1, loss_s3_c1, loss_s4_c1, loss_s1_c2, loss_s2_c2, loss_s3_c2, loss_s4_c2, loss_msda = self.loss_all_domain(
-                img_s1, img_s2, img_s3, img_s4, img_t, label_s1, label_s2, label_s3, label_s4)
+            loss_source_C1, loss_source_C2, loss_msda = self.loss_all_domain(img_s, img_t, label_s)
 
-            loss_s_c1 = loss_s1_c1 + loss_s2_c1 + loss_s3_c1 + loss_s4_c1
-            loss_s_c2 = loss_s1_c2 + loss_s2_c2 + loss_s3_c2 + loss_s4_c2
-            loss = loss_s_c1 + loss_s_c2 + loss_msda
-
+            loss = sum(loss_source_C1) + sum(loss_source_C2) + loss_msda
             loss.backward()
 
             self.opt_g.step()
@@ -296,16 +297,13 @@ class Solver(object):
             self.opt_c2.step()
             self.reset_grad()
 
-            loss_s1_c1, loss_s2_c1, loss_s3_c1, loss_s4_c1, loss_s1_c2, loss_s2_c2, loss_s3_c2, loss_s4_c2, loss_msda = \
-                self.loss_all_domain(img_s1, img_s2, img_s3, img_s4, img_t, label_s1, label_s2, label_s3, label_s4)
+            loss_source_C1, loss_source_C2, loss_msda = self.loss_all_domain(img_s, img_t, label_s)
 
             feat_t = self.G(img_t)
             output_t1 = self.C1(feat_t)
             output_t2 = self.C2(feat_t)
-            loss_s_c1 = loss_s1_c1 + loss_s2_c1 + loss_s3_c1 + loss_s4_c1
-            loss_s_c2 = loss_s1_c2 + loss_s2_c2 + loss_s3_c2 + loss_s4_c2
 
-            loss_s = loss_s1_c1 + loss_s2_c2 + loss_msda
+            loss_s = sum(loss_source_C1) + sum(loss_source_C2) + loss_msda
             loss_dis = self.discrepancy(output_t1, output_t2)
             loss = loss_s - loss_dis
             loss.backward()
@@ -321,17 +319,21 @@ class Solver(object):
                 loss_dis.backward()
                 self.opt_g.step()
                 self.reset_grad()
+
             if batch_idx > 500:
                 return batch_idx
 
             if batch_idx % self.interval == 0:
                 print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss1: {:.6f}\t Loss2: {:.6f}\t  Discrepancy: {:.6f}'.format(
                     epoch, batch_idx, 100,
-                    100. * batch_idx / 70000, loss_s_c1.data.item(), loss_s_c2.data.item(), loss_dis.data.item()))
+                    100. * batch_idx / 70000, loss_source_C1.data.item(), loss_source_C2.data.item(),
+                    loss_dis.data.item()))
                 if record_file:
                     record = open(record_file, 'a')
-                    record.write('%s %s %s\n' % (loss_dis.data.item(), loss_s_c1.data.item(), loss_s_c2.data.item()))
+                    record.write(
+                        '%s %s %s\n' % (loss_dis.data.item(), loss_source_C1.data.item(), loss_source_C2.data.item()))
                     record.close()
+
         return batch_idx
 
     def train_MMD(self, epoch, record_file=None):
@@ -342,59 +344,42 @@ class Solver(object):
         torch.cuda.manual_seed(1)
 
         for batch_idx, data in enumerate(self.datasets):
+            img_s, label_s = [], []
             img_t = Variable(data['T'].cuda())
-            img_s1 = Variable(data['S1'].cuda())
-            img_s2 = Variable(data['S2'].cuda())
-            img_s3 = Variable(data['S3'].cuda())
-            img_s4 = Variable(data['S4'].cuda())
+            num_datasets = len(data['S'])
 
-            label_s1 = Variable(data['S1_label'].long().cuda())
-            label_s2 = Variable(data['S2_label'].long().cuda())
-            label_s3 = Variable(data['S3_label'].long().cuda())
-            label_s4 = Variable(data['S4_label'].long().cuda())
+            for i in range(num_datasets):
+                img_s.append(Variable(data['S'][i]).cuda())
+                label_s.append(Variable(data['S'][i]).long().cuda())
 
-            if img_s1.size()[0] < self.batch_size or img_s2.size()[0] < self.batch_size or img_s3.size()[
-                0] < self.batch_size or img_s4.size()[0] < self.batch_size or img_t.size()[0] < self.batch_size:
+            if any(img_s[i].size()[0] < self.batch_size for i in range(num_datasets)) \
+                    and img_t.size()[0] < self.batch_size:
                 break
+
             self.reset_grad()
-            feat_s1 = self.G(img_s1)
-            output_s1 = self.C1(feat_s1)
 
-            feat_s2 = self.G(img_s2)
-            output_s2 = self.C1(feat_s2)
+            feat_s, feat_t = self.feat_all_domain(img_s, img_t)
+            output_s, output_t = self.C1_all_domain(feat_s, feat_t)
 
-            feat_s3 = self.G(img_s3)
-            output_s3 = self.C1(feat_s3)
+            print('->shape', output_s[0].shape, label_s[0].shape)
 
-            feat_s4 = self.G(img_s4)
-            output_s4 = self.C1(feat_s4)
+            loss_s = []
+            for i in range(num_datasets):
+                loss_s.append(criterion(output_s[i], label_s[i]))
 
-            feat_t = self.G(img_t)
-            output_t = self.C1(feat_t)
-
-            print('->shape', output_s1.shape, label_s1.shape)
-            loss_s1 = criterion(output_s1, label_s1)
-            loss_s2 = criterion(output_s2, label_s2)
-            loss_s3 = criterion(output_s3, label_s3)
-            loss_s4 = criterion(output_s4, label_s4)
-
-            loss_s = (loss_s1 + loss_s2 + loss_s3 + loss_s4) / 4
+            loss_s_all = sum(loss_s) / num_datasets
 
             sigma = [1, 2, 5, 10]
-            loss_msda = mmd.mix_rbf_mmd2(feat_s1, feat_s2, sigma) + mmd.mix_rbf_mmd2(feat_s1, feat_s3,
-                                                                                     sigma) + mmd.mix_rbf_mmd2(feat_s1,
-                                                                                                               feat_s4,
-                                                                                                               sigma) + \
-                        mmd.mix_rbf_mmd2(feat_s1, feat_t, sigma) + mmd.mix_rbf_mmd2(feat_s2, feat_s3,
-                                                                                    sigma) + mmd.mix_rbf_mmd2(feat_s2,
-                                                                                                              feat_t,
-                                                                                                              sigma) + \
-                        mmd.mix_rbf_mmd2(feat_s2, feat_s4, sigma) + mmd.mix_rbf_mmd2(feat_s3, feat_s4,
-                                                                                     sigma) + mmd.mix_rbf_mmd2(feat_s3,
-                                                                                                               feat_t,
-                                                                                                               sigma) + \
-                        mmd.mix_rbf_mmd2(feat_s4, feat_t, sigma)
-            loss = 10 * loss_msda + loss_s
+            comb = list(combinations(range(num_datasets), 2))
+
+            loss_msda = 0
+            for i in range(num_datasets):
+                loss_msda += mmd.mix_rbf_mmd2(feat_s[i], feat_t, sigma)
+
+            for k in range(len(comb)):
+                loss_msda += mmd.mix_rbf_mmd2(feat_s[comb[k][0]], feat_s[comb[k][1]])
+
+            loss = 10 * loss_msda + loss_s_all
             loss.backward()
 
             self.opt_c1.step()
@@ -404,14 +389,14 @@ class Solver(object):
                 return batch_idx
 
             if batch_idx % self.interval == 0:
-                print(
-                    'Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss1: {:.6f}\t Loss2: {:.6f}\t Loss3: {:.6f}\t Loss4: {:.6f}\t Discrepancy: {:.6f}'.format(
-                        epoch, batch_idx, 100,
-                        100. * batch_idx / 70000, loss_s1.data[0], loss_s2.data[0], loss_s3.data[0], loss_s4.data[0],
-                        loss_msda.data[0]))
+                print_val = 'Train Epoch: {} [{}/{} ({:.0f}%)]' + '\tLoss : {:.6f}' * num_datasets + '\t Discrepancy: {:.6f}'
+
+                print(print_val.format(epoch, batch_idx, 100, 100. * batch_idx / 70000, *loss_s.data[0],
+                                       loss_msda.data[0]))
                 if record_file:
                     record = open(record_file, 'a')
-                    record.write('%s %s %s %s %s\n' % (
-                        loss_msda.data[0], loss_s1.data[0], loss_s2.data[0], loss_s3.data[0], loss_s4.data[0]))
+                    record_val = '%s ' * (num_datasets + 1) + '\n'
+                    record.write(record_val % (loss_msda.data[0], *loss_s.data[0]))
                     record.close()
+
         return batch_idx
