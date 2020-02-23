@@ -31,7 +31,7 @@ class CombinedData(Dataset):
 
     def __getitem__(self, index):
         S, S_paths,t,t_paths = None, None, None, None
-        dataset_idx = index%self.num_datasets==0
+        dataset_idx = index%self.num_datasets
         if dataset_idx==0:
             try:
                 S, S_paths = next(self.data_loader_A_iter)

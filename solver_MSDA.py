@@ -9,6 +9,7 @@ from torch.autograd import Variable
 from model.build_gen import *
 from datasets.dataset_read import dataset_read,dataset_hard_cluster, dataset_combined
 import numpy as np
+import math
 
 
 # Training settings
@@ -403,16 +404,24 @@ class Solver(object):
         feat_t, conv_feat_t = feat_t_comb
         domain_logits = self.DP(conv_feat_s)
         entropy_loss, domain_prob = self.entropy_loss(domain_logits)
-        entropy_loss = 0*entropy_loss
+        if(math.isnan(entropy_loss.data.item())):
+            raise Exception('entropy loss is nan')
+        entropy_loss = 0.01*entropy_loss
 
         output_s_c1, output_t_c1 = self.C1_all_domain_soft(feat_s, feat_t)
         output_s_c2, output_t_c2 = self.C2_all_domain_soft(feat_s, feat_t)
 
-        loss_msda =  0* msda.msda_regulizer_soft(feat_s, feat_t, 5, domain_prob)
+        loss_msda =  0.1* msda.msda_regulizer_soft(feat_s, feat_t, 5, domain_prob)
+        if(math.isnan(loss_msda.data.item())):
+            raise Exception('msda loss is nan')
         loss_s_c1 =\
             self.softmax_loss_all_domain_soft(output_s_c1, label_s)
+        if(math.isnan(loss_s_c1.data.item())):
+            raise Exception(' c1 loss is nan')
         loss_s_c2 =\
             self.softmax_loss_all_domain_soft(output_s_c2, label_s)
+        if(math.isnan(loss_s_c2.data.item())):
+            raise Exception(' c2 loss is nan')
         return  loss_s_c1, loss_s_c2, loss_msda, entropy_loss
 
     def train_MSDA_soft(self, epoch, record_file=None):
@@ -445,6 +454,7 @@ class Solver(object):
             self.opt_dp.step()
             self.reset_grad()
 
+            #loss_dis = loss_msda*0
             loss_s_c1, loss_s_c2, loss_msda, entropy_loss = self.loss_soft_all_domain(img_s, img_t, label_s)
 
             feat_t, conv_feat_t = self.G(img_t)
@@ -551,12 +561,20 @@ class Solver(object):
                     record.write('%s %s %s %s %s\n' % (loss_msda.data[0], loss_s1.data[0], loss_s2.data[0], loss_s3.data[0], loss_s4.data[0]))
                     record.close()
         return batch_idx
+    
 class HLoss(nn.Module):
     def __init__(self):
         super(HLoss, self).__init__()
 
     def forward(self, x):
-        probs = F.softmax(x, dim=1)
-        b =  probs* F.log_softmax(x, dim=1)
-        b = -1.0 * b.sum()
-        return b, probs
+        input_ = F.softmax(x, dim=1)
+        mask = input_.ge(0.000001)
+        mask_out = torch.masked_select(input_, mask)
+        entropy = -(torch.sum(mask_out * torch.log(mask_out)))
+        return entropy / float(input_.size(0)), input_ + 1e-5
+        
+        
+#         probs = F.softmax(x, dim=1)
+#         b =  probs* F.log_softmax(x, dim=1)
+#         b = -1.0 * b.sum()
+#         return b, probs
