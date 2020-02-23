@@ -397,11 +397,12 @@ class Solver(object):
         feat_t, conv_feat_t = feat_t_comb
         domain_logits = self.DP(conv_feat_s)
         entropy_loss, domain_prob = self.entropy_loss(domain_logits)
+        entropy_loss = 0*entropy_loss
 
         output_s_c1, output_t_c1 = self.C1_all_domain_soft(feat_s, feat_t)
         output_s_c2, output_t_c2 = self.C2_all_domain_soft(feat_s, feat_t)
 
-        loss_msda =  0.0005* msda.msda_regulizer_soft(feat_s, feat_t, 5, domain_prob.detach())
+        loss_msda =  0* msda.msda_regulizer_soft(feat_s, feat_t, 5, domain_prob)
         loss_s_c1 =\
             self.softmax_loss_all_domain_soft(output_s_c1, label_s)
         loss_s_c2 =\
@@ -463,7 +464,7 @@ class Solver(object):
                 return batch_idx
 
             if batch_idx % self.interval == 0:
-                print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss1: {:.6f}\t Loss2: {:.6f}\t Loss_entropy: {:.6f}\t Loss_mmd: {:.6f}\t Discrepancy: {:.6f}'.format(
+                print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss1: {:.6f}\t Loss2: {:.6f}\t Loss_mmd: {:.6f}\t Loss_entropy: {:.6f}\t Discrepancy: {:.6f}'.format(
                     epoch, batch_idx, 100,
                     100. * batch_idx / 70000, loss_s_c1.data.item(), loss_s_c2.data.item(), loss_msda.data.item(), entropy_loss.data.item(), loss_dis.data.item()))
                 if record_file:
