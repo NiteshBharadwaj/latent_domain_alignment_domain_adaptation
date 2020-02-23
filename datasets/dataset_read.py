@@ -1,91 +1,66 @@
 import sys
-
 sys.path.append('../loader')
-from unaligned_data_loader import UnalignedDataLoader
-from svhn import load_svhn
-from mnist import load_mnist
-from mnist_m import load_mnistm
-from usps_ import load_usps
-from gtsrb import load_gtsrb
-from synth_number import load_syn
-from synth_traffic import load_syntraffic
 
-# User imports for hard-cluster code
+from .unaligned_data_loader import UnalignedDataLoader
+from .svhn import load_svhn
+from .mnist import load_mnist
+from .mnist_m import load_mnistm
+from .usps_ import load_usps
+from .gtsrb import load_gtsrb
+from .synth_number import load_syn
+from .synth_traffic import load_syntraffic
+
 import numpy as np
-#import random
-# from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 from sklearn.cluster import KMeans
 
 
+# from sklearn.preprocessing import StandardScaler
+
 def return_dataset(data, scale=False, usps=False, all_use='no'):
     if data == 'svhn':
-        train_image, train_label, \
-        test_image, test_label = load_svhn()
+        train_image, train_label, test_image, test_label = load_svhn()
     if data == 'mnist':
-        train_image, train_label, \
-        test_image, test_label = load_mnist()
-        # print(train_image.shape)
+        train_image, train_label, test_image, test_label = load_mnist()
     if data == 'mnistm':
-        train_image, train_label, \
-        test_image, test_label = load_mnistm()
-        # print(train_image.shape)
+        train_image, train_label, test_image, test_label = load_mnistm()
     if data == 'usps':
-        train_image, train_label, \
-        test_image, test_label = load_usps()
+        train_image, train_label, test_image, test_label = load_usps()
     if data == 'synth':
-        train_image, train_label, \
-        test_image, test_label = load_syntraffic()
+        train_image, train_label, test_image, test_label = load_syntraffic()
     if data == 'gtsrb':
-        train_image, train_label, \
-        test_image, test_label = load_gtsrb()
+        train_image, train_label, test_image, test_label = load_gtsrb()
     if data == 'syn':
-        train_image, train_label, \
-        test_image, test_label = load_syn()
+        train_image, train_label, test_image, test_label = load_syn()
 
     return train_image, train_label, test_image, test_label
 
 
 def dataset_read(target, batch_size):
-    S1 = {}
-    S1_test = {}
-    S2 = {}
-    S2_test = {}
-    S3 = {}
-    S3_test = {}
-    S4 = {}
-    S4_test = {}
+    num_latent_domains = 4
+    scale = 32
 
-    S = [S1, S2, S3, S4]
-    S_test = [S1_test, S2_test, S3_test, S4_test]
-
-    T = {}
-    T_test = {}
     domain_all = ['mnistm', 'mnist', 'usps', 'svhn', 'syn']
     domain_all.remove(target)
 
     target_train, target_train_label, target_test, target_test_label = return_dataset(target)
-
-    for i in range(len(domain_all)):
-        source_train, source_train_label, source_test, source_test_label = return_dataset(domain_all[i])
-        S[i]['imgs'] = source_train
-        S[i]['labels'] = source_train_label
-        # input target sample when test, source performance is not important
-        S_test[i]['imgs'] = target_test
-        S_test[i]['labels'] = target_test_label
-
-    # S['imgs'] = train_source
-    # S['labels'] = s_label_train
-    T['imgs'] = target_train
-    T['labels'] = target_train_label
+    T = {'imgs': target_train, 'labels': target_train_label}
 
     # input target samples for both
-    # S_test['imgs'] = test_target
-    # S_test['labels'] = t_label_test
-    T_test['imgs'] = target_test
-    T_test['labels'] = target_test_label
+    T_test = {'imgs': target_test, 'labels': target_test_label}
 
-    scale = 32
+    S = {}
+    S_test = {}
+    for i in range(len(num_latent_domains)):
+        source_train, source_train_label, source_test, source_test_label = return_dataset(domain_all[i])
+        S[i] = {}
+        S[i]['imgs'] = source_train
+        S[i]['labels'] = source_train_label
+
+        # input target sample when test, source performance is not important
+        S_test[i] = {}
+        S_test[i]['imgs'] = target_test
+        S_test[i]['labels'] = target_test_label
 
     train_loader = UnalignedDataLoader()
     train_loader.initialize(S, T, batch_size, batch_size, scale=scale)
@@ -102,39 +77,28 @@ def dataset_read(target, batch_size):
 def dataset_hard_cluster(target, batch_size):
     # Number of components for PCA
     n_comp = 50
-    # Number of clusters for K-Means algorithm
-    num_clus = 4
+    # Number of hard clusters for K-Means algorithm
+    num_clus = 7
+    scale = 32
 
-    T = {}
-    T_test = {}
     domain_all = ['mnistm', 'mnist', 'usps', 'svhn', 'syn']
-    #target_dataset = domain_all.pop(random.randrange(len(domain_all)))
-
     domain_all.remove(target)
-
     target_train, target_train_label, target_test, target_test_label = return_dataset(target)
 
-    # Generate target dataset label splits
-    #target_train, target_train_label, target_test, target_test_label = return_dataset(target_dataset)
-
-    T['imgs'] = target_train
-    T['labels'] = target_train_label
+    T = {'imgs': target_train, 'labels': target_train_label}
 
     # input target samples for both
-    T_test['imgs'] = target_test
-    T_test['labels'] = target_test_label
+    T_test = {'imgs': target_test, 'labels': target_test_label}
 
     S_train = []
     S_train_labels = []
-    #S_train_std = []
+    # S_train_std = []
 
     # Read the respective source domain datasets
     for i in range(len(domain_all)):
 
         source_train, source_train_label, source_test, source_test_label = return_dataset(domain_all[i])
-
         # Convert all the datasets to (3,28,28) image size for (2352 Feature vector)
-
         # Broadcast to three channels
         if source_train.shape[1] == 1:
             source_train = np.repeat(source_train, 3, 1)
@@ -144,7 +108,7 @@ def dataset_hard_cluster(target, batch_size):
         S_train.append(source_train)
         S_train_labels.append(source_train_label)
 
-        #S_train_std.append(StandardScaler().fit_transform(source_train.reshape(source_train.shape[0], -1)))
+        # S_train_std.append(StandardScaler().fit_transform(source_train.reshape(source_train.shape[0], -1)))
 
     X_combined = np.concatenate(S_train, axis=0)
     X_labels = np.concatenate(S_train_labels, axis=0)
@@ -157,28 +121,17 @@ def dataset_hard_cluster(target, batch_size):
     kmeans = KMeans(n_clusters=num_clus, n_init=1)
     predict = kmeans.fit(pca_transformed).predict(pca_transformed)
 
-
-    S1 = {}
-    S1_test = {}
-    S2 = {}
-    S2_test = {}
-    S3 = {}
-    S3_test = {}
-    S4 = {}
-    S4_test = {}
-
-    S = [S1, S2, S3, S4]
-    S_test = [S1_test, S2_test, S3_test, S4_test]
-
-    for i in range(len(domain_all)):
+    S = {}
+    S_test = {}
+    for i in range(len(num_clus)):
+        S[i] = {}
         S[i]['imgs'] = X_combined[predict == i]
         S[i]['labels'] = X_labels[predict == i]
 
         # input target sample when test, source performance is not important
+        S_test[i] = {}
         S_test[i]['imgs'] = target_test
         S_test[i]['labels'] = target_test_label
-
-    scale = 32
 
     train_loader = UnalignedDataLoader()
     train_loader.initialize(S, T, batch_size, batch_size, scale=scale)
