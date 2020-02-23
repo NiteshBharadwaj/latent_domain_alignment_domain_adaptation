@@ -86,7 +86,7 @@ class CombinedData(Dataset):
             raise StopIteration()
         else:
             self.iter += 1
-            return {'S': S, 'S1_label': S_paths,
+            return {'S': S, 'S_label': S_paths,
                     'T': t, 'T_label': t_paths}
 
     def __len__(self):
