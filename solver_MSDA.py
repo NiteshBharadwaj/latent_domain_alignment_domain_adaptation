@@ -476,7 +476,7 @@ class Solver(object):
                     100. * batch_idx / 70000, loss_s_c1.data.item(), loss_s_c2.data.item(), loss_msda.data.item(), entropy_loss.data.item(), loss_dis.data.item()))
                 if record_file:
                     record = open(record_file, 'a')
-                    record.write('%s %s %s\n' % (loss_dis.data.item(), loss_s_c1.data.item(), loss_s_c2.data.item()))
+                    record.write('%s %s %s %s %s %s\n' % (loss_dis.data.item(), loss_s_c1.data.item(), loss_s_c2.data.item(), loss_msda.data.item(), entropy_loss.data.item(), loss_dis.data.item()))
                     record.close()
         return batch_idx
 
