@@ -88,7 +88,7 @@ def main():
             if not args.one_step:
                 # num = solver.train_merge_baseline(t, record_file=record_train)
                 if args.dl_type=='soft_cluster':
-                    solver.train_MSDA_soft(t,record_file=record_train)
+                    num= solver.train_MSDA_soft(t,record_file=record_train)
                 else:
                     num = solver.train_MSDA(t, record_file=record_train)
             else:

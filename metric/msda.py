@@ -1,7 +1,7 @@
 import torch
 
 def euclidean(x1,x2):
-	return ((x1-x2)**2).sum().sqrt()
+	return ((x1-x2)**2).mean().sqrt()
 
 def k_moment(output_s1, output_s2, output_s3, output_s4, output_t, k):
 	output_s1 = (output_s1**k).mean(0)

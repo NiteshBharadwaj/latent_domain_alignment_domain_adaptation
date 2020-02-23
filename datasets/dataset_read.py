@@ -238,7 +238,7 @@ def dataset_combined(target, batch_size):
     train_loader.initialize(S, T, batch_size, batch_size, scale=scale)
     dataset = train_loader.load_data()
 
-    test_loader = CombinedDataLoader()
+    test_loader = UnalignedDataLoader()
     test_loader.initialize(S_test, T_test, batch_size, batch_size, scale=scale)
 
     dataset_test = test_loader.load_data()

@@ -222,34 +222,35 @@ class Solver(object):
         size = 0
         feature_all = np.array([])
         label_all = []
-        for batch_idx, data in enumerate(self.dataset_test):
-            img = data['T']
-            label = data['T_label']
+        with torch.no_grad():
+           for batch_idx, data in enumerate(self.dataset_test):
+               img = data['T']
+               label = data['T_label']
+               
+               img, label = img.cuda(), label.long().cuda()
+               img, label = Variable(img, volatile=True), Variable(label)
+               feat, _ = self.G(img)
+               #print('feature.shape:{}'.format(feat.shape))
 
-            img, label = img.cuda(), label.long().cuda()
-            img, label = Variable(img, volatile=True), Variable(label)
-            feat = self.G(img)
-            #print('feature.shape:{}'.format(feat.shape))
+               if batch_idx == 0:
+               	label_all = label.data.cpu().numpy().tolist()
+               	
+               	#feature_all = feat.data.cpu().numpy()
+               else:
+               	#feature_all = np.ma.row_stack((feature_all, feat.data.cpu().numpy()))
+               	#feature_all = feature_all.data
+               	label_all = label_all + label.data.cpu().numpy().tolist()
 
-            if batch_idx == 0:
-            	label_all = label.data.cpu().numpy().tolist()
-            	
-            	feature_all = feat.data.cpu().numpy()
-            else:
-            	feature_all = np.ma.row_stack((feature_all, feat.data.cpu().numpy()))
-            	feature_all = feature_all.data
-            	label_all = label_all + label.data.cpu().numpy().tolist()
-
-            #print(feature_all.shape)
-            
-            output1 = self.C1(feat)
-            
-            test_loss += F.nll_loss(output1, label).data.item()
-            pred1 = output1.data.max(1)[1]
-            k = label.data.size()[0]
-            correct1 += pred1.eq(label.data).cpu().sum()
-            size += k
-        np.savez('result_plot_sv_t', feature_all, label_all )
+               #print(feat.shape)
+               
+               output1 = self.C1(feat)
+               
+               test_loss += F.nll_loss(output1, label).data.item()
+               pred1 = output1.data.max(1)[1]
+               k = label.data.size()[0]
+               correct1 += pred1.eq(label.data).cpu().sum()
+               size += k
+        #np.savez('result_plot_sv_t', feature_all, label_all )
         test_loss = test_loss / size
         print(
             '\nTest set: Average loss: {:.4f}, Accuracy C1: {}/{} ({:.0f}%)  \n'.format(
@@ -400,7 +401,7 @@ class Solver(object):
         output_s_c1, output_t_c1 = self.C1_all_domain_soft(feat_s, feat_t)
         output_s_c2, output_t_c2 = self.C2_all_domain_soft(feat_s, feat_t)
 
-        loss_msda =  0.0005* msda.msda_regulizer_soft(feat_s, feat_t, 5, domain_prob)
+        loss_msda =  0.0005* msda.msda_regulizer_soft(feat_s, feat_t, 5, domain_prob.detach())
         loss_s_c1 =\
             self.softmax_loss_all_domain_soft(output_s_c1, label_s)
         loss_s_c2 =\
