@@ -463,9 +463,9 @@ class Solver(object):
                 return batch_idx
 
             if batch_idx % self.interval == 0:
-                print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss1: {:.6f}\t Loss2: {:.6f}\t  Discrepancy: {:.6f}'.format(
+                print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss1: {:.6f}\t Loss2: {:.6f}\t Loss_entropy: {:.6f}\t Loss_mmd: {:.6f}\t Discrepancy: {:.6f}'.format(
                     epoch, batch_idx, 100,
-                    100. * batch_idx / 70000, loss_s_c1.data.item(), loss_s_c2.data.item(), loss_dis.data.item()))
+                    100. * batch_idx / 70000, loss_s_c1.data.item(), loss_s_c2.data.item(), loss_msda.data.item(), entropy_loss.data.item(), loss_dis.data.item()))
                 if record_file:
                     record = open(record_file, 'a')
                     record.write('%s %s %s\n' % (loss_dis.data.item(), loss_s_c1.data.item(), loss_s_c2.data.item()))
