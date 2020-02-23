@@ -40,7 +40,7 @@ def moment_soft(output_s, domain_prob):
 	domain_prob = domain_prob.reshape(domain_prob.shape[0], 1, domain_prob.shape[1])
 	output_prob = torch.matmul(output_s, domain_prob)
 	output_prob_sum = output_prob.sum(1)
-	output_prob = output_prob/output_prob_sum
+	output_prob = output_prob/output_prob_sum.reshape(output_prob_sum.shape[0], 1, output_prob_sum.shape[1])
 	loss = 0
 	for i in range(output_prob.shape[2]):
 		for j in range(i+1,output_prob.shape[2]):
