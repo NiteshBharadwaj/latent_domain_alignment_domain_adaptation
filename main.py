@@ -13,6 +13,8 @@ import os
 parser = argparse.ArgumentParser(description='PyTorch MSDA Implementation')
 parser.add_argument('--all_use', type=str, default='no', metavar='N',
                     help='use all training data? in usps adaptation')
+parser.add_argument('--dl_type', type=str, default='', metavar='N',
+                    help='original, hard_cluster, combined')
 parser.add_argument('--record_folder', type=str, default='record', metavar='N',
                     help='record folder')
 parser.add_argument('--batch-size', type=int, default=128, metavar='N',

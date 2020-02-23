@@ -7,7 +7,7 @@ import mmd
 import msda
 from torch.autograd import Variable
 from model.build_gen import *
-from datasets.dataset_read import dataset_read,dataset_hard_cluster
+from datasets.dataset_read import dataset_read,dataset_hard_cluster, dataset_combined
 import numpy as np
 
 
@@ -23,9 +23,13 @@ class Solver(object):
         self.use_abs_diff = args.use_abs_diff
     
         print('dataset loading')
-        #self.datasets, self.dataset_test = dataset_read(target, self.batch_size)
-        self.datasets, self.dataset_test = dataset_hard_cluster(target, self.batch_size)
-        
+        if args.dl_type == 'original':
+            self.datasets, self.dataset_test = dataset_read(target, self.batch_size)
+        elif args.dl_type == 'hard_cluster':
+            self.datasets, self.dataset_test = dataset_hard_cluster(target, self.batch_size)
+        else:
+            self.datasets, self.dataset_test = dataset_combined(target, self.batch_size)
+
         #print(self.dataset['S1'].shape) 
     
         print('load finished!')
