@@ -438,7 +438,7 @@ class Solver(object):
 
             loss_s_c1, loss_s_c2, loss_msda, entropy_loss = self.loss_soft_all_domain(img_s, img_t, label_s)
 
-            feat_t = self.G(img_t)
+            feat_t, conv_feat_t = self.G(img_t)
             output_t1 = self.C1(feat_t)
             output_t2 = self.C2(feat_t)
 
@@ -451,7 +451,7 @@ class Solver(object):
             self.reset_grad()
 
             for i in range(4):
-                feat_t = self.G(img_t)
+                feat_t, conv_feat_t = self.G(img_t)
                 output_t1 = self.C1(feat_t)
                 output_t2 = self.C2(feat_t)
                 loss_dis = self.discrepancy(output_t1, output_t2)
