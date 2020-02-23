@@ -36,6 +36,8 @@ def msda_regulizer(output_s1, output_s2, output_s3, output_s4, output_t, belta_m
 	#return euclidean(output_s1, output_t)
 
 def moment_soft(output_s, domain_prob):
+	output_s = output_s.reshape(output_s.shape[0], output_s.shape[1],1)
+	domain_prob = domain_prob.reshape(domain_prob.shape[0], 1, domain_prob.shape[1])
 	output_prob = torch.matmul(output_s, domain_prob)
 	output_prob_sum = output_prob.sum(1)
 	output_prob = output_prob/output_prob_sum
