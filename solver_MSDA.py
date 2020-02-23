@@ -387,16 +387,15 @@ class Solver(object):
         return criterion(output, label_s)
 
     def entropy_loss(self, output):
-        criterion = nn.CrossEntropyLoss().cuda()
-        return criterion(output, output)
+        criterion = HLoss().cuda()
+        return criterion(output)
 
     def loss_soft_all_domain(self, img_s, img_t, label_s):
         feat_s_comb, feat_t_comb = self.feat_soft_all_domain(img_s, img_t)
         feat_s, conv_feat_s = feat_s_comb
         feat_t, conv_feat_t = feat_t_comb
         domain_logits = self.DP(conv_feat_s)
-        domain_prob = F.softmax(domain_logits, dim=1)
-        entropy_loss = self.entropy_loss(domain_logits)
+        entropy_loss, domain_prob = self.entropy_loss(domain_logits)
 
         output_s_c1, output_t_c1 = self.C1_all_domain_soft(feat_s, feat_t)
         output_s_c2, output_t_c2 = self.C2_all_domain_soft(feat_s, feat_t)
@@ -543,3 +542,12 @@ class Solver(object):
                     record.write('%s %s %s %s %s\n' % (loss_msda.data[0], loss_s1.data[0], loss_s2.data[0], loss_s3.data[0], loss_s4.data[0]))
                     record.close()
         return batch_idx
+class HLoss(nn.Module):
+    def __init__(self):
+        super(HLoss, self).__init__()
+
+    def forward(self, x):
+        probs = F.softmax(x, dim=1)
+        b =  probs* F.log_softmax(x, dim=1)
+        b = -1.0 * b.sum()
+        return b, probs
