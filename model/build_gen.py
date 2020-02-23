@@ -16,4 +16,5 @@ def Classifier():
     # if source == 'svhn':
     return svhn2mnist.Predictor()
 
-
+def DomainPredictor(num_domains):
+    return svhn2mnist.DomainPredictor(num_domains)

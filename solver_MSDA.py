@@ -27,15 +27,19 @@ class Solver(object):
             self.datasets, self.dataset_test = dataset_read(target, self.batch_size)
         elif args.dl_type == 'hard_cluster':
             self.datasets, self.dataset_test = dataset_hard_cluster(target, self.batch_size)
-        else:
+        elif args.dl_type=='soft_cluster':
             self.datasets, self.dataset_test = dataset_combined(target, self.batch_size)
+        else:
+            raise Exception('Type of experiment undefined')
 
         #print(self.dataset['S1'].shape) 
     
         print('load finished!')
+        num_domains = 4
         self.G = Generator()
         self.C1 = Classifier()
         self.C2 = Classifier()
+        self.DP = DomainPredictor(num_domains)
         print('model_loaded')
 
         if args.eval_only:
@@ -50,6 +54,7 @@ class Solver(object):
         self.G.cuda()
         self.C1.cuda()
         self.C2.cuda()
+        self.DP.cuda()
         self.interval = interval
 
         self.set_optimizer(which_opt=optimizer, lr=learning_rate)
@@ -339,6 +344,106 @@ class Solver(object):
             loss_s_c2 = loss_s1_c2 + loss_s2_c2 + loss_s3_c2 + loss_s4_c2
 
             loss_s = loss_s1_c1 + loss_s2_c2 + loss_msda
+            loss_dis = self.discrepancy(output_t1, output_t2)
+            loss = loss_s - loss_dis
+            loss.backward()
+            self.opt_c1.step()
+            self.opt_c2.step()
+            self.reset_grad()
+
+            for i in range(4):
+                feat_t = self.G(img_t)
+                output_t1 = self.C1(feat_t)
+                output_t2 = self.C2(feat_t)
+                loss_dis = self.discrepancy(output_t1, output_t2)
+                loss_dis.backward()
+                self.opt_g.step()
+                self.reset_grad()
+            if batch_idx > 500:
+                return batch_idx
+
+            if batch_idx % self.interval == 0:
+                print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss1: {:.6f}\t Loss2: {:.6f}\t  Discrepancy: {:.6f}'.format(
+                    epoch, batch_idx, 100,
+                    100. * batch_idx / 70000, loss_s_c1.data.item(), loss_s_c2.data.item(), loss_dis.data.item()))
+                if record_file:
+                    record = open(record_file, 'a')
+                    record.write('%s %s %s\n' % (loss_dis.data.item(), loss_s_c1.data.item(), loss_s_c2.data.item()))
+                    record.close()
+        return batch_idx
+
+
+    def feat_soft_all_domain(self, img_s, img_t):
+        return self.G(img_s), self.G(img_t)
+
+    def C1_all_domain_soft(self, feat1, feat_t):
+        return self.C1(feat1), self.C1(feat_t)
+
+    def C2_all_domain_soft(self, feat1, feat_t):
+        return self.C2(feat1), self.C2(feat_t)
+
+    def softmax_loss_all_domain_soft(self, output, label_s):
+        criterion = nn.CrossEntropyLoss().cuda()
+        return criterion(output, label_s)
+
+    def entropy_loss(self, output):
+        criterion = nn.CrossEntropyLoss().cuda()
+        return criterion(output, output)
+
+    def loss_soft_all_domain(self, img_s, img_t, label_s):
+        feat_s_comb, feat_t_comb = self.feat_soft_all_domain(img_s, img_t)
+        feat_s, conv_feat_s = feat_s_comb
+        feat_t, conv_feat_t = feat_t_comb
+        domain_logits = self.DP(conv_feat_s)
+        domain_prob = F.softmax(domain_logits, dim=1)
+        entropy_loss = self.entropy_loss(domain_logits)
+
+        output_s_c1, output_t_c1 = self.C1_all_domain_soft(feat_s, feat_t)
+        output_s_c2, output_t_c2 = self.C2_all_domain_soft(feat_s, feat_t)
+
+        loss_msda =  0.0005* msda.msda_regulizer_soft(feat_s, feat_t, 5, domain_prob)
+        loss_s_c1 =\
+            self.softmax_loss_all_domain_soft(output_s_c1, label_s)
+        loss_s_c2 =\
+            self.softmax_loss_all_domain_soft(output_s_c2, label_s)
+        return  loss_s_c1, loss_s_c2, loss_msda, entropy_loss
+
+    def train_MSDA_soft(self, epoch, record_file=None):
+        criterion = nn.CrossEntropyLoss().cuda()
+        self.G.train()
+        self.C1.train()
+        self.C2.train()
+        self.DP.train()
+        torch.cuda.manual_seed(1)
+
+        for batch_idx, data in enumerate(self.datasets):
+            img_t = Variable(data['T'].cuda())
+            img_s = Variable(data['S'].cuda())
+            label_s = Variable(data['S_label'].long().cuda())
+
+            if img_s.size()[0] < self.batch_size or img_t.size()[0] < self.batch_size:
+                break
+
+            self.reset_grad()
+
+            loss_s_c1, loss_s_c2, loss_msda, entropy_loss = self.loss_soft_all_domain(img_s, img_t, label_s)
+
+            loss = loss_s_c1 + loss_s_c2 + loss_msda + entropy_loss
+
+            loss.backward()
+
+            self.opt_g.step()
+            self.opt_c1.step()
+            self.opt_c2.step()
+            self.reset_grad()
+
+            loss_s_c1, loss_s_c2, loss_msda, entropy_loss = self.loss_soft_all_domain(img_s, img_t, label_s)
+
+            feat_t = self.G(img_t)
+            output_t1 = self.C1(feat_t)
+            output_t2 = self.C2(feat_t)
+
+            loss_s = loss_s_c1 + loss_s_c2 + loss_msda + entropy_loss
             loss_dis = self.discrepancy(output_t1, output_t2)
             loss = loss_s - loss_dis
             loss.backward()
