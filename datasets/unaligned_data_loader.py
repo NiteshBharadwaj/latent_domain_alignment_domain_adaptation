@@ -49,7 +49,7 @@ class PairedData(object):
             except StopIteration:
                 if source[i] is None or source_paths[i] is None:
                     self.stop_source[i] = True
-                    self.data_loader_s_iter = iter(self.data_loader_s[i])
+                    self.data_loader_s_iter[i] = iter(self.data_loader_s[i])
                     source[i], source_paths[i] = next(self.data_loader_s_iter[i])
         try:
             t, t_paths = next(self.data_loader_t_iter)

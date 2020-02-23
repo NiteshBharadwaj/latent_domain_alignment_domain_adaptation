@@ -38,7 +38,7 @@ def msda_regulizer(source_output, target_output, beta_moment):
         source_output[i] = source_output[i] - s_mean[i]
 
     target_output = target_output - t_mean
-
+    
     # Compute first moment for nC2 combinations
     moment1 = 0
     for i in range(num_sources):

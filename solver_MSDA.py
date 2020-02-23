@@ -282,7 +282,7 @@ class Solver(object):
                 label_s.append(Variable(data['S_label'][i]).long().cuda())
 
             if any(img_s[i].size()[0] < self.batch_size for i in range(num_datasets)) \
-                    and img_t.size()[0] < self.batch_size:
+                    or img_t.size()[0] < self.batch_size:
                 break
 
             self.reset_grad()
