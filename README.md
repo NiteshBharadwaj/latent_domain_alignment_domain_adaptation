@@ -13,6 +13,22 @@ Pip cmds:
     
     pip install git+https://github.com/pytorch/tnt.git@master
 
+CompCar Setup:
+i) In 'data' folder create 'CCWeb' and 'CCSurv' sub folders
+ii) From main directory, run 
+```
+bash download_cc.sh
+cd data/CCSurv/
+cat sv_data.z* > sv_data_combined.zip
+unzip -P  d89551fd190e38 sv_data_combined.zip
+cd ..
+cd data/CCWeb/
+cat data.z* > data_combined.zip
+unzip -P  d89551fd190e38 data_combined.zip
+```
+
+
+
 
 To reproduce Digit-5 Results:
 
