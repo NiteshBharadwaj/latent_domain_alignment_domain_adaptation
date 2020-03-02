@@ -19,14 +19,17 @@ ii) From main directory, run
 ```
 bash download_cc.sh
 cd data/CCSurv/
-cat sv_data.z* > sv_data_combined.zip
+zip -F sv_data.zip --out sv_data_combined.zip
 unzip -P  d89551fd190e38 sv_data_combined.zip
-cd ..
-cd data/CCWeb/
-cat data.z* > data_combined.zip
+cd ../CCWeb/
+zip -F data.zip --out data_combined.zip
 unzip -P  d89551fd190e38 data_combined.zip
 ```
 
+Training Compcars
+```
+bash experiment_do.sh  CCSurv 100 0 record/compcats soft_cluster cars
+```
 
 
 
