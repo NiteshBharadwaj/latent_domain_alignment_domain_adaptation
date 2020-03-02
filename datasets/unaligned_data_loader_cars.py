@@ -3,7 +3,7 @@ import torchnet as tnt
 from builtins import object
 import torchvision.transforms as transforms
 from datasets_cars import Dataset
-
+import numpy as np
 
 class CombinedData(Dataset):
     def __init__(self, data_loader_S, data_loader_t, max_dataset_size):
@@ -18,6 +18,8 @@ class CombinedData(Dataset):
         self.data_loader_S_iter = []
         for i in range(self.num_S):
             self.data_loader_S_iter.append(iter(self.data_loader_S[i]))
+        self.data_loader_t = data_loader_t
+        self.data_loader_t_iter = iter(self.data_loader_t)
         self.iter = 0
 
     def __getitem__(self, index):
@@ -55,7 +57,7 @@ class CombinedData(Dataset):
 class UnalignedDataLoader():
     def initialize(self, source, target, batch_size1, batch_size2, scale=32):
         transform = transforms.Compose([
-            transforms.Scale(scale),
+            transforms.Resize((scale,scale)),
             transforms.ToTensor(),
             transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
         ])

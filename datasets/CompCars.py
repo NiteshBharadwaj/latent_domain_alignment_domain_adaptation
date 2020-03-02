@@ -6,7 +6,7 @@ def split_(train_file, label_dir):
     with open(train_file,'r') as f:
         for line in f:
 #             label_path = os.path.join(label_dir,line)
-            paths.append(line)
+            paths.append(line.split('\n')[0])
     return paths
 
 def read_comp_cars(target):
