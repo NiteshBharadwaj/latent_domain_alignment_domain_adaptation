@@ -37,7 +37,7 @@ def cars_combined(target, batch_size):
     target_train, target_train_label, target_test, target_test_label = return_dataset(target)
 
     for i in range(len(domain_all)):
-        source_train, source_train_label, source_test, source_test_label = return_dataset(target)
+        source_train, source_train_label, source_test, source_test_label = return_dataset(domain_all[i])
         S[i]['imgs'] = source_train
         S[i]['labels'] = source_train_label
         # input target sample when test, source performance is not important
