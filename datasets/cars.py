@@ -22,7 +22,7 @@ def return_dataset(target):
     return read_comp_cars(target)
 
 
-def dataset_combined(target, batch_size):
+def cars_combined(target, batch_size):
     S1 = {}
     S1_test = {}
 
@@ -37,7 +37,7 @@ def dataset_combined(target, batch_size):
     target_train, target_train_label, target_test, target_test_label = return_dataset(target)
 
     for i in range(len(domain_all)):
-        source_train, source_train_label, source_test, source_test_label = return_dataset(domain_all[i])
+        source_train, source_train_label, source_test, source_test_label = return_dataset(target)
         S[i]['imgs'] = source_train
         S[i]['labels'] = source_train_label
         # input target sample when test, source performance is not important

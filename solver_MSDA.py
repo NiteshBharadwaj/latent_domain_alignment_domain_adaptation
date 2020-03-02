@@ -37,7 +37,7 @@ class Solver(object):
 
         elif args.data=='cars':
             if args.dl_type == 'soft_cluster':
-                self.datasets, self.dataset_test = cars_combined(self.batch_size)
+                self.datasets, self.dataset_test = cars_combined(target,self.batch_size)
         #print(self.dataset['S1'].shape) 
     
         print('load finished!')

@@ -9,7 +9,7 @@ class CombinedData(Dataset):
     def __init__(self, data_loader_S, data_loader_t, max_dataset_size):
         super(Dataset,self).__init__()
         self.data_loader_S = data_loader_S
-        self.num_S = len(daya_loader_S)
+        self.num_S = len(data_loader_S)
         self.stop_S = []
         for i in range(self.num_S):
             self.stop_S.append(False)
@@ -62,9 +62,9 @@ class UnalignedDataLoader():
         data_sources = []
         data_loader_s = []
         max_size = 0
-        fot i in range(len(source)):
-            dataset_sources.append(Dataset(source[i]['imgs'], source[i]['labels'], transform=transform))
-            data_loader_s.append(torch.utils.data.DataLoader(dataset_sources[i], batch_size=batch_size1, shuffle=True, num_workers=4))
+        for i in range(len(source)):
+            data_sources.append(Dataset(source[i]['imgs'], source[i]['labels'], transform=transform))
+            data_loader_s.append(torch.utils.data.DataLoader(data_sources[i], batch_size=batch_size1, shuffle=True, num_workers=4))
             max_size = max(max_size,len(data_sources[i]))
         self.dataset_s = data_loader_s
 
@@ -72,7 +72,7 @@ class UnalignedDataLoader():
         data_loader_t = torch.utils.data.DataLoader(dataset_target, batch_size=batch_size2, shuffle=True, num_workers=4)
 
         self.dataset_t = dataset_target
-        self.paired_data = CombinedData(data_loader_s1, data_loader_s2, data_loader_s3,data_loader_s4, data_loader_t,
+        self.paired_data = CombinedData(data_loader_s, data_loader_t,
                                       float("inf"))
 
         self.num_datasets = len(source)
