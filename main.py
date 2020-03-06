@@ -14,7 +14,7 @@ parser = argparse.ArgumentParser(description='PyTorch MSDA Implementation')
 parser.add_argument('--all_use', type=str, default='no', metavar='N',
                     help='use all training data? in usps adaptation')
 parser.add_argument('--dl_type', type=str, default='', metavar='N',
-                    help='original, hard_cluster, combined')
+                    help='original, hard_cluster, combined, soft_cluster')
 
 parser.add_argument('--data', type=str, default='', metavar='N',
                     help='digits,cars')

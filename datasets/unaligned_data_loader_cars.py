@@ -11,6 +11,7 @@ class CombinedData(Dataset):
         self.data_loader_S = data_loader_S
         self.num_S = len(data_loader_S)
         self.stop_S = []
+        self.stop_t = False
         for i in range(self.num_S):
             self.stop_S.append(False)
         self.max_dataset_size = max_dataset_size
@@ -41,7 +42,7 @@ class CombinedData(Dataset):
                 t, t_paths = next(self.data_loader_t_iter)
 
         if (np.prod(self.stop_S)>0 and self.stop_t==True) or self.iter > self.max_dataset_size:
-            for i in range(self.stop_S):
+            for i in range(len(self.stop_S)):
                 self.stop_S[i] = False
             self.stop_t = False
             raise StopIteration()

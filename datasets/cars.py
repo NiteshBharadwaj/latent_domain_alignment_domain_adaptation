@@ -1,14 +1,8 @@
 import sys
 
 sys.path.append('../loader')
-from .unaligned_data_loader_cars import UnalignedDataLoader as CombinedDataLoader
-from svhn import load_svhn
-from mnist import load_mnist
-from mnist_m import load_mnistm
-from usps_ import load_usps
-from gtsrb import load_gtsrb
-from synth_number import load_syn
-from synth_traffic import load_syntraffic
+sys.path.append('./datasets')
+from unaligned_data_loader_cars import UnalignedDataLoader as CombinedDataLoader
 from CompCars import read_comp_cars
 # User imports for hard-cluster code
 import numpy as np

@@ -1,0 +1,43 @@
+Namespace(all_use='no', batch_size=128, checkpoint_dir='checkpoint', cuda=True, data='cars', dl_type='soft_cluster', eval_only=False, lr=0.0002, max_epoch=200, no_cuda=False, num_k=4, one_step=False, optimizer='adam', record_folder='record', resume_epoch=100, save_epoch=10, save_model=False, seed=1, source='svhn', target='CCSurv', use_abs_diff=False)
+dataset loading
+train_num_images CCSurv ,31148
+test_num_images CCSurv ,13333
+train_num_images CCWeb ,136726
+test_num_images CCWeb ,136726
+load finished!
+model_loaded
+initialize complete
+0
+Train Epoch: 0 [0/100 (0%)]	Loss1: 6.093869	 Loss2: 6.189043	 Loss_mmd: 0.084997	 Loss_entropy: 0.012330	 Discrepancy: 0.000259
+Train Epoch: 0 [100/100 (0%)]	Loss1: 6.977933	 Loss2: 6.996459	 Loss_mmd: 0.042201	 Loss_entropy: 0.000309	 Discrepancy: 0.000156
+Train Epoch: 0 [200/100 (0%)]	Loss1: 6.525445	 Loss2: 6.487799	 Loss_mmd: 0.035514	 Loss_entropy: 0.000818	 Discrepancy: 0.000133
+
+Test set: Average loss: 0.0316, Accuracy C1: 24/13333 (0%)  
+
+recording %s record/CCSurv_10_test.txt
+1
+Train Epoch: 1 [0/100 (0%)]	Loss1: 6.258823	 Loss2: 6.244938	 Loss_mmd: 0.027187	 Loss_entropy: 0.001027	 Discrepancy: 0.000128
+Train Epoch: 1 [100/100 (0%)]	Loss1: 5.963147	 Loss2: 5.959701	 Loss_mmd: 0.024397	 Loss_entropy: 0.000635	 Discrepancy: 0.000112
+Train Epoch: 1 [200/100 (0%)]	Loss1: 5.739247	 Loss2: 5.752535	 Loss_mmd: 0.019458	 Loss_entropy: 0.000467	 Discrepancy: 0.000101
+
+Test set: Average loss: 0.0299, Accuracy C1: 19/13205 (0%)  
+
+recording %s record/CCSurv_10_test.txt
+2
+Train Epoch: 2 [0/100 (0%)]	Loss1: 5.894244	 Loss2: 5.910287	 Loss_mmd: 0.017674	 Loss_entropy: 0.000742	 Discrepancy: 0.000096
+Train Epoch: 2 [100/100 (0%)]	Loss1: 5.641440	 Loss2: 5.641018	 Loss_mmd: 0.014136	 Loss_entropy: 0.000577	 Discrepancy: 0.000087
+Train Epoch: 2 [200/100 (0%)]	Loss1: 5.223545	 Loss2: 5.218770	 Loss_mmd: 0.012935	 Loss_entropy: 0.000289	 Discrepancy: 0.000082
+
+Test set: Average loss: 0.0315, Accuracy C1: 22/13205 (0%)  
+
+recording %s record/CCSurv_10_test.txt
+3
+Train Epoch: 3 [0/100 (0%)]	Loss1: 5.403143	 Loss2: 5.412905	 Loss_mmd: 0.012547	 Loss_entropy: 0.000695	 Discrepancy: 0.000080
+Train Epoch: 3 [100/100 (0%)]	Loss1: 4.896091	 Loss2: 4.882014	 Loss_mmd: 0.012318	 Loss_entropy: 0.000344	 Discrepancy: 0.000075
+Train Epoch: 3 [200/100 (0%)]	Loss1: 4.962596	 Loss2: 4.973824	 Loss_mmd: 0.009085	 Loss_entropy: 0.000466	 Discrepancy: 0.000070
+
+Test set: Average loss: 0.0287, Accuracy C1: 46/13205 (0%)  
+
+recording %s record/CCSurv_10_test.txt
+4
+Train Epoch: 4 [0/100 (0%)]	Loss1: 5.022212	 Loss2: 5.021441	 Loss_mmd: 0.010559	 Loss_entropy: 0.000514	 Discrepancy: 0.000070

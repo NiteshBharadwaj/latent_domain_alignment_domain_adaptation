@@ -24,6 +24,8 @@ class Solver(object):
         self.save_epoch = save_epoch
         self.use_abs_diff = args.use_abs_diff
     
+        self.args = args
+
         print('dataset loading')
         if args.data=='digits':
             if args.dl_type == 'original':
@@ -42,9 +44,10 @@ class Solver(object):
     
         print('load finished!')
         num_domains = 4
+        num_classes = 1716
         self.G = Generator()
-        self.C1 = Classifier()
-        self.C2 = Classifier()
+        self.C1 = Classifier(num_classes)
+        self.C2 = Classifier(num_classes)
         self.DP = DomainPredictor(num_domains)
         print('model_loaded')
 
@@ -437,11 +440,13 @@ class Solver(object):
         self.DP.train()
         torch.cuda.manual_seed(1)
 
+        batch_idx_g = 0
+
         for batch_idx, data in enumerate(self.datasets):
+            batch_idx_g = batch_idx
             img_t = Variable(data['T'].cuda())
             img_s = Variable(data['S'].cuda())
             label_s = Variable(data['S_label'].long().cuda())
-
             if img_s.size()[0] < self.batch_size or img_t.size()[0] < self.batch_size:
                 break
 
@@ -474,7 +479,7 @@ class Solver(object):
             self.opt_c2.step()
             self.reset_grad()
 
-            for i in range(4):
+            for i in range(self.args.num_k):
                 feat_t, conv_feat_t = self.G(img_t)
                 output_t1 = self.C1(feat_t)
                 output_t2 = self.C2(feat_t)
@@ -482,8 +487,8 @@ class Solver(object):
                 loss_dis.backward()
                 self.opt_g.step()
                 self.reset_grad()
-            if batch_idx > 500:
-                return batch_idx
+            # if batch_idx > 500:
+            #     return batch_idx
 
             if batch_idx % self.interval == 0:
                 print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss1: {:.6f}\t Loss2: {:.6f}\t Loss_mmd: {:.6f}\t Loss_entropy: {:.6f}\t Discrepancy: {:.6f}'.format(
@@ -493,7 +498,7 @@ class Solver(object):
                     record = open(record_file, 'a')
                     record.write('%s %s %s %s %s %s\n' % (loss_dis.data.item(), loss_s_c1.data.item(), loss_s_c2.data.item(), loss_msda.data.item(), entropy_loss.data.item(), loss_dis.data.item()))
                     record.close()
-        return batch_idx
+        return batch_idx_g
 
     def train_MMD(self, epoch, record_file=None):
         criterion = nn.CrossEntropyLoss().cuda()
