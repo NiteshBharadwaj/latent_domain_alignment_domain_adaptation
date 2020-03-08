@@ -36,8 +36,7 @@ def return_dataset(data, scale=False, usps=False, all_use='no'):
     return train_image, train_label, test_image, test_label
 
 
-def dataset_read(target, batch_size):
-    num_latent_domains = 4
+def dataset_read(target, batch_size,num_latent_domains = 4):
     scale = 32
 
     domain_all = ['mnistm', 'mnist', 'usps', 'svhn', 'syn']
@@ -51,7 +50,7 @@ def dataset_read(target, batch_size):
 
     S = {}
     S_test = {}
-    for i in range(len(num_latent_domains)):
+    for i in range(num_latent_domains):
         source_train, source_train_label, source_test, source_test_label = return_dataset(domain_all[i])
         S[i] = {}
         S[i]['imgs'] = source_train
@@ -74,11 +73,8 @@ def dataset_read(target, batch_size):
     return dataset, dataset_test
 
 
-def dataset_hard_cluster(target, batch_size):
-    # Number of components for PCA
-    n_comp = 50
-    # Number of hard clusters for K-Means algorithm
-    num_clus = 4
+def dataset_hard_cluster(target, batch_size, num_clus = 4, n_comp = 35):
+
     scale = 32
 
     domain_all = ['mnistm', 'mnist', 'usps', 'svhn', 'syn']

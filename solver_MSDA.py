@@ -10,6 +10,7 @@ from model.build_gen import *
 from datasets.dataset_read import dataset_read, dataset_hard_cluster
 import numpy as np
 from itertools import combinations
+import math
 
 
 # Training settings
@@ -23,8 +24,8 @@ class Solver(object):
         self.use_abs_diff = args.use_abs_diff
 
         print('dataset loading')
-        # self.datasets, self.dataset_test = dataset_read(target, self.batch_size)
-        self.datasets, self.dataset_test = dataset_hard_cluster(target, self.batch_size)
+        self.datasets, self.dataset_test = dataset_read(target, self.batch_size)
+        #self.datasets, self.dataset_test = dataset_hard_cluster(target, self.batch_size)
 
         # print(self.dataset['S1'].shape)
 
@@ -91,7 +92,7 @@ class Solver(object):
                 label_s.append(Variable(data['S'][i]).long().cuda())
                 
             if any(img_s[i].size()[0] < self.batch_size for i in range(num_datasets)) \
-                    and img_t.size()[0] < self.batch_size:
+                    or img_t.size()[0] < self.batch_size:
                 break
 
             self.reset_grad()
@@ -138,8 +139,8 @@ class Solver(object):
 
         for batch_idx, data in enumerate(self.datasets):
             # if
-            img_s = np.concatenate([data['S1'][0:44], data['S2'][44:88], data['S3'][88:]], 0)
-            label_s = np.concatenate([data['S1_label'][0:44], data['S2_label'][44:88], data['S3_label'][88:]], 0)
+            img_s = np.concatenate([data['S'][0][0:44], data['S'][1][44:88], data['S'][2][88:]], 0)
+            label_s = np.concatenate([data['S_label'][0][0:44], data['S_label'][1][44:88], data['S_label'][2][88:]], 0)
             img_t = Variable(data['T'].cuda())
             img_s = Variable(torch.from_numpy(img_s).cuda())
 
@@ -231,6 +232,7 @@ class Solver(object):
         feat_source = []
         for i in range(len(img_s)):
             feat_source.append(self.G(img_s[i]))
+            
         return feat_source, self.G(img_t)
 
     def C1_all_domain(self, feat_s, feat_t):
@@ -255,14 +257,19 @@ class Solver(object):
     def loss_all_domain(self, img_s, img_t, label_s):
 
         feat_s, feat_t = self.feat_all_domain(img_s, img_t)
+        #for i in range(len(feat_s)):
+        #    if(torch.isnan(feat_s[i]).any()):
+        #        
+        #        print(torch.isnan(img_s[i]).any())
+        #        print(": img_s is nan")
+        #        raise Exception("feat_s is nan"+str(i))
 
         C1_feat_s, C1_feat_t = self.C1_all_domain(feat_s, feat_t)
         C2_feat_s, C2_feat_t = self.C2_all_domain(feat_s, feat_t)
 
-        loss_msda = 0.0005 * msda.msda_regulizer(feat_s, feat_t, 5)
+        loss_msda = 1e-4 * msda.msda_regulizer(feat_s, feat_t, 5)        
         loss_source_C1 = self.softmax_loss_all_domain(C1_feat_s, label_s)
         loss_source_C2 = self.softmax_loss_all_domain(C2_feat_s, label_s)
-
         return loss_source_C1, loss_source_C2, loss_msda
 
     def train_MSDA(self, epoch, record_file=None):
@@ -286,7 +293,6 @@ class Solver(object):
                 break
 
             self.reset_grad()
-       
 
             loss_source_C1, loss_source_C2, loss_msda = self.loss_all_domain(img_s, img_t, label_s)
 
@@ -306,8 +312,10 @@ class Solver(object):
 
             loss_s = sum(loss_source_C1) + sum(loss_source_C2) + loss_msda
             loss_dis = self.discrepancy(output_t1, output_t2)
+
             loss = loss_s - loss_dis
             loss.backward()
+            
             self.opt_c1.step()
             self.opt_c2.step()
             self.reset_grad()
@@ -354,7 +362,7 @@ class Solver(object):
                 label_s.append(Variable(data['S'][i]).long().cuda())
 
             if any(img_s[i].size()[0] < self.batch_size for i in range(num_datasets)) \
-                    and img_t.size()[0] < self.batch_size:
+                    or img_t.size()[0] < self.batch_size:
                 break
 
             self.reset_grad()

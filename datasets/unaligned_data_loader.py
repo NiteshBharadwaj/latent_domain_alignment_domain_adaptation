@@ -71,7 +71,7 @@ class PairedData(object):
 
 
 class UnalignedDataLoader():
-    def initialize(self, source, target, batch_size1, batch_size2, scale=32):
+    def initialize(self, source, target, batch_size_source, batch_size_target, scale=32):
         transform = transforms.Compose([
             transforms.Scale(scale),
             transforms.ToTensor(),
@@ -84,13 +84,13 @@ class UnalignedDataLoader():
         for i in range(len(source)):
             dataset_source.append(Dataset(source[i]['imgs'], source[i]['labels'], transform=transform))
             dataloader_source.append(
-                torch.utils.data.DataLoader(dataset_source[i], batch_size=batch_size1, shuffle=True,
+                torch.utils.data.DataLoader(dataset_source[i], batch_size=batch_size_source, shuffle=True,
                                             num_workers=4))
 
         self.dataset_s = dataset_source
 
         dataset_target = Dataset(target['imgs'], target['labels'], transform=transform)
-        dataloader_target = torch.utils.data.DataLoader(dataset_target, batch_size=batch_size2, shuffle=True,
+        dataloader_target = torch.utils.data.DataLoader(dataset_target, batch_size=batch_size_target, shuffle=True,
                                                         num_workers=4)
 
         self.dataset_t = dataset_target
@@ -103,4 +103,5 @@ class UnalignedDataLoader():
         return self.paired_data
 
     def __len__(self):
-        return min(max(len(max(self.dataset_s, key=lambda i: len(i))), len(self.dataset_t)), float("inf"))
+        
+        return min(max(len(max(self.dataset_s, key = lambda i: len(i))), len(self.dataset_t)), float("inf"))
