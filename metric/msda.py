@@ -1,4 +1,3 @@
-import torch
 from itertools import combinations
 
 
@@ -56,4 +55,3 @@ def msda_regulizer(source_output, target_output, beta_moment):
         reg_info += k_moment(source_output_, target_output, i + 2)
 
     return reg_info / 6
-# return euclidean(output_s1, output_t)
