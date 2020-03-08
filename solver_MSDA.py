@@ -291,32 +291,43 @@ class Solver(object):
             record.write('%s\n' % (float(correct1) / size))
             record.close()
 
+    def feat_all_domain(self, img_s, img_t):
+        feat_source = []
+        for i in range(len(img_s)):
+            feat_source.append(self.G(img_s[i])[0])
 
-    def feat_all_domain(self, img_s1, img_s2, img_s3, img_s4, img_t):
-    	return self.G(img_s1), self.G(img_s2), self.G(img_s3), self.G(img_s4), self.G(img_t)
+        return feat_source, self.G(img_t)[0]
 
-    def C1_all_domain(self, feat1, feat2,feat3,feat4, feat_t):
-    	return self.C1(feat1), self.C1(feat2), self.C1(feat3), self.C1(feat4), self.C1(feat_t)
-    
-    def C2_all_domain(self, feat1, feat2,feat3,feat4, feat_t):
-    	return self.C2(feat1), self.C2(feat2), self.C2(feat3), self.C2(feat4), self.C2(feat_t) 
+    def C1_all_domain(self, feat_s, feat_t):
+        C1_feat_source = []
+        for i in range(len(feat_s)):
+            C1_feat_source.append(self.C1(feat_s[i]))
+        return C1_feat_source, self.C1(feat_t)
 
-    def softmax_loss_all_domain(self, output1, output2, output3, output4, label_s1, label_s2, label_s3, label_s4):
-    	criterion = nn.CrossEntropyLoss().cuda()
-    	return criterion(output1, label_s1), criterion(output2, label_s2), criterion(output3, label_s3), criterion(output4,label_s4)
+    def C2_all_domain(self, feat_s, feat_t):
+        C2_feat_source = []
+        for i in range(len(feat_s)):
+            C2_feat_source.append(self.C2(feat_s[i]))
+        return C2_feat_source, self.C2(feat_t)
 
-    def loss_all_domain(self, img_s1, img_s2, img_s3, img_s4, img_t, label_s1, label_s2, label_s3,label_s4):
-        feat_s1, feat_s2, feat_s3, feat_s4, feat_t = self.feat_all_domain(img_s1, img_s2, img_s3, img_s4, img_t)
-        output_s1_c1, output_s2_c1, output_s3_c1, output_s4_c1, output_t_c1 = \
-        	self.C1_all_domain(feat_s1, feat_s2, feat_s3, feat_s4, feat_t)
-        output_s1_c2, output_s2_c2, output_s3_c2, output_s4_c2, output_t_c2 = \
-        	self.C2_all_domain(feat_s1,feat_s2, feat_s3, feat_s4, feat_t)
-        loss_msda =  0.0005* msda.msda_regulizer(feat_s1, feat_s2, feat_s3, feat_s4, feat_t, 5)
-        loss_s1_c1, loss_s2_c1,loss_s3_c1,loss_s4_c1 =\
-            self.softmax_loss_all_domain(output_s1_c1, output_s2_c1, output_s3_c1,output_s4_c1, label_s1, label_s2, label_s3,label_s4)
-        loss_s1_c2, loss_s2_c2,loss_s3_c2,loss_s4_c2 =\
-            self.softmax_loss_all_domain(output_s1_c2, output_s2_c2, output_s3_c2,output_s4_c2, label_s1, label_s2, label_s3,label_s4)
-        return  loss_s1_c1, loss_s2_c1,loss_s3_c1,loss_s4_c1, loss_s1_c2, loss_s2_c2,loss_s3_c2,loss_s4_c2, loss_msda
+    def softmax_loss_all_domain(self, output_s, label_s):
+        criterion = nn.CrossEntropyLoss().cuda()
+        softmax_loss = []
+        for i in range(len(output_s)):
+            softmax_loss.append(criterion(output_s[i], label_s[i]))
+        return softmax_loss
+
+    def loss_all_domain(self, img_s, img_t, label_s):
+
+        feat_s, feat_t = self.feat_all_domain(img_s, img_t)
+
+        C1_feat_s, C1_feat_t = self.C1_all_domain(feat_s, feat_t)
+        C2_feat_s, C2_feat_t = self.C2_all_domain(feat_s, feat_t)
+
+        loss_msda = 1e-4 * msda.msda_regulizer(feat_s, feat_t, 5)
+        loss_source_C1 = self.softmax_loss_all_domain(C1_feat_s, label_s)
+        loss_source_C2 = self.softmax_loss_all_domain(C2_feat_s, label_s)
+        return loss_source_C1, loss_source_C2, loss_msda
 
     def train_MSDA(self, epoch, record_file=None):
         criterion = nn.CrossEntropyLoss().cuda()
@@ -326,30 +337,22 @@ class Solver(object):
         torch.cuda.manual_seed(1)
 
         for batch_idx, data in enumerate(self.datasets):
+            img_s, label_s = [], []
             img_t = Variable(data['T'].cuda())
-            img_s1 = Variable(data['S1'].cuda())
-            img_s2 = Variable(data['S2'].cuda())
-            img_s3 = Variable(data['S3'].cuda())
-            img_s4 = Variable(data['S4'].cuda())
-            label_s1 = Variable(data['S1_label'].long().cuda())
-            label_s2 = Variable(data['S2_label'].long().cuda())
-            label_s3 = Variable(data['S3_label'].long().cuda())
-            label_s4 = Variable(data['S4_label'].long().cuda())
+            num_datasets = len(data['S'])
 
+            for i in range(num_datasets):
+                img_s.append(Variable(data['S'][i]).cuda())
+                label_s.append(Variable(data['S_label'][i]).long().cuda())
 
-            if img_s1.size()[0] < self.batch_size or img_s2.size()[0] < self.batch_size  or img_s3.size()[0] < self.batch_size or img_s4.size()[0]<self.batch_size or img_t.size()[0] < self.batch_size:
-                break            
+            if any(img_s[i].size()[0] < self.batch_size for i in range(num_datasets)) \
+                    or img_t.size()[0] < self.batch_size:
+                break
 
             self.reset_grad()
+            loss_source_C1, loss_source_C2, loss_msda = self.loss_all_domain(img_s, img_t, label_s)
 
-
-            loss_s1_c1, loss_s2_c1,loss_s3_c1,loss_s4_c1, loss_s1_c2, loss_s2_c2, loss_s3_c2, loss_s4_c2, loss_msda = self.loss_all_domain(
-            	img_s1, img_s2, img_s3, img_s4, img_t,  label_s1, label_s2, label_s3,label_s4)
-
-            loss_s_c1 = loss_s1_c1 + loss_s2_c1 + loss_s3_c1 + loss_s4_c1
-            loss_s_c2 = loss_s1_c2 + loss_s2_c2 + loss_s3_c2 + loss_s4_c2
-            loss = loss_s_c1 + loss_s_c2 + loss_msda
-
+            loss = sum(loss_source_C1) + sum(loss_source_C2) + loss_msda
             loss.backward()
             
             self.opt_g.step()
@@ -357,17 +360,15 @@ class Solver(object):
             self.opt_c2.step()
             self.reset_grad()
 
-            loss_s1_c1, loss_s2_c1,loss_s3_c1,loss_s4_c1, loss_s1_c2, loss_s2_c2,loss_s3_c2,loss_s4_c2, loss_msda =\
-            	self.loss_all_domain(img_s1, img_s2, img_s3, img_s4, img_t, label_s1, label_s2, label_s3,label_s4)     
-
+            loss_source_C1, loss_source_C2, loss_msda = self.loss_all_domain(img_s, img_t, label_s)
 
             feat_t = self.G(img_t)
             output_t1 = self.C1(feat_t)
             output_t2 = self.C2(feat_t)
-            loss_s_c1 = loss_s1_c1 + loss_s2_c1 + loss_s3_c1 + loss_s4_c1
-            loss_s_c2 = loss_s1_c2 + loss_s2_c2 + loss_s3_c2 + loss_s4_c2
+            loss_s_c1 = sum(loss_source_C1)
+            loss_s_c2 = sum(loss_source_C2)
 
-            loss_s = loss_s1_c1 + loss_s2_c2 + loss_msda
+            loss_s = loss_source_C1[0] + loss_source_C2[0] + loss_msda
             loss_dis = self.discrepancy(output_t1, output_t2)
             loss = loss_s - loss_dis
             loss.backward()
@@ -376,7 +377,7 @@ class Solver(object):
             self.reset_grad()
 
             for i in range(4):
-                feat_t = self.G(img_t)
+                feat_t = self.G(img_t)[0]
                 output_t1 = self.C1(feat_t)
                 output_t2 = self.C2(feat_t)
                 loss_dis = self.discrepancy(output_t1, output_t2)
