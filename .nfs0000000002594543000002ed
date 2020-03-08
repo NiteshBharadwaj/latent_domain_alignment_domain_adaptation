@@ -162,3 +162,11 @@ recording %s record/CCSurv_18_test.txt
 Train Epoch: 21 [0/100 (0%)]	Loss1: 1.541953	 Loss2: 1.541838	 Loss_mmd: 0.011281	 Loss_entropy: 0.000179	 Discrepancy: 0.000028
 Train Epoch: 21 [100/100 (0%)]	Loss1: 1.536928	 Loss2: 1.537974	 Loss_mmd: 0.010886	 Loss_entropy: 0.000217	 Discrepancy: 0.000028
 Train Epoch: 21 [200/100 (0%)]	Loss1: 1.505838	 Loss2: 1.505326	 Loss_mmd: 0.010866	 Loss_entropy: 0.000275	 Discrepancy: 0.000028
+
+Test set: Average loss: 0.0059, Accuracy C1: 720/13205 (5%)  
+
+recording %s record/CCSurv_18_test.txt
+22
+Train Epoch: 22 [0/100 (0%)]	Loss1: 1.179107	 Loss2: 1.184153	 Loss_mmd: 0.011333	 Loss_entropy: 0.000193	 Discrepancy: 0.000027
+Train Epoch: 22 [100/100 (0%)]	Loss1: 1.319831	 Loss2: 1.322415	 Loss_mmd: 0.010617	 Loss_entropy: 0.000215	 Discrepancy: 0.000026
+Train Epoch: 22 [200/100 (0%)]	Loss1: 1.436050	 Loss2: 1.431958	 Loss_mmd: 0.010191	 Loss_entropy: 0.000117	 Discrepancy: 0.000026

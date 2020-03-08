@@ -237,7 +237,7 @@ class Solver(object):
                     record.close()
         return batch_idx
 
-    def test(self, epoch, record_file=None, save_model=False):
+    def test(self, epoch, is_train_perf record_file=None, save_model=False):
         self.G.eval()
         self.C1.eval()
         test_loss = 0
@@ -245,10 +245,20 @@ class Solver(object):
         size = 0
         feature_all = np.array([])
         label_all = []
+
+
+        which_dataset = self.dataset_test
+        data_symbol = 'T'
+        data_label_symbol = 'T_label'
+        if is_train_perf:
+            which_dataset = self.dataset
+            data_symbol = 'S'
+            data_label_symbol = 'S_label'
+
         with torch.no_grad():
-           for batch_idx, data in enumerate(self.dataset_test):
-               img = data['T']
-               label = data['T_label']
+           for batch_idx, data in enumerate(which_dataset):
+               img = data[data_symbol]
+               label = data[data_label_symbol]
                
                img, label = img.cuda(), label.long().cuda()
                img, label = Variable(img, volatile=True), Variable(label)
@@ -275,21 +285,22 @@ class Solver(object):
                size += k
         #np.savez('result_plot_sv_t', feature_all, label_all )
         test_loss = test_loss / size
-        print(
-            '\nTest set: Average loss: {:.4f}, Accuracy C1: {}/{} ({:.0f}%)  \n'.format(
-                test_loss, correct1, size,   100. * correct1 / size))
-        if save_model and epoch % self.save_epoch == 0:
-            torch.save(self.G,
-                       '%s/%s_to_%s_model_epoch%s_G.pt' % (self.checkpoint_dir, self.source, self.target, epoch))
-            torch.save(self.C1,
-                       '%s/%s_to_%s_model_epoch%s_C1.pt' % (self.checkpoint_dir, self.source, self.target, epoch))
-            torch.save(self.C2,
-                       '%s/%s_to_%s_model_epoch%s_C2.pt' % (self.checkpoint_dir, self.source, self.target, epoch))
-        if record_file:
-            record = open(record_file, 'a')
-            print('recording %s', record_file)
-            record.write('%s\n' % (float(correct1) / size))
-            record.close()
+        if is_train_perf:
+            print('\nTrain set: Average loss: {:.4f}, Accuracy C1: {}/{} ({:.0f}%)  \n'.format(test_loss, correct1, size,   100. * correct1 / size))
+        else:
+            print('\nTest set: Average loss: {:.4f}, Accuracy C1: {}/{} ({:.0f}%)  \n'.format(test_loss, correct1, size,   100. * correct1 / size))
+            if save_model and epoch % self.save_epoch == 0:
+                torch.save(self.G,
+                           '%s/%s_to_%s_model_epoch%s_G.pt' % (self.checkpoint_dir, self.source, self.target, epoch))
+                torch.save(self.C1,
+                           '%s/%s_to_%s_model_epoch%s_C1.pt' % (self.checkpoint_dir, self.source, self.target, epoch))
+                torch.save(self.C2,
+                           '%s/%s_to_%s_model_epoch%s_C2.pt' % (self.checkpoint_dir, self.source, self.target, epoch))
+            if record_file:
+                record = open(record_file, 'a')
+                print('recording %s', record_file)
+                record.write('%s\n' % (float(correct1) / size))
+                record.close()
 
 
     def feat_all_domain(self, img_s1, img_s2, img_s3, img_s4, img_t):
@@ -462,59 +473,59 @@ class Solver(object):
 
             loss_s_c1, loss_s_c2, loss_msda, entropy_loss = self.loss_soft_all_domain(img_s, img_t, label_s)
 
-            loss = loss_s_c1 + loss_s_c2 #+ loss_msda + entropy_loss
+            loss = loss_s_c1 + loss_s_c2 + loss_msda + entropy_loss
 
             loss.backward()
 
             self.opt_g.step()
             self.opt_c1.step()
             self.opt_c2.step()
-            #self.opt_dp.step()
+            self.opt_dp.step()
             self.reset_grad()
 
-            #loss_dis = loss_msda*0
-            # loss_s_c1, loss_s_c2, loss_msda, entropy_loss = self.loss_soft_all_domain(img_s, img_t, label_s)
+            loss_dis = loss_msda*0
+            loss_s_c1, loss_s_c2, loss_msda, entropy_loss = self.loss_soft_all_domain(img_s, img_t, label_s)
 
-            # feat_t, conv_feat_t = self.G(img_t)
-            # output_t1 = self.C1(feat_t)
-            # output_t2 = self.C2(feat_t)
+            feat_t, conv_feat_t = self.G(img_t)
+            output_t1 = self.C1(feat_t)
+            output_t2 = self.C2(feat_t)
 
-            # loss_s = loss_s_c1 + loss_s_c2 + loss_msda + entropy_loss
-            # loss_dis = self.discrepancy(output_t1, output_t2)
-            # loss = loss_s - loss_dis
-            # loss.backward()
-            # self.opt_c1.step()
-            # self.opt_c2.step()
-            # self.reset_grad()
+            loss_s = loss_s_c1 + loss_s_c2 + loss_msda + entropy_loss
+            loss_dis = self.discrepancy(output_t1, output_t2)
+            loss = loss_s - loss_dis
+            loss.backward()
+            self.opt_c1.step()
+            self.opt_c2.step()
+            self.reset_grad()
 
-            # for i in range(self.args.num_k):
-            #     feat_t, conv_feat_t = self.G(img_t)
-            #     output_t1 = self.C1(feat_t)
-            #     output_t2 = self.C2(feat_t)
-            #     loss_dis = self.discrepancy(output_t1, output_t2)
-            #     loss_dis.backward()
-            #     self.opt_g.step()
-            #     self.reset_grad()
-            # if batch_idx > 500:
-            #     return batch_idx
-
-            # if batch_idx % self.interval == 0:
-            #     print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss1: {:.6f}\t Loss2: {:.6f}\t Loss_mmd: {:.6f}\t Loss_entropy: {:.6f}\t Discrepancy: {:.6f}'.format(
-            #         epoch, batch_idx, 100,
-            #         100. * batch_idx / 70000, loss_s_c1.data.item(), loss_s_c2.data.item(), loss_msda.data.item(), entropy_loss.data.item(), loss_dis.data.item()))
-            #     if record_file:
-            #         record = open(record_file, 'a')
-            #         record.write('%s %s %s %s %s %s\n' % (loss_dis.data.item(), loss_s_c1.data.item(), loss_s_c2.data.item(), loss_msda.data.item(), entropy_loss.data.item(), loss_dis.data.item()))
-            #         record.close()
+            for i in range(self.args.num_k):
+                feat_t, conv_feat_t = self.G(img_t)
+                output_t1 = self.C1(feat_t)
+                output_t2 = self.C2(feat_t)
+                loss_dis = self.discrepancy(output_t1, output_t2)
+                loss_dis.backward()
+                self.opt_g.step()
+                self.reset_grad()
+            if batch_idx > 500:
+                return batch_idx
 
             if batch_idx % self.interval == 0:
                 print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss1: {:.6f}\t Loss2: {:.6f}\t Loss_mmd: {:.6f}\t Loss_entropy: {:.6f}\t Discrepancy: {:.6f}'.format(
                     epoch, batch_idx, 100,
-                    100. * batch_idx / 70000, loss_s_c1.data.item(), loss_s_c2.data.item(), 0, 0, 0))
+                    100. * batch_idx / 70000, loss_s_c1.data.item(), loss_s_c2.data.item(), loss_msda.data.item(), entropy_loss.data.item(), loss_dis.data.item()))
                 if record_file:
                     record = open(record_file, 'a')
-                    record.write('%s %s %s %s %s %s\n' % (0, loss_s_c1.data.item(), loss_s_c2.data.item(), 0, 0, 0))
+                    record.write('%s %s %s %s %s %s\n' % (loss_dis.data.item(), loss_s_c1.data.item(), loss_s_c2.data.item(), loss_msda.data.item(), entropy_loss.data.item(), loss_dis.data.item()))
                     record.close()
+
+            # if batch_idx % self.interval == 0:
+            #     print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss1: {:.6f}\t Loss2: {:.6f}\t Loss_mmd: {:.6f}\t Loss_entropy: {:.6f}\t Discrepancy: {:.6f}'.format(
+            #         epoch, batch_idx, 100,
+            #         100. * batch_idx / 70000, loss_s_c1.data.item(), loss_s_c2.data.item(), 0, 0, 0))
+            #     if record_file:
+            #         record = open(record_file, 'a')
+            #         record.write('%s %s %s %s %s %s\n' % (0, loss_s_c1.data.item(), loss_s_c2.data.item(), 0, 0, 0))
+            #         record.close()
         return batch_idx_g
 
     def train_MMD(self, epoch, record_file=None):
