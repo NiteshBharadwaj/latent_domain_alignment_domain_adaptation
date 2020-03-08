@@ -1,0 +1,527 @@
+Namespace(all_use='no', batch_size=64, checkpoint_dir='checkpoint', cuda=True, data='cars', dl_type='soft_cluster', eval_only=False, lr=0.0002, max_epoch=200, no_cuda=False, num_k=4, one_step=False, optimizer='adam', record_folder='record', resume_epoch=100, save_epoch=10, save_model=False, seed=1, source='svhn', target='CCSurv', use_abs_diff=False)
+dataset loading
+train_num_images CCSurv ,31148
+test_num_images CCSurv ,13333
+train_num_images CCWeb ,136726
+test_num_images CCWeb ,136726
+load finished!
+model_loaded
+initialize complete
+0
+Train Epoch: 0 [0/100 (0%)]	Loss1: 7.524807	 Loss2: 7.488342	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 0 [100/100 (0%)]	Loss1: 7.647182	 Loss2: 7.656478	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 0 [200/100 (0%)]	Loss1: 6.929944	 Loss2: 6.888814	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 0 [300/100 (0%)]	Loss1: 6.122673	 Loss2: 6.152480	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 0 [400/100 (1%)]	Loss1: 6.104513	 Loss2: 6.134396	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+
+Test set: Average loss: 0.0691, Accuracy C1: 201/13333 (2%)  
+
+recording %s record/CCSurv_17_test.txt
+1
+Train Epoch: 1 [0/100 (0%)]	Loss1: 5.853425	 Loss2: 5.858923	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 1 [100/100 (0%)]	Loss1: 5.366074	 Loss2: 5.353360	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 1 [200/100 (0%)]	Loss1: 5.260807	 Loss2: 5.244782	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 1 [300/100 (0%)]	Loss1: 4.694364	 Loss2: 4.667099	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 1 [400/100 (1%)]	Loss1: 4.830908	 Loss2: 4.834543	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+
+Test set: Average loss: 0.0796, Accuracy C1: 151/13269 (1%)  
+
+recording %s record/CCSurv_17_test.txt
+2
+Train Epoch: 2 [0/100 (0%)]	Loss1: 4.718649	 Loss2: 4.699071	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 2 [100/100 (0%)]	Loss1: 4.693450	 Loss2: 4.674758	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 2 [200/100 (0%)]	Loss1: 4.350495	 Loss2: 4.307574	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 2 [300/100 (0%)]	Loss1: 3.989294	 Loss2: 3.977564	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 2 [400/100 (1%)]	Loss1: 3.900198	 Loss2: 3.841720	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+
+Test set: Average loss: 0.0946, Accuracy C1: 214/13269 (2%)  
+
+recording %s record/CCSurv_17_test.txt
+3
+Train Epoch: 3 [0/100 (0%)]	Loss1: 3.823967	 Loss2: 3.818714	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 3 [100/100 (0%)]	Loss1: 3.936244	 Loss2: 3.925204	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 3 [200/100 (0%)]	Loss1: 3.662991	 Loss2: 3.664230	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 3 [300/100 (0%)]	Loss1: 3.819124	 Loss2: 3.787251	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 3 [400/100 (1%)]	Loss1: 3.381854	 Loss2: 3.333967	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+
+Test set: Average loss: 0.0997, Accuracy C1: 291/13269 (2%)  
+
+recording %s record/CCSurv_17_test.txt
+4
+Train Epoch: 4 [0/100 (0%)]	Loss1: 3.416052	 Loss2: 3.426166	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 4 [100/100 (0%)]	Loss1: 3.256789	 Loss2: 3.236969	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+
+Test set: Average loss: 0.0969, Accuracy C1: 576/13269 (4%)  
+
+recording %s record/CCSurv_17_test.txt
+5
+
+Test set: Average loss: 0.0969, Accuracy C1: 573/13269 (4%)  
+
+recording %s record/CCSurv_17_test.txt
+6
+Train Epoch: 6 [0/100 (0%)]	Loss1: 2.755831	 Loss2: 2.765138	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 6 [100/100 (0%)]	Loss1: 2.633386	 Loss2: 2.628049	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 6 [200/100 (0%)]	Loss1: 2.861805	 Loss2: 2.851071	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+
+Test set: Average loss: 0.1110, Accuracy C1: 510/13269 (4%)  
+
+recording %s record/CCSurv_17_test.txt
+7
+Train Epoch: 7 [0/100 (0%)]	Loss1: 2.660867	 Loss2: 2.686289	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 7 [100/100 (0%)]	Loss1: 2.369287	 Loss2: 2.371066	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 7 [200/100 (0%)]	Loss1: 2.375256	 Loss2: 2.383056	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 7 [300/100 (0%)]	Loss1: 2.423340	 Loss2: 2.457170	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 7 [400/100 (1%)]	Loss1: 2.344032	 Loss2: 2.321451	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+
+Test set: Average loss: 0.1055, Accuracy C1: 590/13269 (4%)  
+
+recording %s record/CCSurv_17_test.txt
+8
+Train Epoch: 8 [0/100 (0%)]	Loss1: 2.064423	 Loss2: 2.048298	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 8 [100/100 (0%)]	Loss1: 2.195205	 Loss2: 2.214048	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 8 [200/100 (0%)]	Loss1: 2.162991	 Loss2: 2.172784	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 8 [300/100 (0%)]	Loss1: 2.077961	 Loss2: 2.046923	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 8 [400/100 (1%)]	Loss1: 2.108573	 Loss2: 2.088744	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+
+Test set: Average loss: 0.1153, Accuracy C1: 597/13269 (4%)  
+
+recording %s record/CCSurv_17_test.txt
+9
+Train Epoch: 9 [0/100 (0%)]	Loss1: 2.261798	 Loss2: 2.275340	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 9 [100/100 (0%)]	Loss1: 2.390804	 Loss2: 2.378514	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 9 [200/100 (0%)]	Loss1: 2.328668	 Loss2: 2.380631	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 9 [300/100 (0%)]	Loss1: 2.085938	 Loss2: 2.080034	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 9 [400/100 (1%)]	Loss1: 1.578133	 Loss2: 1.596242	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+
+Test set: Average loss: 0.1057, Accuracy C1: 951/13269 (7%)  
+
+recording %s record/CCSurv_17_test.txt
+10
+Train Epoch: 10 [0/100 (0%)]	Loss1: 1.640973	 Loss2: 1.648268	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 10 [100/100 (0%)]	Loss1: 2.063502	 Loss2: 2.107866	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 10 [200/100 (0%)]	Loss1: 1.843129	 Loss2: 1.828953	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 10 [300/100 (0%)]	Loss1: 1.896438	 Loss2: 1.916487	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+
+Test set: Average loss: 0.1143, Accuracy C1: 852/13269 (6%)  
+
+recording %s record/CCSurv_17_test.txt
+11
+
+Test set: Average loss: 0.1143, Accuracy C1: 850/13269 (6%)  
+
+recording %s record/CCSurv_17_test.txt
+12
+Train Epoch: 12 [0/100 (0%)]	Loss1: 1.383243	 Loss2: 1.402470	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 12 [100/100 (0%)]	Loss1: 1.205472	 Loss2: 1.186531	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+
+Test set: Average loss: 0.1155, Accuracy C1: 967/13269 (7%)  
+
+recording %s record/CCSurv_17_test.txt
+13
+Train Epoch: 13 [0/100 (0%)]	Loss1: 1.552110	 Loss2: 1.522421	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 13 [100/100 (0%)]	Loss1: 1.401119	 Loss2: 1.427871	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 13 [200/100 (0%)]	Loss1: 1.213143	 Loss2: 1.197120	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 13 [300/100 (0%)]	Loss1: 1.366953	 Loss2: 1.370414	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 13 [400/100 (1%)]	Loss1: 1.161345	 Loss2: 1.181460	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+
+Test set: Average loss: 0.1227, Accuracy C1: 869/13269 (7%)  
+
+recording %s record/CCSurv_17_test.txt
+14
+Train Epoch: 14 [0/100 (0%)]	Loss1: 1.010687	 Loss2: 1.041198	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 14 [100/100 (0%)]	Loss1: 1.458125	 Loss2: 1.468389	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 14 [200/100 (0%)]	Loss1: 0.888239	 Loss2: 0.893553	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 14 [300/100 (0%)]	Loss1: 1.228207	 Loss2: 1.265660	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 14 [400/100 (1%)]	Loss1: 1.327284	 Loss2: 1.315056	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+
+Test set: Average loss: 0.1206, Accuracy C1: 765/13269 (6%)  
+
+recording %s record/CCSurv_17_test.txt
+15
+Train Epoch: 15 [0/100 (0%)]	Loss1: 1.113922	 Loss2: 1.132368	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 15 [100/100 (0%)]	Loss1: 1.568751	 Loss2: 1.568805	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 15 [200/100 (0%)]	Loss1: 1.587161	 Loss2: 1.596696	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 15 [300/100 (0%)]	Loss1: 1.331257	 Loss2: 1.326582	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 15 [400/100 (1%)]	Loss1: 1.155971	 Loss2: 1.164735	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+
+Test set: Average loss: 0.1199, Accuracy C1: 806/13269 (6%)  
+
+recording %s record/CCSurv_17_test.txt
+16
+Train Epoch: 16 [0/100 (0%)]	Loss1: 1.404331	 Loss2: 1.352550	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 16 [100/100 (0%)]	Loss1: 1.192428	 Loss2: 1.185048	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 16 [200/100 (0%)]	Loss1: 1.378877	 Loss2: 1.364437	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 16 [300/100 (0%)]	Loss1: 1.532561	 Loss2: 1.516578	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 16 [400/100 (1%)]	Loss1: 0.993619	 Loss2: 0.989221	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+
+Test set: Average loss: 0.1082, Accuracy C1: 1017/13269 (8%)  
+
+recording %s record/CCSurv_17_test.txt
+17
+Train Epoch: 17 [0/100 (0%)]	Loss1: 1.313997	 Loss2: 1.314939	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+
+Test set: Average loss: 0.1124, Accuracy C1: 915/13269 (7%)  
+
+recording %s record/CCSurv_17_test.txt
+18
+
+Test set: Average loss: 0.1124, Accuracy C1: 913/13269 (7%)  
+
+recording %s record/CCSurv_17_test.txt
+19
+Train Epoch: 19 [0/100 (0%)]	Loss1: 0.991085	 Loss2: 0.967274	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 19 [100/100 (0%)]	Loss1: 0.668606	 Loss2: 0.666990	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 19 [200/100 (0%)]	Loss1: 0.706548	 Loss2: 0.708595	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 19 [300/100 (0%)]	Loss1: 0.598179	 Loss2: 0.610826	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 19 [400/100 (1%)]	Loss1: 1.037545	 Loss2: 1.040848	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+
+Test set: Average loss: 0.1169, Accuracy C1: 1091/13269 (8%)  
+
+recording %s record/CCSurv_17_test.txt
+20
+Train Epoch: 20 [0/100 (0%)]	Loss1: 0.587234	 Loss2: 0.562994	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 20 [100/100 (0%)]	Loss1: 0.575594	 Loss2: 0.560966	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 20 [200/100 (0%)]	Loss1: 0.671678	 Loss2: 0.684964	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 20 [300/100 (0%)]	Loss1: 0.829255	 Loss2: 0.839754	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 20 [400/100 (1%)]	Loss1: 0.956217	 Loss2: 0.921525	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+
+Test set: Average loss: 0.1178, Accuracy C1: 941/13269 (7%)  
+
+recording %s record/CCSurv_17_test.txt
+21
+Train Epoch: 21 [0/100 (0%)]	Loss1: 0.843645	 Loss2: 0.854350	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 21 [100/100 (0%)]	Loss1: 0.714018	 Loss2: 0.708723	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 21 [200/100 (0%)]	Loss1: 0.850193	 Loss2: 0.835073	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 21 [300/100 (0%)]	Loss1: 0.624349	 Loss2: 0.644038	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 21 [400/100 (1%)]	Loss1: 1.006033	 Loss2: 1.030718	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+
+Test set: Average loss: 0.1130, Accuracy C1: 1064/13269 (8%)  
+
+recording %s record/CCSurv_17_test.txt
+22
+Train Epoch: 22 [0/100 (0%)]	Loss1: 1.103404	 Loss2: 1.106533	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 22 [100/100 (0%)]	Loss1: 0.776799	 Loss2: 0.777432	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 22 [200/100 (0%)]	Loss1: 0.648947	 Loss2: 0.651033	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 22 [300/100 (0%)]	Loss1: 1.080288	 Loss2: 1.069904	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 22 [400/100 (1%)]	Loss1: 1.047512	 Loss2: 1.024095	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+
+Test set: Average loss: 0.1039, Accuracy C1: 1160/13269 (9%)  
+
+recording %s record/CCSurv_17_test.txt
+23
+Train Epoch: 23 [0/100 (0%)]	Loss1: 0.862541	 Loss2: 0.851295	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 23 [100/100 (0%)]	Loss1: 1.032492	 Loss2: 1.022836	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 23 [200/100 (0%)]	Loss1: 0.991731	 Loss2: 0.991625	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+
+Test set: Average loss: 0.0995, Accuracy C1: 1028/13269 (8%)  
+
+recording %s record/CCSurv_17_test.txt
+24
+
+Test set: Average loss: 0.0996, Accuracy C1: 1027/13269 (8%)  
+
+recording %s record/CCSurv_17_test.txt
+25
+Train Epoch: 25 [0/100 (0%)]	Loss1: 0.697686	 Loss2: 0.709555	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 25 [100/100 (0%)]	Loss1: 0.541943	 Loss2: 0.540952	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 25 [200/100 (0%)]	Loss1: 0.594445	 Loss2: 0.603642	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+
+Test set: Average loss: 0.1031, Accuracy C1: 1081/13269 (8%)  
+
+recording %s record/CCSurv_17_test.txt
+26
+Train Epoch: 26 [0/100 (0%)]	Loss1: 0.624295	 Loss2: 0.624289	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 26 [100/100 (0%)]	Loss1: 0.508847	 Loss2: 0.506613	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 26 [200/100 (0%)]	Loss1: 0.348353	 Loss2: 0.354768	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 26 [300/100 (0%)]	Loss1: 0.544487	 Loss2: 0.539936	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 26 [400/100 (1%)]	Loss1: 0.463636	 Loss2: 0.450247	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+
+Test set: Average loss: 0.1013, Accuracy C1: 1098/13269 (8%)  
+
+recording %s record/CCSurv_17_test.txt
+27
+Train Epoch: 27 [0/100 (0%)]	Loss1: 0.397677	 Loss2: 0.400393	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 27 [100/100 (0%)]	Loss1: 0.722996	 Loss2: 0.721807	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 27 [200/100 (0%)]	Loss1: 0.943799	 Loss2: 0.936976	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 27 [300/100 (0%)]	Loss1: 0.651657	 Loss2: 0.645926	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 27 [400/100 (1%)]	Loss1: 0.810507	 Loss2: 0.820536	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+
+Test set: Average loss: 0.0989, Accuracy C1: 1059/13269 (8%)  
+
+recording %s record/CCSurv_17_test.txt
+28
+Train Epoch: 28 [0/100 (0%)]	Loss1: 0.601460	 Loss2: 0.609524	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 28 [100/100 (0%)]	Loss1: 0.579795	 Loss2: 0.596928	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 28 [200/100 (0%)]	Loss1: 0.598548	 Loss2: 0.595093	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 28 [300/100 (0%)]	Loss1: 0.719488	 Loss2: 0.721548	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 28 [400/100 (1%)]	Loss1: 0.800656	 Loss2: 0.789057	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+
+Test set: Average loss: 0.0983, Accuracy C1: 1103/13269 (8%)  
+
+recording %s record/CCSurv_17_test.txt
+29
+Train Epoch: 29 [0/100 (0%)]	Loss1: 0.685488	 Loss2: 0.679357	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 29 [100/100 (0%)]	Loss1: 1.078217	 Loss2: 1.068105	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 29 [200/100 (0%)]	Loss1: 0.817795	 Loss2: 0.824050	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 29 [300/100 (0%)]	Loss1: 0.635086	 Loss2: 0.622857	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 29 [400/100 (1%)]	Loss1: 0.755149	 Loss2: 0.750275	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+
+Test set: Average loss: 0.0863, Accuracy C1: 1358/13269 (10%)  
+
+recording %s record/CCSurv_17_test.txt
+30
+
+Test set: Average loss: 0.0863, Accuracy C1: 1358/13269 (10%)  
+
+recording %s record/CCSurv_17_test.txt
+31
+Train Epoch: 31 [0/100 (0%)]	Loss1: 0.629604	 Loss2: 0.642132	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+
+Test set: Average loss: 0.0881, Accuracy C1: 1235/13269 (9%)  
+
+recording %s record/CCSurv_17_test.txt
+32
+Train Epoch: 32 [0/100 (0%)]	Loss1: 0.503482	 Loss2: 0.510310	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 32 [100/100 (0%)]	Loss1: 0.562860	 Loss2: 0.554411	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 32 [200/100 (0%)]	Loss1: 0.333048	 Loss2: 0.331791	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 32 [300/100 (0%)]	Loss1: 0.416307	 Loss2: 0.418279	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 32 [400/100 (1%)]	Loss1: 0.335952	 Loss2: 0.338189	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+
+Test set: Average loss: 0.0880, Accuracy C1: 1130/13269 (9%)  
+
+recording %s record/CCSurv_17_test.txt
+33
+Train Epoch: 33 [0/100 (0%)]	Loss1: 0.445534	 Loss2: 0.437448	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 33 [100/100 (0%)]	Loss1: 0.366642	 Loss2: 0.361023	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 33 [200/100 (0%)]	Loss1: 0.477568	 Loss2: 0.468395	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 33 [300/100 (0%)]	Loss1: 0.373152	 Loss2: 0.369964	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 33 [400/100 (1%)]	Loss1: 0.427262	 Loss2: 0.429506	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+
+Test set: Average loss: 0.0802, Accuracy C1: 1260/13269 (9%)  
+
+recording %s record/CCSurv_17_test.txt
+34
+Train Epoch: 34 [0/100 (0%)]	Loss1: 0.549143	 Loss2: 0.552083	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 34 [100/100 (0%)]	Loss1: 0.341803	 Loss2: 0.338759	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 34 [200/100 (0%)]	Loss1: 0.381164	 Loss2: 0.390152	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 34 [300/100 (0%)]	Loss1: 0.685544	 Loss2: 0.694915	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 34 [400/100 (1%)]	Loss1: 0.713721	 Loss2: 0.715630	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+
+Test set: Average loss: 0.0748, Accuracy C1: 1136/13269 (9%)  
+
+recording %s record/CCSurv_17_test.txt
+35
+Train Epoch: 35 [0/100 (0%)]	Loss1: 0.419576	 Loss2: 0.417384	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 35 [100/100 (0%)]	Loss1: 0.575194	 Loss2: 0.568825	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 35 [200/100 (0%)]	Loss1: 0.536055	 Loss2: 0.531705	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 35 [300/100 (0%)]	Loss1: 0.813820	 Loss2: 0.799623	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 35 [400/100 (1%)]	Loss1: 0.661408	 Loss2: 0.661647	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+
+Test set: Average loss: 0.0676, Accuracy C1: 1411/13269 (11%)  
+
+recording %s record/CCSurv_17_test.txt
+36
+Train Epoch: 36 [0/100 (0%)]	Loss1: 0.603573	 Loss2: 0.614237	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 36 [100/100 (0%)]	Loss1: 0.826637	 Loss2: 0.818180	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+
+Test set: Average loss: 0.0759, Accuracy C1: 991/13269 (7%)  
+
+recording %s record/CCSurv_17_test.txt
+37
+
+Test set: Average loss: 0.0758, Accuracy C1: 988/13269 (7%)  
+
+recording %s record/CCSurv_17_test.txt
+38
+Train Epoch: 38 [0/100 (0%)]	Loss1: 0.395996	 Loss2: 0.383840	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 38 [100/100 (0%)]	Loss1: 0.397987	 Loss2: 0.408199	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 38 [200/100 (0%)]	Loss1: 0.350420	 Loss2: 0.348116	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 38 [300/100 (0%)]	Loss1: 0.251394	 Loss2: 0.253856	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+
+Test set: Average loss: 0.0733, Accuracy C1: 1263/13269 (10%)  
+
+recording %s record/CCSurv_17_test.txt
+39
+Train Epoch: 39 [0/100 (0%)]	Loss1: 0.378693	 Loss2: 0.384455	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 39 [100/100 (0%)]	Loss1: 0.370419	 Loss2: 0.364304	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 39 [200/100 (0%)]	Loss1: 0.241155	 Loss2: 0.233872	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 39 [300/100 (0%)]	Loss1: 0.226063	 Loss2: 0.234770	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 39 [400/100 (1%)]	Loss1: 0.332564	 Loss2: 0.338780	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+
+Test set: Average loss: 0.0703, Accuracy C1: 1041/13269 (8%)  
+
+recording %s record/CCSurv_17_test.txt
+40
+Train Epoch: 40 [0/100 (0%)]	Loss1: 0.615078	 Loss2: 0.617614	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 40 [100/100 (0%)]	Loss1: 0.419229	 Loss2: 0.421691	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 40 [200/100 (0%)]	Loss1: 0.402467	 Loss2: 0.397268	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 40 [300/100 (0%)]	Loss1: 0.589104	 Loss2: 0.591045	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 40 [400/100 (1%)]	Loss1: 0.376099	 Loss2: 0.376861	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+
+Test set: Average loss: 0.0653, Accuracy C1: 1157/13269 (9%)  
+
+recording %s record/CCSurv_17_test.txt
+41
+Train Epoch: 41 [0/100 (0%)]	Loss1: 0.349650	 Loss2: 0.347621	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 41 [100/100 (0%)]	Loss1: 0.463384	 Loss2: 0.456444	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 41 [200/100 (0%)]	Loss1: 0.663198	 Loss2: 0.664114	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 41 [300/100 (0%)]	Loss1: 0.813231	 Loss2: 0.796883	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 41 [400/100 (1%)]	Loss1: 0.444422	 Loss2: 0.444848	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+
+Test set: Average loss: 0.0594, Accuracy C1: 1131/13269 (9%)  
+
+recording %s record/CCSurv_17_test.txt
+42
+Train Epoch: 42 [0/100 (0%)]	Loss1: 0.741762	 Loss2: 0.747555	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 42 [100/100 (0%)]	Loss1: 0.635766	 Loss2: 0.630833	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 42 [200/100 (0%)]	Loss1: 0.439833	 Loss2: 0.433004	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 42 [300/100 (0%)]	Loss1: 0.826190	 Loss2: 0.817484	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+
+Test set: Average loss: 0.0587, Accuracy C1: 1381/13269 (10%)  
+
+recording %s record/CCSurv_17_test.txt
+43
+
+Test set: Average loss: 0.0585, Accuracy C1: 1385/13269 (10%)  
+
+recording %s record/CCSurv_17_test.txt
+44
+Train Epoch: 44 [0/100 (0%)]	Loss1: 0.412836	 Loss2: 0.417728	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 44 [100/100 (0%)]	Loss1: 0.205487	 Loss2: 0.203817	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+
+Test set: Average loss: 0.0592, Accuracy C1: 1232/13269 (9%)  
+
+recording %s record/CCSurv_17_test.txt
+45
+Train Epoch: 45 [0/100 (0%)]	Loss1: 0.236992	 Loss2: 0.233206	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 45 [100/100 (0%)]	Loss1: 0.250996	 Loss2: 0.254368	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 45 [200/100 (0%)]	Loss1: 0.336540	 Loss2: 0.335037	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 45 [300/100 (0%)]	Loss1: 0.246123	 Loss2: 0.244208	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 45 [400/100 (1%)]	Loss1: 0.271789	 Loss2: 0.269490	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+
+Test set: Average loss: 0.0532, Accuracy C1: 1342/13269 (10%)  
+
+recording %s record/CCSurv_17_test.txt
+46
+Train Epoch: 46 [0/100 (0%)]	Loss1: 0.351459	 Loss2: 0.348117	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 46 [100/100 (0%)]	Loss1: 0.434448	 Loss2: 0.436517	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 46 [200/100 (0%)]	Loss1: 0.369082	 Loss2: 0.359727	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 46 [300/100 (0%)]	Loss1: 0.494551	 Loss2: 0.487845	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 46 [400/100 (1%)]	Loss1: 0.401555	 Loss2: 0.399480	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+
+Test set: Average loss: 0.0551, Accuracy C1: 1052/13269 (8%)  
+
+recording %s record/CCSurv_17_test.txt
+47
+Train Epoch: 47 [0/100 (0%)]	Loss1: 0.330535	 Loss2: 0.332543	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 47 [100/100 (0%)]	Loss1: 0.552110	 Loss2: 0.555643	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 47 [200/100 (0%)]	Loss1: 0.393988	 Loss2: 0.404717	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 47 [300/100 (0%)]	Loss1: 0.496303	 Loss2: 0.488978	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 47 [400/100 (1%)]	Loss1: 0.507850	 Loss2: 0.509728	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+
+Test set: Average loss: 0.0537, Accuracy C1: 964/13269 (7%)  
+
+recording %s record/CCSurv_17_test.txt
+48
+Train Epoch: 48 [0/100 (0%)]	Loss1: 0.513486	 Loss2: 0.517402	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 48 [100/100 (0%)]	Loss1: 0.477544	 Loss2: 0.476716	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 48 [200/100 (0%)]	Loss1: 0.459345	 Loss2: 0.464020	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 48 [300/100 (0%)]	Loss1: 0.589407	 Loss2: 0.588302	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 48 [400/100 (1%)]	Loss1: 0.731064	 Loss2: 0.726103	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+
+Test set: Average loss: 0.0497, Accuracy C1: 1249/13269 (9%)  
+
+recording %s record/CCSurv_17_test.txt
+49
+Train Epoch: 49 [0/100 (0%)]	Loss1: 0.425130	 Loss2: 0.431479	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+
+Test set: Average loss: 0.0516, Accuracy C1: 1059/13269 (8%)  
+
+recording %s record/CCSurv_17_test.txt
+50
+
+Test set: Average loss: 0.0516, Accuracy C1: 1059/13269 (8%)  
+
+recording %s record/CCSurv_17_test.txt
+51
+Train Epoch: 51 [0/100 (0%)]	Loss1: 0.263310	 Loss2: 0.261245	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 51 [100/100 (0%)]	Loss1: 0.245833	 Loss2: 0.248520	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 51 [200/100 (0%)]	Loss1: 0.209961	 Loss2: 0.209752	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 51 [300/100 (0%)]	Loss1: 0.327278	 Loss2: 0.327704	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 51 [400/100 (1%)]	Loss1: 0.170152	 Loss2: 0.169293	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+
+Test set: Average loss: 0.0368, Accuracy C1: 1463/13269 (11%)  
+
+recording %s record/CCSurv_17_test.txt
+52
+Train Epoch: 52 [0/100 (0%)]	Loss1: 0.243674	 Loss2: 0.242414	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 52 [100/100 (0%)]	Loss1: 0.267921	 Loss2: 0.269007	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 52 [200/100 (0%)]	Loss1: 0.332841	 Loss2: 0.335463	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 52 [300/100 (0%)]	Loss1: 0.344266	 Loss2: 0.346348	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 52 [400/100 (1%)]	Loss1: 0.362591	 Loss2: 0.359305	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+
+Test set: Average loss: 0.0393, Accuracy C1: 1146/13269 (9%)  
+
+recording %s record/CCSurv_17_test.txt
+53
+Train Epoch: 53 [0/100 (0%)]	Loss1: 0.260572	 Loss2: 0.257968	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 53 [100/100 (0%)]	Loss1: 0.441438	 Loss2: 0.450909	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 53 [200/100 (0%)]	Loss1: 0.391085	 Loss2: 0.390064	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 53 [300/100 (0%)]	Loss1: 0.429690	 Loss2: 0.425082	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 53 [400/100 (1%)]	Loss1: 0.268543	 Loss2: 0.269446	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+
+Test set: Average loss: 0.0361, Accuracy C1: 1339/13269 (10%)  
+
+recording %s record/CCSurv_17_test.txt
+54
+Train Epoch: 54 [0/100 (0%)]	Loss1: 0.404744	 Loss2: 0.412076	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 54 [100/100 (0%)]	Loss1: 0.542130	 Loss2: 0.538877	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 54 [200/100 (0%)]	Loss1: 0.528534	 Loss2: 0.523797	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 54 [300/100 (0%)]	Loss1: 0.300142	 Loss2: 0.305818	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 54 [400/100 (1%)]	Loss1: 0.425737	 Loss2: 0.427447	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+
+Test set: Average loss: 0.0354, Accuracy C1: 1268/13269 (10%)  
+
+recording %s record/CCSurv_17_test.txt
+55
+Train Epoch: 55 [0/100 (0%)]	Loss1: 0.607587	 Loss2: 0.617626	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 55 [100/100 (0%)]	Loss1: 0.444716	 Loss2: 0.441030	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 55 [200/100 (0%)]	Loss1: 0.339815	 Loss2: 0.338199	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+
+Test set: Average loss: 0.0355, Accuracy C1: 1167/13269 (9%)  
+
+recording %s record/CCSurv_17_test.txt
+56
+
+Test set: Average loss: 0.0354, Accuracy C1: 1162/13269 (9%)  
+
+recording %s record/CCSurv_17_test.txt
+57
+Train Epoch: 57 [0/100 (0%)]	Loss1: 0.221544	 Loss2: 0.218502	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 57 [100/100 (0%)]	Loss1: 0.207636	 Loss2: 0.206707	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 57 [200/100 (0%)]	Loss1: 0.270345	 Loss2: 0.271457	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+
+Test set: Average loss: 0.0289, Accuracy C1: 1370/13269 (10%)  
+
+recording %s record/CCSurv_17_test.txt
+58
+Train Epoch: 58 [0/100 (0%)]	Loss1: 0.158221	 Loss2: 0.156798	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 58 [100/100 (0%)]	Loss1: 0.430158	 Loss2: 0.433432	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 58 [200/100 (0%)]	Loss1: 0.304739	 Loss2: 0.306660	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 58 [300/100 (0%)]	Loss1: 0.353646	 Loss2: 0.353554	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 58 [400/100 (1%)]	Loss1: 0.299241	 Loss2: 0.297372	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+
+Test set: Average loss: 0.0258, Accuracy C1: 1384/13269 (10%)  
+
+recording %s record/CCSurv_17_test.txt
+59
+Train Epoch: 59 [0/100 (0%)]	Loss1: 0.383539	 Loss2: 0.385647	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 59 [100/100 (0%)]	Loss1: 0.324154	 Loss2: 0.320755	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 59 [200/100 (0%)]	Loss1: 0.274063	 Loss2: 0.268307	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 59 [300/100 (0%)]	Loss1: 0.286727	 Loss2: 0.287363	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+Train Epoch: 59 [400/100 (1%)]	Loss1: 0.356453	 Loss2: 0.352797	 Loss_mmd: 0.000000	 Loss_entropy: 0.000000	 Discrepancy: 0.000000
+
+Test set: Average loss: 0.0300, Accuracy C1: 1077/13269 (8%)  
+
+recording %s record/CCSurv_17_test.txt

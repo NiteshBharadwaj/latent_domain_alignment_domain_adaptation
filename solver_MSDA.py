@@ -454,49 +454,58 @@ class Solver(object):
 
             loss_s_c1, loss_s_c2, loss_msda, entropy_loss = self.loss_soft_all_domain(img_s, img_t, label_s)
 
-            loss = loss_s_c1 + loss_s_c2 + loss_msda + entropy_loss
+            loss = loss_s_c1 + loss_s_c2 #+ loss_msda + entropy_loss
 
             loss.backward()
 
             self.opt_g.step()
             self.opt_c1.step()
             self.opt_c2.step()
-            self.opt_dp.step()
+            #self.opt_dp.step()
             self.reset_grad()
 
             #loss_dis = loss_msda*0
-            loss_s_c1, loss_s_c2, loss_msda, entropy_loss = self.loss_soft_all_domain(img_s, img_t, label_s)
+            # loss_s_c1, loss_s_c2, loss_msda, entropy_loss = self.loss_soft_all_domain(img_s, img_t, label_s)
 
-            feat_t, conv_feat_t = self.G(img_t)
-            output_t1 = self.C1(feat_t)
-            output_t2 = self.C2(feat_t)
+            # feat_t, conv_feat_t = self.G(img_t)
+            # output_t1 = self.C1(feat_t)
+            # output_t2 = self.C2(feat_t)
 
-            loss_s = loss_s_c1 + loss_s_c2 + loss_msda + entropy_loss
-            loss_dis = self.discrepancy(output_t1, output_t2)
-            loss = loss_s - loss_dis
-            loss.backward()
-            self.opt_c1.step()
-            self.opt_c2.step()
-            self.reset_grad()
+            # loss_s = loss_s_c1 + loss_s_c2 + loss_msda + entropy_loss
+            # loss_dis = self.discrepancy(output_t1, output_t2)
+            # loss = loss_s - loss_dis
+            # loss.backward()
+            # self.opt_c1.step()
+            # self.opt_c2.step()
+            # self.reset_grad()
 
-            for i in range(self.args.num_k):
-                feat_t, conv_feat_t = self.G(img_t)
-                output_t1 = self.C1(feat_t)
-                output_t2 = self.C2(feat_t)
-                loss_dis = self.discrepancy(output_t1, output_t2)
-                loss_dis.backward()
-                self.opt_g.step()
-                self.reset_grad()
+            # for i in range(self.args.num_k):
+            #     feat_t, conv_feat_t = self.G(img_t)
+            #     output_t1 = self.C1(feat_t)
+            #     output_t2 = self.C2(feat_t)
+            #     loss_dis = self.discrepancy(output_t1, output_t2)
+            #     loss_dis.backward()
+            #     self.opt_g.step()
+            #     self.reset_grad()
             # if batch_idx > 500:
             #     return batch_idx
+
+            # if batch_idx % self.interval == 0:
+            #     print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss1: {:.6f}\t Loss2: {:.6f}\t Loss_mmd: {:.6f}\t Loss_entropy: {:.6f}\t Discrepancy: {:.6f}'.format(
+            #         epoch, batch_idx, 100,
+            #         100. * batch_idx / 70000, loss_s_c1.data.item(), loss_s_c2.data.item(), loss_msda.data.item(), entropy_loss.data.item(), loss_dis.data.item()))
+            #     if record_file:
+            #         record = open(record_file, 'a')
+            #         record.write('%s %s %s %s %s %s\n' % (loss_dis.data.item(), loss_s_c1.data.item(), loss_s_c2.data.item(), loss_msda.data.item(), entropy_loss.data.item(), loss_dis.data.item()))
+            #         record.close()
 
             if batch_idx % self.interval == 0:
                 print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss1: {:.6f}\t Loss2: {:.6f}\t Loss_mmd: {:.6f}\t Loss_entropy: {:.6f}\t Discrepancy: {:.6f}'.format(
                     epoch, batch_idx, 100,
-                    100. * batch_idx / 70000, loss_s_c1.data.item(), loss_s_c2.data.item(), loss_msda.data.item(), entropy_loss.data.item(), loss_dis.data.item()))
+                    100. * batch_idx / 70000, loss_s_c1.data.item(), loss_s_c2.data.item(), 0, 0, 0))
                 if record_file:
                     record = open(record_file, 'a')
-                    record.write('%s %s %s %s %s %s\n' % (loss_dis.data.item(), loss_s_c1.data.item(), loss_s_c2.data.item(), loss_msda.data.item(), entropy_loss.data.item(), loss_dis.data.item()))
+                    record.write('%s %s %s %s %s %s\n' % (0, loss_s_c1.data.item(), loss_s_c2.data.item(), 0, 0, 0))
                     record.close()
         return batch_idx_g
 

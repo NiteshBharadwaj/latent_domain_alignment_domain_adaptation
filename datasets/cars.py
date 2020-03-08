@@ -44,7 +44,7 @@ def cars_combined(target, batch_size):
     T_test['imgs'] = target_test
     T_test['labels'] = target_test_label
 
-    scale = 128#TODO
+    scale = 256#TODO
 
     train_loader = CombinedDataLoader()
     train_loader.initialize(S, T, batch_size, batch_size, scale=scale)

@@ -30,6 +30,8 @@ class Dataset(data.Dataset):
 
         img_path, target = self.data[index], self.labels[index]
         img = Image.open(img_path)
+        image = np.array(img)
+        img = Image.fromarray(image[...,:3])
         # doing this so that it is consistent with all other datasets
         # to return a PIL Image
 
