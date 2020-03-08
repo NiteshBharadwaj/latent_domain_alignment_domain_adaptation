@@ -6,7 +6,8 @@ import torch.optim as optim
 import mmd
 import msda
 from torch.autograd import Variable
-from model.build_gen import *
+from model.build_gen_digits import Generator as Generator_digit, Classifier as Classifier_digit, DomainPredictor as DP_Digit
+from model.build_gen import Generator as Generator_cars, Classifier as Classifier_cars, DomainPredictor as DP_cars
 from datasets.dataset_read import dataset_read,dataset_hard_cluster, dataset_combined
 from datasets.cars import cars_combined
 import numpy as np
@@ -37,18 +38,25 @@ class Solver(object):
             else:
                 raise Exception('Type of experiment undefined')
 
+            print('load finished!')
+            num_classes = 10
+            num_domains = 4
+
+            self.G = Generator_digit()
+            self.C1 = Classifier_digit()
+            self.C2 = Classifier_digit()
+            self.DP = DP_Digit(num_domains)
         elif args.data=='cars':
             if args.dl_type == 'soft_cluster':
                 self.datasets, self.dataset_test = cars_combined(target,self.batch_size)
-        #print(self.dataset['S1'].shape) 
-    
-        print('load finished!')
-        num_domains = 4
-        num_classes = 1716
-        self.G = Generator()
-        self.C1 = Classifier(num_classes)
-        self.C2 = Classifier(num_classes)
-        self.DP = DomainPredictor(num_domains)
+            print('load finished!')
+            num_classes = 1716
+            num_domains=4
+            self.G = Generator_cars()
+            self.C1 = Classifier_cars(num_classes)
+            self.C2 = Classifier_cars(num_classes)
+            self.DP = DP_cars(num_domains)
+        #print(self.dataset['S1'].shape)
         print('model_loaded')
 
         if args.eval_only:

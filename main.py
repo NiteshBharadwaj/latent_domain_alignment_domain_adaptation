@@ -5,7 +5,7 @@ import torch
 import sys
 sys.path.append('./model')
 sys.path.append('./datasets')
-sys.path.append('./metric');
+sys.path.append('./metric')
 from solver_MSDA import Solver
 import os
 
