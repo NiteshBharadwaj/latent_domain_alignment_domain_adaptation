@@ -158,24 +158,16 @@ def dataset_hard_cluster(target, batch_size):
     kmeans = KMeans(n_clusters=num_clus, n_init=1)
     predict = kmeans.fit(pca_transformed).predict(pca_transformed)
 
-
-    S1 = {}
-    S1_test = {}
-    S2 = {}
-    S2_test = {}
-    S3 = {}
-    S3_test = {}
-    S4 = {}
-    S4_test = {}
-
-    S = [S1, S2, S3, S4]
-    S_test = [S1_test, S2_test, S3_test, S4_test]
-
-    for i in range(len(domain_all)):
+    print("Hard Clustering Ends")
+    S = []
+    S_test = []
+    for i in range(num_clus):
+        S.append({})
         S[i]['imgs'] = X_combined[predict == i]
         S[i]['labels'] = X_labels[predict == i]
 
         # input target sample when test, source performance is not important
+        S_test.append({})
         S_test[i]['imgs'] = target_test
         S_test[i]['labels'] = target_test_label
 
