@@ -2,7 +2,7 @@ import torch.utils.data
 import torchnet as tnt
 from builtins import object
 import torchvision.transforms as transforms
-from .datasets_ import Dataset
+from datasets_ import Dataset
 
 
 class PairedData(object):

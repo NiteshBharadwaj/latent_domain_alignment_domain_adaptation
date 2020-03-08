@@ -323,7 +323,7 @@ class Solver(object):
 
         C1_feat_s, C1_feat_t = self.C1_all_domain(feat_s, feat_t)
         C2_feat_s, C2_feat_t = self.C2_all_domain(feat_s, feat_t)
-
+        
         loss_msda = 1e-4 * msda.msda_regulizer(feat_s, feat_t, 5)
         loss_source_C1 = self.softmax_loss_all_domain(C1_feat_s, label_s)
         loss_source_C2 = self.softmax_loss_all_domain(C2_feat_s, label_s)
@@ -351,18 +351,21 @@ class Solver(object):
 
             self.reset_grad()
             loss_source_C1, loss_source_C2, loss_msda = self.loss_all_domain(img_s, img_t, label_s)
-
-            loss = sum(loss_source_C1) + sum(loss_source_C2) + loss_msda
+            loss =0 
+            for loss_ in loss_source_C1:
+                loss+=loss_
+            for loss_ in loss_source_C2:
+                loss+=loss_
+            loss += loss_msda
             loss.backward()
             
             self.opt_g.step()
             self.opt_c1.step()
             self.opt_c2.step()
             self.reset_grad()
-
             loss_source_C1, loss_source_C2, loss_msda = self.loss_all_domain(img_s, img_t, label_s)
 
-            feat_t = self.G(img_t)
+            feat_t = self.G(img_t)[0]
             output_t1 = self.C1(feat_t)
             output_t2 = self.C2(feat_t)
             loss_s_c1 = sum(loss_source_C1)
