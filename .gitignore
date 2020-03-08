@@ -5,3 +5,4 @@ record/*
 *.npz
 __pycache__/
 *.idea
+*.log
