@@ -15,7 +15,8 @@ parser.add_argument('--all_use', type=str, default='no', metavar='N',
                     help='use all training data? in usps adaptation')
 parser.add_argument('--dl_type', type=str, default='', metavar='N',
                     help='original, hard_cluster, combined, soft_cluster')
-
+parser.add_argument('--num_domain', type=int, default=4, metavar='N',
+                    help='input latent domains')
 parser.add_argument('--data', type=str, default='', metavar='N',
                     help='digits,cars')
 parser.add_argument('--record_folder', type=str, default='record', metavar='N',
@@ -67,16 +68,12 @@ def main():
                     save_epoch=args.save_epoch)
     record_num = 0
     
-    record_train = '%s/%s_%s.txt' % (
-        args.record_folder, args.target,record_num)
-    record_test = '%s/%s_%s_test.txt' % (
-        args.record_folder, args.target, record_num)
+    record_train = '%s/%s_%s.txt' % (args.record_folder, args.target,record_num)
+    record_test = '%s/%s_%s_test.txt' % (args.record_folder, args.target, record_num)
     while os.path.exists(record_train):
         record_num += 1
-        record_train = '%s/%s_%s.txt' % (
-            args.record_folder, args.target, record_num)
-        record_test = '%s/%s_%s_test.txt' % (
-            args.record_folder, args.target, record_num)
+        record_train = '%s/%s_%s.txt' % (args.record_folder, args.target, record_num)
+        record_test = '%s/%s_%s_test.txt' % (args.record_folder, args.target, record_num)
 
     if not os.path.exists(args.checkpoint_dir):
         os.mkdir(args.checkpoint_dir)
