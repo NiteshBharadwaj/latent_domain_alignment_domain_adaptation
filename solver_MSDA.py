@@ -28,6 +28,8 @@ class Solver(object):
 
         self.args = args
 
+        self.best_accuracy = 9999999
+
         print('dataset loading')
         if args.data == 'digits':
             if args.dl_type == 'original':
@@ -236,58 +238,62 @@ class Solver(object):
         data_symbol = 'T'
         data_label_symbol = 'T_label'
         if is_train_perf:
-            which_dataset = self.dataset
+            which_dataset = self.datasets
             data_symbol = 'S'
             data_label_symbol = 'S_label'
 
         with torch.no_grad():
-            for batch_idx, data in enumerate(which_dataset):
-                img = data[data_symbol]
-                label = data[data_label_symbol]
+           for batch_idx, data in enumerate(which_dataset):
+               if batch_idx >= 100:
+                   break
 
-                img, label = img.cuda(), label.long().cuda()
-                img, label = Variable(img, volatile=True), Variable(label)
-                feat, _ = self.G(img)
-                # print('feature.shape:{}'.format(feat.shape))
+               img = data[data_symbol]
+               label = data[data_label_symbol]
+               
+               img, label = img.cuda(), label.long().cuda()
+               img, label = Variable(img, volatile=True), Variable(label)
+               feat, _ = self.G(img)
+               #print('feature.shape:{}'.format(feat.shape))
 
-                if batch_idx == 0:
-                    label_all = label.data.cpu().numpy().tolist()
+               if batch_idx == 0:
+               	label_all = label.data.cpu().numpy().tolist()
+               	
+               	#feature_all = feat.data.cpu().numpy()
+               else:
+               	#feature_all = np.ma.row_stack((feature_all, feat.data.cpu().numpy()))
+               	#feature_all = feature_all.data
+               	label_all = label_all + label.data.cpu().numpy().tolist()
 
-                    # feature_all = feat.data.cpu().numpy()
-                else:
-                    # feature_all = np.ma.row_stack((feature_all, feat.data.cpu().numpy()))
-                    # feature_all = feature_all.data
-                    label_all = label_all + label.data.cpu().numpy().tolist()
-
-                # print(feat.shape)
-
-                output1 = self.C1(feat)
-
-                test_loss += F.nll_loss(output1, label).data.item()
-                pred1 = output1.data.max(1)[1]
-                k = label.data.size()[0]
-                correct1 += pred1.eq(label.data).cpu().sum()
-                size += k
-        # np.savez('result_plot_sv_t', feature_all, label_all )
-        test_loss = test_loss / size
+               #print(feat.shape)
+               
+               output1 = self.C1(feat)
+               
+               test_loss += F.nll_loss(output1, label).data.item()
+               pred1 = output1.data.max(1)[1]
+               k = label.data.size()[0]
+               correct1 += pred1.eq(label.data).cpu().sum()
+               size += k
+        #np.savez('result_plot_sv_t', feature_all, label_all )
+        test_loss = test_loss / (size +1e-6)
         if is_train_perf:
-            print(
-                '\nTrain set: Average loss: {:.4f}, Accuracy C1: {}/{} ({:.0f}%)  \n'.format(test_loss, correct1, size,
-                                                                                             100. * correct1 / size))
+            print('\nTrain set: Average loss: {:.4f}, Accuracy C1: {}/{} ({:.0f}%)  \n'.format(test_loss, correct1, size,   100. * correct1 / (size+1e-6)))
         else:
-            print('\nTest set: Average loss: {:.4f}, Accuracy C1: {}/{} ({:.0f}%)  \n'.format(test_loss, correct1, size,
-                                                                                              100. * correct1 / size))
-            if save_model and epoch % self.save_epoch == 0:
+            print('\nTest set: Average loss: {:.4f}, Accuracy C1: {}/{} ({:.0f}%)  \n'.format(test_loss, correct1, size,   100. * correct1 / (size+1e-6)))
+            if save_model and epoch % self.save_epoch == 0 and test_loss < self.best_accuracy:
                 torch.save(self.G,
                            '%s/%s_to_%s_model_epoch%s_G.pt' % (self.checkpoint_dir, self.source, self.target, epoch))
                 torch.save(self.C1,
                            '%s/%s_to_%s_model_epoch%s_C1.pt' % (self.checkpoint_dir, self.source, self.target, epoch))
                 torch.save(self.C2,
                            '%s/%s_to_%s_model_epoch%s_C2.pt' % (self.checkpoint_dir, self.source, self.target, epoch))
+            
+            if test_loss < self.best_accuracy:
+                self.best_accuracy = test_loss
+                
             if record_file:
                 record = open(record_file, 'a')
                 print('recording %s', record_file)
-                record.write('%s\n' % (float(correct1) / size))
+                record.write('%s\n' % (float(correct1) / (size+1e-6)))
                 record.close()
 
     def feat_all_domain(self, img_s, img_t):

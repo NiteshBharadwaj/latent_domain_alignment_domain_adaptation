@@ -1,5 +1,5 @@
 import os
-base_dir = 'data'
+base_dir = 'data_cropped'
 import scipy.io as sio
 import numpy as np
 def split_(train_file, label_dir):

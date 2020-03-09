@@ -33,9 +33,16 @@ class ImageCropper():
 								cnt += 1
 								if (cnt == 3):
 									x1,y1,x2,y2 = line.split(' ')
+									x1 = int(x1)
+									y1 = int(y1)
+									x2 = int(x2)
+									y2 = int(y2)
 									img1 = img
-									if (x1 != x2 and y1 != y2):
-										img1 = img.crop((int(x1), int(y1), int(x2), int(y2)))
+
+									x_max, y_max = img.size
+
+									if (x1 > 0 and x2 > 0 and y1 > 0 and y2 > 0 and x1 < x_max and x2 < x_max and y1 < y_max and y2 < y_max and x1 != x2 and y1 != y2):
+										img1 = img.crop((x1, y1, x2, y2))
 									img1.save(os.path.join(out_path, folder, folder2, folder3)+'/'+file_name+'.jpg')
 
 

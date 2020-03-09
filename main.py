@@ -5,7 +5,7 @@ import torch
 import sys
 sys.path.append('./model')
 sys.path.append('./datasets')
-sys.path.append('./metric')
+sys.path.append('./metric');
 from solver_MSDA import Solver
 import os
 
@@ -40,7 +40,7 @@ parser.add_argument('--one_step', action='store_true', default=False,
 parser.add_argument('--optimizer', type=str, default='adam', metavar='N', help='which optimizer')
 parser.add_argument('--resume_epoch', type=int, default=100, metavar='N',
                     help='epoch to resume')
-parser.add_argument('--save_epoch', type=int, default=10, metavar='N',
+parser.add_argument('--save_epoch', type=int, default=1, metavar='N',
                     help='when to restore the model')
 parser.add_argument('--save_model', action='store_true', default=False,
                     help='save_model or not')
@@ -95,9 +95,10 @@ def main():
                 num = solver.train_onestep(t, record_file=record_train)
             count += num
             if t % 1 == 0:
-                solver.test(t,is_train_perf=False, record_file=record_test, save_model=args.save_model)
-            if count >= 20000:
-                break
+                solver.test(t, is_train_perf=True, record_file=record_test, save_model=args.save_model)
+                solver.test(t, is_train_perf=False, record_file=record_test, save_model=args.save_model)
+            # if count >= 20000:
+            #     break
 
 
 if __name__ == '__main__':

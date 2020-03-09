@@ -1,0 +1,493 @@
+Namespace(all_use='no', batch_size=128, checkpoint_dir='checkpoint', cuda=True, data='cars', dl_type='soft_cluster', eval_only=False, lr=0.0002, max_epoch=200, no_cuda=False, num_k=4, one_step=False, optimizer='adam', record_folder='record', resume_epoch=100, save_epoch=1, save_model=False, seed=1, source='svhn', target='CCSurv', use_abs_diff=False)
+dataset loading
+train_num_images CCSurv ,31148
+test_num_images CCSurv ,13333
+train_num_images CCWeb ,136726
+test_num_images CCWeb ,136726
+load finished!
+Downloading: "https://download.pytorch.org/models/alexnet-owt-4df8aa71.pth" to /tmp/xdg-cache/torch/checkpoints/alexnet-owt-4df8aa71.pth
+  0%|          | 0.00/233M [00:00<?, ?B/s]  0%|          | 40.0k/233M [00:00<11:49, 344kB/s]  0%|          | 232k/233M [00:00<09:22, 434kB/s]   0%|          | 744k/233M [00:00<06:46, 599kB/s]  1%|          | 2.16M/233M [00:00<04:47, 841kB/s]  2%|▏         | 5.38M/233M [00:00<03:20, 1.19MB/s]  4%|▎         | 8.55M/233M [00:00<02:20, 1.67MB/s]  5%|▌         | 11.7M/233M [00:00<01:39, 2.34MB/s]  6%|▋         | 14.9M/233M [00:00<01:10, 3.24MB/s]  8%|▊         | 17.6M/233M [00:00<00:51, 4.42MB/s]  9%|▉         | 20.5M/233M [00:01<00:37, 5.94MB/s] 10%|▉         | 23.2M/233M [00:01<00:28, 7.75MB/s] 11%|█         | 25.8M/233M [00:01<00:22, 9.86MB/s] 12%|█▏        | 28.7M/233M [00:01<00:17, 12.4MB/s] 14%|█▎        | 31.8M/233M [00:01<00:13, 15.2MB/s] 15%|█▍        | 34.8M/233M [00:01<00:11, 17.9MB/s] 17%|█▋        | 38.7M/233M [00:01<00:09, 21.6MB/s] 18%|█▊        | 42.0M/233M [00:01<00:08, 24.3MB/s] 19%|█▉        | 45.2M/233M [00:01<00:07, 26.6MB/s] 21%|██        | 48.6M/233M [00:02<00:06, 28.8MB/s] 22%|██▏       | 51.9M/233M [00:02<00:06, 30.0MB/s] 24%|██▎       | 55.2M/233M [00:02<00:06, 30.7MB/s] 25%|██▌       | 58.4M/233M [00:02<00:07, 25.3MB/s] 26%|██▌       | 61.1M/233M [00:02<00:06, 26.2MB/s] 27%|██▋       | 63.9M/233M [00:02<00:06, 26.9MB/s] 29%|██▊       | 66.6M/233M [00:02<00:06, 26.9MB/s] 30%|██▉       | 69.8M/233M [00:02<00:06, 28.5MB/s] 31%|███       | 72.8M/233M [00:02<00:05, 29.4MB/s] 33%|███▎      | 75.8M/233M [00:03<00:05, 29.8MB/s] 34%|███▎      | 78.7M/233M [00:03<00:05, 29.9MB/s] 35%|███▍      | 81.6M/233M [00:03<00:05, 29.9MB/s] 36%|███▋      | 84.5M/233M [00:03<00:05, 30.2MB/s] 38%|███▊      | 87.9M/233M [00:03<00:04, 31.7MB/s] 39%|███▉      | 91.1M/233M [00:03<00:04, 32.3MB/s] 40%|████      | 94.2M/233M [00:03<00:04, 32.3MB/s] 42%|████▏     | 97.3M/233M [00:03<00:04, 32.3MB/s] 43%|████▎     | 101M/233M [00:03<00:04, 32.7MB/s]  45%|████▍     | 104M/233M [00:03<00:04, 33.5MB/s] 46%|████▌     | 108M/233M [00:04<00:03, 34.8MB/s] 48%|████▊     | 111M/233M [00:04<00:03, 35.5MB/s] 49%|████▉     | 115M/233M [00:04<00:03, 35.5MB/s] 51%|█████     | 118M/233M [00:04<00:03, 36.9MB/s] 52%|█████▏    | 122M/233M [00:04<00:03, 37.3MB/s] 54%|█████▍    | 126M/233M [00:04<00:03, 30.0MB/s] 55%|█████▌    | 129M/233M [00:04<00:03, 30.6MB/s] 57%|█████▋    | 132M/233M [00:04<00:03, 31.1MB/s] 58%|█████▊    | 135M/233M [00:04<00:03, 31.3MB/s] 59%|█████▉    | 138M/233M [00:05<00:03, 32.1MB/s] 61%|██████    | 141M/233M [00:05<00:02, 32.7MB/s] 62%|██████▏   | 145M/233M [00:05<00:02, 33.3MB/s] 64%|██████▍   | 149M/233M [00:05<00:02, 36.3MB/s] 66%|██████▌   | 153M/233M [00:05<00:02, 37.2MB/s] 67%|██████▋   | 157M/233M [00:05<00:02, 36.8MB/s] 69%|██████▉   | 160M/233M [00:05<00:02, 37.6MB/s] 70%|███████   | 164M/233M [00:05<00:01, 37.5MB/s] 72%|███████▏  | 168M/233M [00:05<00:01, 37.2MB/s] 73%|███████▎  | 171M/233M [00:05<00:01, 37.0MB/s] 75%|███████▌  | 175M/233M [00:06<00:01, 37.6MB/s] 77%|███████▋  | 178M/233M [00:06<00:01, 37.3MB/s] 79%|███████▊  | 183M/233M [00:06<00:01, 40.8MB/s] 80%|████████  | 187M/233M [00:06<00:01, 33.0MB/s] 82%|████████▏ | 191M/233M [00:06<00:01, 33.6MB/s] 83%|████████▎ | 195M/233M [00:06<00:01, 35.1MB/s] 85%|████████▌ | 198M/233M [00:06<00:00, 36.6MB/s] 87%|████████▋ | 202M/233M [00:06<00:00, 36.5MB/s] 88%|████████▊ | 206M/233M [00:06<00:00, 36.4MB/s] 90%|█████████ | 210M/233M [00:07<00:00, 39.3MB/s] 92%|█████████▏| 214M/233M [00:07<00:00, 39.2MB/s] 94%|█████████▎| 218M/233M [00:07<00:00, 31.7MB/s] 95%|█████████▍| 221M/233M [00:07<00:00, 32.3MB/s] 96%|█████████▋| 225M/233M [00:07<00:00, 33.8MB/s] 98%|█████████▊| 228M/233M [00:07<00:00, 34.3MB/s]100%|██████████| 233M/233M [00:07<00:00, 37.9MB/s]
+model_loaded
+initialize complete
+0
+/datasets/home/home-00/16/116/dmund/code_MSDA_digit/solver_MSDA.py:122: UserWarning: Implicit dimension choice for softmax has been deprecated. Change the call to include dim=X as an argument.
+  return torch.mean(torch.abs(F.softmax(out1) - F.softmax(out2)))
+Train Epoch: 0 [0/100 (0%)]	Loss1: 6.052006	 Loss2: 6.157029	 Loss_mmd: 0.070864	 Loss_entropy: 0.012142	 Discrepancy: 0.000262
+Train Epoch: 0 [100/100 (0%)]	Loss1: 5.949075	 Loss2: 5.954697	 Loss_mmd: 0.044188	 Loss_entropy: 0.000938	 Discrepancy: 0.000157
+Train Epoch: 0 [200/100 (0%)]	Loss1: 5.076291	 Loss2: 5.094654	 Loss_mmd: 0.042359	 Loss_entropy: 0.000532	 Discrepancy: 0.000136
+/datasets/home/home-00/16/116/dmund/code_MSDA_digit/solver_MSDA.py:269: UserWarning: volatile was removed and now has no effect. Use `with torch.no_grad():` instead.
+  img, label = Variable(img, volatile=True), Variable(label)
+
+Train set: Average loss: 0.0258, Accuracy C1: 891/12800 (7%)  
+
+
+Test set: Average loss: 0.0306, Accuracy C1: 110/12800 (1%)  
+
+recording %s record/CCSurv_25_test.txt
+1
+Train Epoch: 1 [0/100 (0%)]	Loss1: 4.970205	 Loss2: 4.947395	 Loss_mmd: 0.036575	 Loss_entropy: 0.000737	 Discrepancy: 0.000134
+Train Epoch: 1 [100/100 (0%)]	Loss1: 4.384252	 Loss2: 4.375612	 Loss_mmd: 0.033879	 Loss_entropy: 0.000467	 Discrepancy: 0.000121
+
+Train set: Average loss: 0.0132, Accuracy C1: 1856/12800 (14%)  
+
+
+Test set: Average loss: 0.0381, Accuracy C1: 6/405 (1%)  
+
+recording %s record/CCSurv_25_test.txt
+2
+Train Epoch: 2 [0/100 (0%)]	Loss1: 3.901523	 Loss2: 3.902838	 Loss_mmd: 0.030029	 Loss_entropy: 0.000264	 Discrepancy: 0.000113
+Train Epoch: 2 [100/100 (0%)]	Loss1: 3.475938	 Loss2: 3.503402	 Loss_mmd: 0.029173	 Loss_entropy: 0.000474	 Discrepancy: 0.000107
+
+Train set: Average loss: 0.0049, Accuracy C1: 2611/12800 (20%)  
+
+
+Test set: Average loss: 0.0310, Accuracy C1: 239/12800 (2%)  
+
+recording %s record/CCSurv_25_test.txt
+3
+Train Epoch: 3 [0/100 (0%)]	Loss1: 3.569856	 Loss2: 3.557644	 Loss_mmd: 0.026969	 Loss_entropy: 0.000324	 Discrepancy: 0.000103
+Train Epoch: 3 [100/100 (0%)]	Loss1: 3.008723	 Loss2: 3.016963	 Loss_mmd: 0.028240	 Loss_entropy: 0.000271	 Discrepancy: 0.000100
+
+Train set: Average loss: -0.0003, Accuracy C1: 3212/11798 (27%)  
+
+
+Test set: Average loss: 0.0483, Accuracy C1: 7/277 (3%)  
+
+recording %s record/CCSurv_25_test.txt
+4
+Train Epoch: 4 [0/100 (0%)]	Loss1: 2.775345	 Loss2: 2.759371	 Loss_mmd: 0.023848	 Loss_entropy: 0.000392	 Discrepancy: 0.000097
+Train Epoch: 4 [100/100 (0%)]	Loss1: 2.519614	 Loss2: 2.515378	 Loss_mmd: 0.023942	 Loss_entropy: 0.000153	 Discrepancy: 0.000090
+
+Train set: Average loss: -0.0099, Accuracy C1: 4839/12800 (38%)  
+
+
+Test set: Average loss: 0.0367, Accuracy C1: 360/12800 (3%)  
+
+recording %s record/CCSurv_25_test.txt
+5
+Train Epoch: 5 [0/100 (0%)]	Loss1: 2.417248	 Loss2: 2.407953	 Loss_mmd: 0.024934	 Loss_entropy: 0.000846	 Discrepancy: 0.000091
+Train Epoch: 5 [100/100 (0%)]	Loss1: 1.911087	 Loss2: 1.892187	 Loss_mmd: 0.024435	 Loss_entropy: 0.000561	 Discrepancy: 0.000085
+
+Train set: Average loss: -0.0110, Accuracy C1: 4821/12800 (38%)  
+
+
+Test set: Average loss: 0.0544, Accuracy C1: 5/277 (2%)  
+
+recording %s record/CCSurv_25_test.txt
+6
+Train Epoch: 6 [0/100 (0%)]	Loss1: 2.046097	 Loss2: 2.060269	 Loss_mmd: 0.021100	 Loss_entropy: 0.000057	 Discrepancy: 0.000081
+Train Epoch: 6 [100/100 (0%)]	Loss1: 2.234021	 Loss2: 2.235744	 Loss_mmd: 0.020031	 Loss_entropy: 0.000117	 Discrepancy: 0.000082
+
+Train set: Average loss: -0.0168, Accuracy C1: 5387/12800 (42%)  
+
+
+Test set: Average loss: 0.0330, Accuracy C1: 514/12800 (4%)  
+
+recording %s record/CCSurv_25_test.txt
+7
+Train Epoch: 7 [0/100 (0%)]	Loss1: 1.868578	 Loss2: 1.868659	 Loss_mmd: 0.020683	 Loss_entropy: 0.000200	 Discrepancy: 0.000078
+Train Epoch: 7 [100/100 (0%)]	Loss1: 1.639739	 Loss2: 1.629999	 Loss_mmd: 0.019263	 Loss_entropy: 0.000824	 Discrepancy: 0.000072
+
+Train set: Average loss: -0.0195, Accuracy C1: 5882/12800 (46%)  
+
+
+Test set: Average loss: 0.0542, Accuracy C1: 6/277 (2%)  
+
+recording %s record/CCSurv_25_test.txt
+8
+Train Epoch: 8 [0/100 (0%)]	Loss1: 1.804258	 Loss2: 1.812395	 Loss_mmd: 0.020899	 Loss_entropy: 0.000377	 Discrepancy: 0.000071
+
+Train set: Average loss: 0.0000, Accuracy C1: 0/0 (0%)  
+
+
+Test set: Average loss: 0.0365, Accuracy C1: 593/12800 (5%)  
+
+recording %s record/CCSurv_25_test.txt
+9
+Train Epoch: 9 [0/100 (0%)]	Loss1: 1.619607	 Loss2: 1.612326	 Loss_mmd: 0.019020	 Loss_entropy: 0.000179	 Discrepancy: 0.000070
+
+Train set: Average loss: -0.0274, Accuracy C1: 6855/12800 (54%)  
+
+
+Test set: Average loss: 0.0496, Accuracy C1: 13/277 (5%)  
+
+recording %s record/CCSurv_25_test.txt
+10
+Train Epoch: 10 [0/100 (0%)]	Loss1: 1.591889	 Loss2: 1.584118	 Loss_mmd: 0.019186	 Loss_entropy: 0.000282	 Discrepancy: 0.000066
+Train Epoch: 10 [100/100 (0%)]	Loss1: 1.427215	 Loss2: 1.425193	 Loss_mmd: 0.018325	 Loss_entropy: 0.000222	 Discrepancy: 0.000063
+
+Train set: Average loss: -0.0267, Accuracy C1: 6495/12800 (51%)  
+
+
+Test set: Average loss: 0.0387, Accuracy C1: 358/12800 (3%)  
+
+recording %s record/CCSurv_25_test.txt
+11
+Train Epoch: 11 [0/100 (0%)]	Loss1: 1.575058	 Loss2: 1.577294	 Loss_mmd: 0.018484	 Loss_entropy: 0.000140	 Discrepancy: 0.000064
+Train Epoch: 11 [100/100 (0%)]	Loss1: 1.541040	 Loss2: 1.543070	 Loss_mmd: 0.017813	 Loss_entropy: 0.000142	 Discrepancy: 0.000062
+
+Train set: Average loss: -0.0304, Accuracy C1: 6901/12800 (54%)  
+
+
+Test set: Average loss: 0.0520, Accuracy C1: 11/277 (4%)  
+
+recording %s record/CCSurv_25_test.txt
+12
+Train Epoch: 12 [0/100 (0%)]	Loss1: 1.434211	 Loss2: 1.434533	 Loss_mmd: 0.015099	 Loss_entropy: 0.000108	 Discrepancy: 0.000059
+Train Epoch: 12 [100/100 (0%)]	Loss1: 1.491127	 Loss2: 1.499107	 Loss_mmd: 0.015703	 Loss_entropy: 0.000364	 Discrepancy: 0.000057
+
+Train set: Average loss: -0.0359, Accuracy C1: 7066/12800 (55%)  
+
+
+Test set: Average loss: 0.0321, Accuracy C1: 548/12800 (4%)  
+
+recording %s record/CCSurv_25_test.txt
+13
+Train Epoch: 13 [0/100 (0%)]	Loss1: 1.401840	 Loss2: 1.412866	 Loss_mmd: 0.016051	 Loss_entropy: 0.000434	 Discrepancy: 0.000058
+Train Epoch: 13 [100/100 (0%)]	Loss1: 1.440295	 Loss2: 1.429187	 Loss_mmd: 0.014142	 Loss_entropy: 0.000174	 Discrepancy: 0.000054
+
+Train set: Average loss: -0.0366, Accuracy C1: 2361/4374 (54%)  
+
+
+Test set: Average loss: 0.0510, Accuracy C1: 16/277 (6%)  
+
+recording %s record/CCSurv_25_test.txt
+14
+Train Epoch: 14 [0/100 (0%)]	Loss1: 1.111810	 Loss2: 1.120317	 Loss_mmd: 0.015137	 Loss_entropy: 0.000798	 Discrepancy: 0.000051
+Train Epoch: 14 [100/100 (0%)]	Loss1: 1.195712	 Loss2: 1.195155	 Loss_mmd: 0.014738	 Loss_entropy: 0.000237	 Discrepancy: 0.000051
+Train Epoch: 14 [200/100 (0%)]	Loss1: 1.109655	 Loss2: 1.111094	 Loss_mmd: 0.013618	 Loss_entropy: 0.000438	 Discrepancy: 0.000050
+
+Train set: Average loss: -0.0420, Accuracy C1: 7690/12800 (60%)  
+
+
+Test set: Average loss: 0.0324, Accuracy C1: 603/12800 (5%)  
+
+recording %s record/CCSurv_25_test.txt
+15
+Train Epoch: 15 [0/100 (0%)]	Loss1: 1.273362	 Loss2: 1.273623	 Loss_mmd: 0.014071	 Loss_entropy: 0.000146	 Discrepancy: 0.000048
+Train Epoch: 15 [100/100 (0%)]	Loss1: 1.194121	 Loss2: 1.186565	 Loss_mmd: 0.013580	 Loss_entropy: 0.000385	 Discrepancy: 0.000048
+
+Train set: Average loss: -0.0451, Accuracy C1: 8145/12800 (64%)  
+
+
+Test set: Average loss: 0.0407, Accuracy C1: 15/277 (5%)  
+
+recording %s record/CCSurv_25_test.txt
+16
+Train Epoch: 16 [0/100 (0%)]	Loss1: 1.009079	 Loss2: 1.004236	 Loss_mmd: 0.013361	 Loss_entropy: 0.000240	 Discrepancy: 0.000047
+Train Epoch: 16 [100/100 (0%)]	Loss1: 1.321437	 Loss2: 1.320532	 Loss_mmd: 0.012985	 Loss_entropy: 0.000461	 Discrepancy: 0.000044
+
+Train set: Average loss: -0.0443, Accuracy C1: 7780/12800 (61%)  
+
+
+Test set: Average loss: 0.0309, Accuracy C1: 526/12800 (4%)  
+
+recording %s record/CCSurv_25_test.txt
+17
+Train Epoch: 17 [0/100 (0%)]	Loss1: 0.985013	 Loss2: 0.988702	 Loss_mmd: 0.013182	 Loss_entropy: 0.000236	 Discrepancy: 0.000041
+Train Epoch: 17 [100/100 (0%)]	Loss1: 1.157544	 Loss2: 1.157033	 Loss_mmd: 0.012870	 Loss_entropy: 0.000212	 Discrepancy: 0.000043
+
+Train set: Average loss: -0.0497, Accuracy C1: 7774/12800 (61%)  
+
+
+Test set: Average loss: 0.0355, Accuracy C1: 13/277 (5%)  
+
+recording %s record/CCSurv_25_test.txt
+18
+Train Epoch: 18 [0/100 (0%)]	Loss1: 1.089202	 Loss2: 1.087396	 Loss_mmd: 0.011929	 Loss_entropy: 0.000452	 Discrepancy: 0.000042
+
+Train set: Average loss: 0.0000, Accuracy C1: 0/0 (0%)  
+
+
+Test set: Average loss: 0.0262, Accuracy C1: 618/12800 (5%)  
+
+recording %s record/CCSurv_25_test.txt
+19
+Train Epoch: 19 [0/100 (0%)]	Loss1: 1.036158	 Loss2: 1.040782	 Loss_mmd: 0.012298	 Loss_entropy: 0.000117	 Discrepancy: 0.000039
+Train Epoch: 19 [100/100 (0%)]	Loss1: 1.075434	 Loss2: 1.091272	 Loss_mmd: 0.011523	 Loss_entropy: 0.000160	 Discrepancy: 0.000041
+
+Train set: Average loss: -0.0562, Accuracy C1: 8617/12800 (67%)  
+
+
+Test set: Average loss: 0.0283, Accuracy C1: 16/277 (6%)  
+
+recording %s record/CCSurv_25_test.txt
+20
+Train Epoch: 20 [0/100 (0%)]	Loss1: 0.906130	 Loss2: 0.907281	 Loss_mmd: 0.013084	 Loss_entropy: 0.000233	 Discrepancy: 0.000039
+Train Epoch: 20 [100/100 (0%)]	Loss1: 1.017555	 Loss2: 1.020202	 Loss_mmd: 0.011650	 Loss_entropy: 0.000606	 Discrepancy: 0.000037
+
+Train set: Average loss: -0.0550, Accuracy C1: 8319/12800 (65%)  
+
+
+Test set: Average loss: 0.0232, Accuracy C1: 647/12800 (5%)  
+
+recording %s record/CCSurv_25_test.txt
+21
+Train Epoch: 21 [0/100 (0%)]	Loss1: 1.110220	 Loss2: 1.117739	 Loss_mmd: 0.012404	 Loss_entropy: 0.000051	 Discrepancy: 0.000038
+Train Epoch: 21 [100/100 (0%)]	Loss1: 0.883592	 Loss2: 0.888152	 Loss_mmd: 0.012576	 Loss_entropy: 0.000187	 Discrepancy: 0.000035
+
+Train set: Average loss: -0.0573, Accuracy C1: 8365/12800 (65%)  
+
+
+Test set: Average loss: 0.0354, Accuracy C1: 9/277 (3%)  
+
+recording %s record/CCSurv_25_test.txt
+22
+Train Epoch: 22 [0/100 (0%)]	Loss1: 0.967838	 Loss2: 0.969960	 Loss_mmd: 0.011543	 Loss_entropy: 0.000182	 Discrepancy: 0.000035
+Train Epoch: 22 [100/100 (0%)]	Loss1: 0.951839	 Loss2: 0.954599	 Loss_mmd: 0.011183	 Loss_entropy: 0.000200	 Discrepancy: 0.000034
+
+Train set: Average loss: -0.0569, Accuracy C1: 7844/12800 (61%)  
+
+
+Test set: Average loss: 0.0204, Accuracy C1: 768/12800 (6%)  
+
+recording %s record/CCSurv_25_test.txt
+23
+Train Epoch: 23 [0/100 (0%)]	Loss1: 1.093431	 Loss2: 1.092137	 Loss_mmd: 0.011748	 Loss_entropy: 0.000383	 Discrepancy: 0.000034
+Train Epoch: 23 [100/100 (0%)]	Loss1: 1.111310	 Loss2: 1.111270	 Loss_mmd: 0.011568	 Loss_entropy: 0.000168	 Discrepancy: 0.000033
+
+Train set: Average loss: 0.0000, Accuracy C1: 0/0 (0%)  
+
+
+Test set: Average loss: 0.0255, Accuracy C1: 30/277 (11%)  
+
+recording %s record/CCSurv_25_test.txt
+24
+Train Epoch: 24 [0/100 (0%)]	Loss1: 0.853504	 Loss2: 0.855660	 Loss_mmd: 0.010951	 Loss_entropy: 0.000272	 Discrepancy: 0.000033
+
+Train set: Average loss: -0.0659, Accuracy C1: 9221/12800 (72%)  
+
+
+Test set: Average loss: 0.0174, Accuracy C1: 896/12800 (7%)  
+
+recording %s record/CCSurv_25_test.txt
+25
+Train Epoch: 25 [0/100 (0%)]	Loss1: 0.765902	 Loss2: 0.766380	 Loss_mmd: 0.010479	 Loss_entropy: 0.000377	 Discrepancy: 0.000031
+Train Epoch: 25 [100/100 (0%)]	Loss1: 0.857337	 Loss2: 0.861895	 Loss_mmd: 0.010161	 Loss_entropy: 0.000164	 Discrepancy: 0.000030
+
+Train set: Average loss: -0.0650, Accuracy C1: 8930/12800 (70%)  
+
+
+Test set: Average loss: 0.0266, Accuracy C1: 16/277 (6%)  
+
+recording %s record/CCSurv_25_test.txt
+26
+Train Epoch: 26 [0/100 (0%)]	Loss1: 0.904073	 Loss2: 0.904747	 Loss_mmd: 0.010859	 Loss_entropy: 0.000151	 Discrepancy: 0.000030
+Train Epoch: 26 [100/100 (0%)]	Loss1: 0.816609	 Loss2: 0.817488	 Loss_mmd: 0.010843	 Loss_entropy: 0.000340	 Discrepancy: 0.000031
+
+Train set: Average loss: -0.0677, Accuracy C1: 8835/12800 (69%)  
+
+
+Test set: Average loss: 0.0175, Accuracy C1: 757/12800 (6%)  
+
+recording %s record/CCSurv_25_test.txt
+27
+Train Epoch: 27 [0/100 (0%)]	Loss1: 0.895052	 Loss2: 0.891629	 Loss_mmd: 0.011255	 Loss_entropy: 0.000452	 Discrepancy: 0.000029
+Train Epoch: 27 [100/100 (0%)]	Loss1: 0.942934	 Loss2: 0.946197	 Loss_mmd: 0.011310	 Loss_entropy: 0.000254	 Discrepancy: 0.000029
+
+Train set: Average loss: -0.0701, Accuracy C1: 8993/12800 (70%)  
+
+
+Test set: Average loss: 0.0100, Accuracy C1: 21/277 (8%)  
+
+recording %s record/CCSurv_25_test.txt
+28
+Train Epoch: 28 [0/100 (0%)]	Loss1: 0.733262	 Loss2: 0.735908	 Loss_mmd: 0.011387	 Loss_entropy: 0.000204	 Discrepancy: 0.000027
+Train Epoch: 28 [100/100 (0%)]	Loss1: 1.116864	 Loss2: 1.117526	 Loss_mmd: 0.011058	 Loss_entropy: 0.000256	 Discrepancy: 0.000028
+
+Train set: Average loss: -0.0683, Accuracy C1: 5793/8854 (65%)  
+
+
+Test set: Average loss: 0.0103, Accuracy C1: 792/12800 (6%)  
+
+recording %s record/CCSurv_25_test.txt
+29
+Train Epoch: 29 [0/100 (0%)]	Loss1: 0.946499	 Loss2: 0.940148	 Loss_mmd: 0.010534	 Loss_entropy: 0.000282	 Discrepancy: 0.000028
+Train Epoch: 29 [100/100 (0%)]	Loss1: 0.720494	 Loss2: 0.718223	 Loss_mmd: 0.011351	 Loss_entropy: 0.000292	 Discrepancy: 0.000027
+
+Train set: Average loss: -0.0771, Accuracy C1: 9045/12800 (71%)  
+
+
+Test set: Average loss: 0.0171, Accuracy C1: 12/277 (4%)  
+
+recording %s record/CCSurv_25_test.txt
+30
+Train Epoch: 30 [0/100 (0%)]	Loss1: 0.871329	 Loss2: 0.870114	 Loss_mmd: 0.010207	 Loss_entropy: 0.000147	 Discrepancy: 0.000026
+Train Epoch: 30 [100/100 (0%)]	Loss1: 0.839838	 Loss2: 0.838923	 Loss_mmd: 0.010054	 Loss_entropy: 0.000291	 Discrepancy: 0.000026
+
+Train set: Average loss: -0.0776, Accuracy C1: 8873/12800 (69%)  
+
+
+Test set: Average loss: 0.0080, Accuracy C1: 845/12800 (7%)  
+
+recording %s record/CCSurv_25_test.txt
+31
+Train Epoch: 31 [0/100 (0%)]	Loss1: 0.740588	 Loss2: 0.743240	 Loss_mmd: 0.011635	 Loss_entropy: 0.000318	 Discrepancy: 0.000025
+Train Epoch: 31 [100/100 (0%)]	Loss1: 0.791554	 Loss2: 0.790874	 Loss_mmd: 0.010426	 Loss_entropy: 0.000158	 Discrepancy: 0.000024
+
+Train set: Average loss: -0.0742, Accuracy C1: 8585/12800 (67%)  
+
+
+Test set: Average loss: 0.0091, Accuracy C1: 14/277 (5%)  
+
+recording %s record/CCSurv_25_test.txt
+32
+Train Epoch: 32 [0/100 (0%)]	Loss1: 0.864399	 Loss2: 0.862306	 Loss_mmd: 0.010875	 Loss_entropy: 0.000298	 Discrepancy: 0.000024
+Train Epoch: 32 [100/100 (0%)]	Loss1: 0.847926	 Loss2: 0.848856	 Loss_mmd: 0.010628	 Loss_entropy: 0.000297	 Discrepancy: 0.000023
+
+Train set: Average loss: -0.0786, Accuracy C1: 9017/12800 (70%)  
+
+
+Test set: Average loss: 0.0042, Accuracy C1: 870/12800 (7%)  
+
+recording %s record/CCSurv_25_test.txt
+33
+Train Epoch: 33 [0/100 (0%)]	Loss1: 0.778674	 Loss2: 0.780952	 Loss_mmd: 0.010476	 Loss_entropy: 0.000209	 Discrepancy: 0.000022
+
+Train set: Average loss: 0.0000, Accuracy C1: 0/0 (0%)  
+
+
+Test set: Average loss: 0.0061, Accuracy C1: 19/277 (7%)  
+
+recording %s record/CCSurv_25_test.txt
+34
+Train Epoch: 34 [0/100 (0%)]	Loss1: 0.580334	 Loss2: 0.582097	 Loss_mmd: 0.010516	 Loss_entropy: 0.000238	 Discrepancy: 0.000023
+
+Train set: Average loss: -0.0849, Accuracy C1: 9547/12800 (75%)  
+
+
+Test set: Average loss: 0.0055, Accuracy C1: 804/12800 (6%)  
+
+recording %s record/CCSurv_25_test.txt
+35
+Train Epoch: 35 [0/100 (0%)]	Loss1: 0.715632	 Loss2: 0.716093	 Loss_mmd: 0.011114	 Loss_entropy: 0.000300	 Discrepancy: 0.000023
+Train Epoch: 35 [100/100 (0%)]	Loss1: 0.570115	 Loss2: 0.570172	 Loss_mmd: 0.010873	 Loss_entropy: 0.000450	 Discrepancy: 0.000021
+
+Train set: Average loss: -0.0801, Accuracy C1: 9254/12800 (72%)  
+
+
+Test set: Average loss: 0.0086, Accuracy C1: 14/277 (5%)  
+
+recording %s record/CCSurv_25_test.txt
+36
+Train Epoch: 36 [0/100 (0%)]	Loss1: 0.682564	 Loss2: 0.684065	 Loss_mmd: 0.010509	 Loss_entropy: 0.000304	 Discrepancy: 0.000021
+Train Epoch: 36 [100/100 (0%)]	Loss1: 0.714368	 Loss2: 0.715570	 Loss_mmd: 0.010476	 Loss_entropy: 0.000306	 Discrepancy: 0.000022
+
+Train set: Average loss: -0.0823, Accuracy C1: 9191/12800 (72%)  
+
+
+Test set: Average loss: 0.0013, Accuracy C1: 820/12800 (6%)  
+
+recording %s record/CCSurv_25_test.txt
+37
+Train Epoch: 37 [0/100 (0%)]	Loss1: 0.774520	 Loss2: 0.775317	 Loss_mmd: 0.009775	 Loss_entropy: 0.000325	 Discrepancy: 0.000020
+Train Epoch: 37 [100/100 (0%)]	Loss1: 0.669056	 Loss2: 0.667770	 Loss_mmd: 0.011233	 Loss_entropy: 0.000318	 Discrepancy: 0.000019
+
+Train set: Average loss: -0.0834, Accuracy C1: 9089/12800 (71%)  
+
+
+Test set: Average loss: 0.0011, Accuracy C1: 22/277 (8%)  
+
+recording %s record/CCSurv_25_test.txt
+38
+Train Epoch: 38 [0/100 (0%)]	Loss1: 0.677892	 Loss2: 0.674673	 Loss_mmd: 0.010488	 Loss_entropy: 0.000311	 Discrepancy: 0.000019
+Train Epoch: 38 [100/100 (0%)]	Loss1: 0.989853	 Loss2: 0.987532	 Loss_mmd: 0.009797	 Loss_entropy: 0.000283	 Discrepancy: 0.000018
+
+Train set: Average loss: -0.0969, Accuracy C1: 1029/1430 (72%)  
+
+
+Test set: Average loss: 0.0022, Accuracy C1: 832/12800 (6%)  
+
+recording %s record/CCSurv_25_test.txt
+39
+Train Epoch: 39 [0/100 (0%)]	Loss1: 0.660674	 Loss2: 0.661829	 Loss_mmd: 0.009982	 Loss_entropy: 0.000362	 Discrepancy: 0.000019
+Train Epoch: 39 [100/100 (0%)]	Loss1: 0.604548	 Loss2: 0.605083	 Loss_mmd: 0.010017	 Loss_entropy: 0.000304	 Discrepancy: 0.000018
+Train Epoch: 39 [200/100 (0%)]	Loss1: 0.714290	 Loss2: 0.715982	 Loss_mmd: 0.010495	 Loss_entropy: 0.000286	 Discrepancy: 0.000018
+
+Train set: Average loss: -0.0877, Accuracy C1: 9524/12800 (74%)  
+
+
+Test set: Average loss: -0.0027, Accuracy C1: 17/277 (6%)  
+
+recording %s record/CCSurv_25_test.txt
+40
+Train Epoch: 40 [0/100 (0%)]	Loss1: 0.524495	 Loss2: 0.524878	 Loss_mmd: 0.009392	 Loss_entropy: 0.000325	 Discrepancy: 0.000018
+Train Epoch: 40 [100/100 (0%)]	Loss1: 0.571818	 Loss2: 0.570546	 Loss_mmd: 0.011067	 Loss_entropy: 0.000351	 Discrepancy: 0.000016
+
+Train set: Average loss: -0.0909, Accuracy C1: 9270/12800 (72%)  
+
+
+Test set: Average loss: -0.0008, Accuracy C1: 735/12800 (6%)  
+
+recording %s record/CCSurv_25_test.txt
+41
+Train Epoch: 41 [0/100 (0%)]	Loss1: 0.809667	 Loss2: 0.810902	 Loss_mmd: 0.009521	 Loss_entropy: 0.000335	 Discrepancy: 0.000017
+Train Epoch: 41 [100/100 (0%)]	Loss1: 0.766215	 Loss2: 0.766595	 Loss_mmd: 0.009755	 Loss_entropy: 0.000366	 Discrepancy: 0.000016
+
+Train set: Average loss: -0.0935, Accuracy C1: 9253/12800 (72%)  
+
+
+Test set: Average loss: -0.0041, Accuracy C1: 25/277 (9%)  
+
+recording %s record/CCSurv_25_test.txt
+42
+Train Epoch: 42 [0/100 (0%)]	Loss1: 0.826878	 Loss2: 0.826132	 Loss_mmd: 0.010084	 Loss_entropy: 0.000338	 Discrepancy: 0.000016
+Train Epoch: 42 [100/100 (0%)]	Loss1: 0.756308	 Loss2: 0.756529	 Loss_mmd: 0.009955	 Loss_entropy: 0.000390	 Discrepancy: 0.000016
+
+Train set: Average loss: -0.0915, Accuracy C1: 9239/12800 (72%)  
+
+
+Test set: Average loss: -0.0070, Accuracy C1: 855/12800 (7%)  
+
+recording %s record/CCSurv_25_test.txt
+43
+Train Epoch: 43 [0/100 (0%)]	Loss1: 0.777003	 Loss2: 0.774305	 Loss_mmd: 0.009552	 Loss_entropy: 0.000350	 Discrepancy: 0.000016
+
+Train set: Average loss: 0.0000, Accuracy C1: 0/0 (0%)  
+
+
+Test set: Average loss: -0.0083, Accuracy C1: 21/277 (8%)  
+
+recording %s record/CCSurv_25_test.txt
+44
+Train Epoch: 44 [0/100 (0%)]	Loss1: 0.644214	 Loss2: 0.642980	 Loss_mmd: 0.009575	 Loss_entropy: 0.000379	 Discrepancy: 0.000016
+Train Epoch: 44 [100/100 (0%)]	Loss1: 0.572691	 Loss2: 0.573587	 Loss_mmd: 0.009562	 Loss_entropy: 0.000478	 Discrepancy: 0.000016
+
+Train set: Average loss: -0.0941, Accuracy C1: 9826/12800 (77%)  
+
+
+Test set: Average loss: -0.0087, Accuracy C1: 1162/12800 (9%)  
+
+recording %s record/CCSurv_25_test.txt
+45
+Train Epoch: 45 [0/100 (0%)]	Loss1: 0.738624	 Loss2: 0.738722	 Loss_mmd: 0.010376	 Loss_entropy: 0.000392	 Discrepancy: 0.000016
+Train Epoch: 45 [100/100 (0%)]	Loss1: 0.609393	 Loss2: 0.610324	 Loss_mmd: 0.009762	 Loss_entropy: 0.000389	 Discrepancy: 0.000016
+
+Train set: Average loss: -0.0920, Accuracy C1: 9145/12800 (71%)  
+
+
+Test set: Average loss: -0.0079, Accuracy C1: 21/277 (8%)  
+
+recording %s record/CCSurv_25_test.txt
+46
+Train Epoch: 46 [0/100 (0%)]	Loss1: 0.637771	 Loss2: 0.638087	 Loss_mmd: 0.009879	 Loss_entropy: 0.000419	 Discrepancy: 0.000015
+Train Epoch: 46 [100/100 (0%)]	Loss1: 0.691444	 Loss2: 0.693206	 Loss_mmd: 0.009729	 Loss_entropy: 0.000427	 Discrepancy: 0.000015
+
+Train set: Average loss: -0.1003, Accuracy C1: 9677/12800 (76%)  
+
+
+Test set: Average loss: -0.0073, Accuracy C1: 729/12800 (6%)  
+
+recording %s record/CCSurv_25_test.txt
+47
+Train Epoch: 47 [0/100 (0%)]	Loss1: 0.713351	 Loss2: 0.712822	 Loss_mmd: 0.008809	 Loss_entropy: 0.000417	 Discrepancy: 0.000015
+Train Epoch: 47 [100/100 (0%)]	Loss1: 0.652911	 Loss2: 0.652869	 Loss_mmd: 0.010543	 Loss_entropy: 0.000440	 Discrepancy: 0.000014
+
+Train set: Average loss: -0.0947, Accuracy C1: 9088/12800 (71%)  
+
+
+Test set: Average loss: -0.0043, Accuracy C1: 15/277 (5%)  
+
+recording %s record/CCSurv_25_test.txt
+48
+Train Epoch: 48 [0/100 (0%)]	Loss1: 0.713655	 Loss2: 0.714106	 Loss_mmd: 0.009767	 Loss_entropy: 0.000447	 Discrepancy: 0.000014
