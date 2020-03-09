@@ -100,17 +100,13 @@ def dataset_read(target, batch_size):
     return dataset, dataset_test
 
 
-def dataset_hard_cluster(target, batch_size):
+def dataset_hard_cluster(target, batch_size,num_clus):
     # Number of components for PCA
     n_comp = 50
-    # Number of clusters for K-Means algorithm
-    num_clus = 4
 
     T = {}
     T_test = {}
     domain_all = ['mnistm', 'mnist', 'usps', 'svhn', 'syn']
-    #target_dataset = domain_all.pop(random.randrange(len(domain_all)))
-
     domain_all.remove(target)
 
     target_train, target_train_label, target_test, target_test_label = return_dataset(target)
@@ -120,7 +116,6 @@ def dataset_hard_cluster(target, batch_size):
 
     T['imgs'] = target_train
     T['labels'] = target_train_label
-
     # input target samples for both
     T_test['imgs'] = target_test
     T_test['labels'] = target_test_label
@@ -185,7 +180,7 @@ def dataset_hard_cluster(target, batch_size):
     return dataset, dataset_test
 
 
-def dataset_combined(target, batch_size):
+def dataset_combined(target, batch_size,num_clus):
     S1 = {}
     S1_test = {}
     S2 = {}
@@ -213,14 +208,10 @@ def dataset_combined(target, batch_size):
         S_test[i]['imgs'] = target_test
         S_test[i]['labels'] = target_test_label
 
-    # S['imgs'] = train_source
-    # S['labels'] = s_label_train
     T['imgs'] = target_train
     T['labels'] = target_train_label
 
     # input target samples for both
-    # S_test['imgs'] = test_target
-    # S_test['labels'] = t_label_test
     T_test['imgs'] = target_test
     T_test['labels'] = target_test_label
 

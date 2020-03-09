@@ -33,15 +33,15 @@ class Solver(object):
             if args.dl_type == 'original':
                 self.datasets, self.dataset_test = dataset_read(target, self.batch_size)
             elif args.dl_type == 'hard_cluster':
-                self.datasets, self.dataset_test = dataset_hard_cluster(target, self.batch_size)
+                self.datasets, self.dataset_test = dataset_hard_cluster(target, self.batch_size,args.num_domain)
             elif args.dl_type == 'soft_cluster':
-                self.datasets, self.dataset_test = dataset_combined(target, self.batch_size)
+                self.datasets, self.dataset_test = dataset_combined(target, self.batch_size,args.num_domain)
             else:
                 raise Exception('Type of experiment undefined')
 
             print('load finished!')
             num_classes = 10
-            num_domains = 4
+            num_domains = args.num_domain
 
             self.G = Generator_digit()
             self.C1 = Classifier_digit()
@@ -81,30 +81,18 @@ class Solver(object):
 
     def set_optimizer(self, which_opt='momentum', lr=0.001, momentum=0.9):
         if which_opt == 'momentum':
-            self.opt_g = optim.SGD(self.G.parameters(),
-                                   lr=lr, weight_decay=0.0005,
-                                   momentum=momentum)
+            self.opt_g = optim.SGD(self.G.parameters(),lr=lr, weight_decay=0.0005, momentum=momentum)
 
-            self.opt_c1 = optim.SGD(self.C1.parameters(),
-                                    lr=lr, weight_decay=0.0005,
-                                    momentum=momentum)
-            self.opt_c2 = optim.SGD(self.C2.parameters(),
-                                    lr=lr, weight_decay=0.0005,
-                                    momentum=momentum)
-            self.opt_dp = optim.SGD(self.DP.parameters(),
-                                    lr=lr, weight_decay=0.0005,
-                                    momentum=momentum)
+            self.opt_c1 = optim.SGD(self.C1.parameters(), lr=lr, weight_decay=0.0005, momentum=momentum)
+            self.opt_c2 = optim.SGD(self.C2.parameters(), lr=lr, weight_decay=0.0005, momentum=momentum)
+            self.opt_dp = optim.SGD(self.DP.parameters(), lr=lr, weight_decay=0.0005, momentum=momentum)
 
         if which_opt == 'adam':
-            self.opt_g = optim.Adam(self.G.parameters(),
-                                    lr=lr, weight_decay=0.0005)
+            self.opt_g = optim.Adam(self.G.parameters(), lr=lr, weight_decay=0.0005)
 
-            self.opt_c1 = optim.Adam(self.C1.parameters(),
-                                     lr=lr, weight_decay=0.0005)
-            self.opt_c2 = optim.Adam(self.C2.parameters(),
-                                     lr=lr, weight_decay=0.0005)
-            self.opt_dp = optim.Adam(self.DP.parameters(),
-                                     lr=lr, weight_decay=0.0005)
+            self.opt_c1 = optim.Adam(self.C1.parameters(), lr=lr, weight_decay=0.0005)
+            self.opt_c2 = optim.Adam(self.C2.parameters(), lr=lr, weight_decay=0.0005)
+            self.opt_dp = optim.Adam(self.DP.parameters(), lr=lr, weight_decay=0.0005)
 
     def reset_grad(self):
         self.opt_g.zero_grad()
