@@ -6,3 +6,5 @@ record/*
 __pycache__/
 *.idea
 *.log
+typescript
+
