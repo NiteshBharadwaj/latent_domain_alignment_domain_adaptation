@@ -95,7 +95,7 @@ def main():
                 num = solver.train_onestep(t, record_file=record_train)
             count += num
             if t % 1 == 0:
-                solver.test(t, record_file=record_test, save_model=args.save_model)
+                solver.test(t,is_train_perf=False, record_file=record_test, save_model=args.save_model)
             if count >= 20000:
                 break
 
