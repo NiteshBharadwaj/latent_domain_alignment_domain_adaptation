@@ -88,6 +88,7 @@ def main():
             if not args.one_step:
                 # num = solver.train_merge_baseline(t, record_file=record_train)
                 if args.dl_type=='soft_cluster':
+                    torch.cuda.empty_cache()
                     num= solver.train_MSDA_soft(t,record_file=record_train)
                 else:
                     num = solver.train_MSDA(t, record_file=record_train)
@@ -95,7 +96,7 @@ def main():
                 num = solver.train_onestep(t, record_file=record_train)
             count += num
             if t % 1 == 0:
-                #solver.test(t, is_train_perf=True, record_file=record_test, save_model=args.save_model)
+                solver.test(t, is_train_perf=True, record_file=record_test, save_model=args.save_model)
                 solver.test(t, is_train_perf=False, record_file=record_test, save_model=args.save_model)
             # if count >= 20000:
             #     break

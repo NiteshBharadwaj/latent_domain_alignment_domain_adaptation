@@ -57,7 +57,16 @@ class CombinedData(Dataset):
 
 class UnalignedDataLoader():
     def initialize(self, source, target, batch_size1, batch_size2, scale=32):
-        transform = transforms.Compose([
+        transform_source = transforms.Compose([
+            transforms.Resize(scale),
+            transforms.RandomCrop(scale),
+            # transforms.RandomResizedCrop(scale),
+            transforms.RandomHorizontalFlip(),
+            transforms.ColorJitter(0.4,0.2,0.2),
+            transforms.ToTensor(),
+            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+        ])
+        transform_target = transforms.Compose([
             transforms.Resize((scale,scale)),
             transforms.ToTensor(),
             transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
@@ -66,12 +75,12 @@ class UnalignedDataLoader():
         data_loader_s = []
         max_size = 0
         for i in range(len(source)):
-            data_sources.append(Dataset(source[i]['imgs'], source[i]['labels'], transform=transform))
+            data_sources.append(Dataset(source[i]['imgs'], source[i]['labels'], transform=transform_source))
             data_loader_s.append(torch.utils.data.DataLoader(data_sources[i], batch_size=batch_size1, shuffle=True, num_workers=4))
             max_size = max(max_size,len(data_sources[i]))
         self.dataset_s = data_loader_s
 
-        dataset_target = Dataset(target['imgs'], target['labels'], transform=transform)
+        dataset_target = Dataset(target['imgs'], target['labels'], transform=transform_target)
         data_loader_t = torch.utils.data.DataLoader(dataset_target, batch_size=batch_size2, shuffle=True, num_workers=4)
 
         self.dataset_t = dataset_target

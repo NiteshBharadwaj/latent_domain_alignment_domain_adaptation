@@ -3,10 +3,119 @@ import torch.nn.functional as F
 from grad_reverse import grad_reverse
 import torch.utils.model_zoo as model_zoo
 from torchvision.models import AlexNet
+import torchvision.models as models
 
 model_urls = {
     'alexnet': 'https://download.pytorch.org/models/alexnet-owt-4df8aa71.pth',
 }
+
+# ---------------------------------------------- ResNet18 -----------------------------------------
+
+
+class Feature_ResNet18(nn.Module):
+	def __init__(self):
+		super(Feature_ResNet18, self).__init__()
+		self.model = models.resnet18(pretrained=True)
+
+		# num_ftrs = self.model.fc.in_features
+		# self.model.fc = nn.Linear(num_ftrs, 1716)
+		# nn.init.xavier_uniform_(self.model.fc.weight, .1)
+		# nn.init.constant_(self.model.fc.bias, 0.)
+
+		# self.fc1 = nn.Linear(512*8*8, 8192)
+		# self.bn1_fc = nn.BatchNorm1d(8192)
+		# self.fc2 = nn.Linear(8192, 4096)
+		# self.bn2_fc = nn.BatchNorm1d(4096)
+		# self.fc3 = nn.Linear(4096, 2048)
+		# self.bn3_fc = nn.BatchNorm1d(2048)
+
+		# self.relu = nn.ReLU(inplace=True)
+
+	def forward(self, x, reverse=False):
+		x = self.model.conv1(x)
+		x = self.model.bn1(x)
+		x = self.model.relu(x)
+		x = self.model.maxpool(x)
+
+		x = self.model.layer1(x)
+		x = self.model.layer2(x)
+		x = self.model.layer3(x)
+		x = self.model.layer4(x)
+
+		x_feat = x.view(x.size(0), 512*8*8)
+
+		x = self.model.avgpool(x)
+		x = x.view(x.size(0), -1)
+		# x = self.model.fc(x)
+
+
+		# x = self.relu(self.bn1_fc(self.fc1(x_feat)))
+		# x = F.dropout(x, training=self.training)
+
+		# x = self.relu(self.bn2_fc(self.fc2(x)))
+		# x = F.dropout(x, training=self.training)
+		# if reverse:
+		# 	x = grad_reverse(x, self.lambd)
+
+		# x = self.relu(self.bn3_fc(self.fc3(x)))
+
+		return x, x_feat
+
+class Predictor_ResNet18(nn.Module):
+	def __init__(self, num_classes, prob=0.5):
+		super(Predictor_ResNet18, self).__init__()
+		self.num_classes = num_classes
+		# self.fc3 = nn.Linear(2048, num_classes)
+
+		self.fc3 = nn.Linear(512, num_classes)
+		nn.init.xavier_uniform_(self.fc3.weight, .1)
+		nn.init.constant_(self.fc3.bias, 0.)
+
+		self.bn_fc3 = nn.BatchNorm1d(num_classes)
+		self.prob = prob
+
+	def set_lambda(self, lambd):
+		self.lambd = lambd
+
+	def forward(self, x, reverse=False):
+		x = self.fc3(x)
+		return x
+
+class DomainPredictor_ResNet18(nn.Module):
+	def __init__(self, num_domains, prob=0.5):
+		super(DomainPredictor_ResNet18, self).__init__()
+
+		self.fc1 = nn.Linear(512*8*8, 8192)
+		self.bn1_fc = nn.BatchNorm1d(8192)
+		self.fc2 = nn.Linear(8192, 4096)
+		self.bn2_fc = nn.BatchNorm1d(4096)
+		self.fc3 = nn.Linear(4096, 2048)
+		self.bn3_fc = nn.BatchNorm1d(2048)
+		self.fc4 = nn.Linear(2048, num_domains)
+
+		self.prob = prob
+		self.num_domains = num_domains
+
+		self.relu = nn.ReLU(inplace=True)
+
+	def set_lambda(self, lambd):
+		self.lambd = lambd
+
+	def forward(self, x_feat, reverse=False):
+
+		x = self.relu(self.bn1_fc(self.fc1(x_feat)))
+		x = F.dropout(x, training=self.training)
+
+		x = self.relu(self.bn2_fc(self.fc2(x)))
+		x = F.dropout(x, training=self.training)
+		if reverse:
+			x = grad_reverse(x, self.lambd)
+
+		x = self.relu(self.bn3_fc(self.fc3(x)))
+		x = self.fc4(x)
+		return x
+
+# ---------------------------------------------- AlexNet -----------------------------------------
 
 class Feature_AlexNet(nn.Module):
 	def __init__(self):
