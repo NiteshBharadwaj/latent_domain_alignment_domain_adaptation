@@ -5,6 +5,27 @@ import torchvision.transforms as transforms
 from datasets_cars import Dataset
 import numpy as np
 
+
+class Lighting(object):
+    """Lighting noise(AlexNet - style PCA - based noise)"""
+
+    def __init__(self, alphastd, eigval, eigvec):
+        self.alphastd = alphastd
+        self.eigval = eigval
+        self.eigvec = eigvec
+
+    def __call__(self, img):
+        if self.alphastd == 0:
+            return img
+
+        alpha = img.new().resize_(3).normal_(0, self.alphastd)
+        rgb = self.eigvec.type_as(img).clone()\
+            .mul(alpha.view(1, 3).expand(3, 3))\
+            .mul(self.eigval.view(1, 3).expand(3, 3))\
+            .sum(1).squeeze()
+        return img.add(rgb.view(3, 1, 1).expand_as(img))
+
+
 class CombinedData(Dataset):
     def __init__(self, data_loader_S, data_loader_t, max_dataset_size):
         super(Dataset,self).__init__()
@@ -56,32 +77,64 @@ class CombinedData(Dataset):
 
 
 class UnalignedDataLoader():
-    def initialize(self, source, target, batch_size1, batch_size2, scale=32):
-        transform_source = transforms.Compose([
-            transforms.Resize(scale),
-            transforms.RandomCrop(scale),
-            # transforms.RandomResizedCrop(scale),
-            transforms.RandomHorizontalFlip(),
-            transforms.ColorJitter(0.4,0.2,0.2),
-            transforms.ToTensor(),
-            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-        ])
-        transform_target = transforms.Compose([
-            transforms.Resize((scale,scale)),
-            transforms.ToTensor(),
-            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-        ])
+    def __init__(self):
+
+        self.__imagenet_pca = {
+            'eigval': torch.Tensor([0.2175, 0.0188, 0.0045]),
+            'eigvec': torch.Tensor([
+                [-0.5675,  0.7192,  0.4009],
+                [-0.5808, -0.0045, -0.8140],
+                [-0.5836, -0.6948,  0.4203],
+            ])
+        }
+    def initialize(self, source, target, batch_size1, batch_size2, scale=32, split='Train'):
+        if split=='Train':
+            transform_source = transforms.Compose([
+                #transforms.Resize(scale),
+                #transforms.RandomCrop(scale),
+                transforms.RandomHorizontalFlip(),
+                transforms.ColorJitter(0.4,0.2,0.2),
+                transforms.ToTensor(),
+                Lighting(0.1, self.__imagenet_pca['eigval'],self.__imagenet_pca['eigvec']),
+                transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                 std=[0.229, 0.224, 0.225])
+            ])
+            transform_target = transforms.Compose([ 
+                #transforms.Resize((scale,scale)),
+                transforms.RandomHorizontalFlip(),
+                transforms.ColorJitter(0.4,0.2,0.2),
+                transforms.ToTensor(),
+                Lighting(0.1,self.__imagenet_pca['eigval'],self.__imagenet_pca['eigvec']),
+                transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                 std=[0.229, 0.224, 0.225])
+            ])
+        elif split=='Test':
+            transform_source = transforms.Compose([
+                #transforms.Resize(scale),
+                #transforms.RandomCrop(scale),
+                transforms.ToTensor(),
+                transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                 std=[0.229, 0.224, 0.225])
+            ])
+            transform_target = transforms.Compose([ 
+                #transforms.Resize((scale,scale)),
+                transforms.ToTensor(),
+                transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                 std=[0.229, 0.224, 0.225])
+            ])
+        else:
+            raise Exception('Wrong split')
         data_sources = []
         data_loader_s = []
         max_size = 0
         for i in range(len(source)):
             data_sources.append(Dataset(source[i]['imgs'], source[i]['labels'], transform=transform_source))
-            data_loader_s.append(torch.utils.data.DataLoader(data_sources[i], batch_size=batch_size1, shuffle=True, num_workers=4))
+            data_loader_s.append(torch.utils.data.DataLoader(data_sources[i], batch_size=batch_size1, shuffle=True, num_workers=3))
             max_size = max(max_size,len(data_sources[i]))
         self.dataset_s = data_loader_s
 
         dataset_target = Dataset(target['imgs'], target['labels'], transform=transform_target)
-        data_loader_t = torch.utils.data.DataLoader(dataset_target, batch_size=batch_size2, shuffle=True, num_workers=4)
+        data_loader_t = torch.utils.data.DataLoader(dataset_target, batch_size=batch_size2, shuffle=True, num_workers=3)
 
         self.dataset_t = dataset_target
         self.paired_data = CombinedData(data_loader_s, data_loader_t,

@@ -2,6 +2,27 @@ from __future__ import print_function
 import torch.utils.data as data
 from PIL import Image
 import numpy as np
+import cv2
+
+def resize2SquareKeepingAspectRation(img, size, interpolation):
+    h, w = img.shape[:2]
+    c = None if len(img.shape) < 3 else img.shape[2]
+    if h == w: return cv2.resize(img, (size, size), interpolation)
+    if h > w: dif = h
+    else:     dif = w
+    x_pos = int((dif - w)/2.)
+    y_pos = int((dif - h)/2.)
+    if c is None:
+        mask = np.zeros((dif, dif), dtype=img.dtype)
+        mask[y_pos:y_pos+h, x_pos:x_pos+w] = img[:h, :w]
+    else:
+        mask = np.zeros((dif, dif, c), dtype=img.dtype)
+        mask[y_pos:y_pos+h, x_pos:x_pos+w, :] = img[:h, :w, :]
+    return cv2.resize(mask, (size, size), interpolation)
+
+def transform(img):
+    return resize2SquareKeepingAspectRation(img, 256, cv2.INTER_LINEAR)
+
 
 class Dataset(data.Dataset):
     """Args:
@@ -29,9 +50,11 @@ class Dataset(data.Dataset):
          """
 
         img_path, target = self.data[index], self.labels[index]
-        img = Image.open(img_path)
-        image = np.array(img)
-        img = Image.fromarray(image[...,:3])
+        img = cv2.imread(img_path)
+        img = img[...,:3]
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        img = transform(img) 
+        img = Image.fromarray(img)
         # doing this so that it is consistent with all other datasets
         # to return a PIL Image
 

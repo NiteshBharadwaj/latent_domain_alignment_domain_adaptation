@@ -47,11 +47,11 @@ def cars_combined(target, batch_size):
     scale = 256#TODO
 
     train_loader = CombinedDataLoader()
-    train_loader.initialize(S, T, batch_size, batch_size, scale=scale)
+    train_loader.initialize(S, T, batch_size, batch_size, scale=scale, split='Train')
     dataset = train_loader.load_data()
 
     test_loader = CombinedDataLoader()
-    test_loader.initialize(S_test, T_test, batch_size, batch_size, scale=scale)
+    test_loader.initialize(S_test, T_test, batch_size, batch_size, scale=scale, split='Test')
 
     dataset_test = test_loader.load_data()
 

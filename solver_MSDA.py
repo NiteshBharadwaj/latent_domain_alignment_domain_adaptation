@@ -519,7 +519,7 @@ class Solver(object):
             #         entropy_loss.data.item(), loss_dis.data.item()))
             #         record.close()
 
-            if batch_idx % self.interval == 0:
+            if batch_idx % 10 == 0:
                 print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss1: {:.6f}\t Loss2: {:.6f}\t Loss_mmd: {:.6f}\t Loss_entropy: {:.6f}\t Discrepancy: {:.6f}'.format(
                     epoch, batch_idx, 100,
                     100. * batch_idx / 70000, loss_s_c1.data.item(), 0, 0, 0, 0))
