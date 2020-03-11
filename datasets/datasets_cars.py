@@ -50,9 +50,9 @@ class Dataset(data.Dataset):
          """
 
         img_path, target = self.data[index], self.labels[index]
-        img = cv2.imread(img_path)
+        img = Image.open(img_path)
+        img = np.array(img)
         img = img[...,:3]
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         img = transform(img) 
         img = Image.fromarray(img)
         # doing this so that it is consistent with all other datasets
