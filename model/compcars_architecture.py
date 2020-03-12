@@ -39,10 +39,11 @@ class Feature_ResNet18(nn.Module):
 
 		x = self.model.layer1(x)
 		x = self.model.layer2(x)
+
+		x_feat = x
+
 		x = self.model.layer3(x)
 		x = self.model.layer4(x)
-
-		x_feat = x.view(x.size(0), 512*8*8)
 
 		x = self.model.avgpool(x)
 		x = x.view(x.size(0), -1)
@@ -85,13 +86,15 @@ class DomainPredictor_ResNet18(nn.Module):
 	def __init__(self, num_domains, prob=0.5):
 		super(DomainPredictor_ResNet18, self).__init__()
 
-		self.fc1 = nn.Linear(512*8*8, 8192)
-		self.bn1_fc = nn.BatchNorm1d(8192)
-		self.fc2 = nn.Linear(8192, 4096)
-		self.bn2_fc = nn.BatchNorm1d(4096)
-		self.fc3 = nn.Linear(4096, 2048)
-		self.bn3_fc = nn.BatchNorm1d(2048)
-		self.fc4 = nn.Linear(2048, num_domains)
+		self.conv1 = nn.Conv2d(128, 256, kernel_size=3, stride=2, padding=1)
+		self.bn1 = nn.BatchNorm2d(256)
+		self.relu = nn.ReLU()
+		self.conv2 = nn.Conv2d(256, 512, kernel_size=3, stride=2, padding=1)
+		self.bn2 = nn.BatchNorm2d(512)
+		self.conv3 = nn.Conv2d(512, 1024, kernel_size=3, stride=2, padding=1)
+		self.bn3 = nn.BatchNorm2d(1024)
+		self.avgpool = nn.AvgPool2d(4)
+		self.fc4 = nn.Linear(1024, num_domains)
 
 		self.prob = prob
 		self.num_domains = num_domains
@@ -103,16 +106,15 @@ class DomainPredictor_ResNet18(nn.Module):
 
 	def forward(self, x_feat, reverse=False):
 
-		x = self.relu(self.bn1_fc(self.fc1(x_feat)))
-		x = F.dropout(x, training=self.training)
-
-		x = self.relu(self.bn2_fc(self.fc2(x)))
-		x = F.dropout(x, training=self.training)
+		x = self.relu(self.bn1(self.conv1(x_feat)))
 		if reverse:
 			x = grad_reverse(x, self.lambd)
-
-		x = self.relu(self.bn3_fc(self.fc3(x)))
+		x = self.relu(self.bn2(self.conv2(x)))
+		x = self.relu(self.bn3(self.conv3(x)))
+		x = self.avgpool(x)
+		x = x.view(x.shape[0],-1)       
 		x = self.fc4(x)
+
 		return x
 
 # ---------------------------------------------- AlexNet -----------------------------------------

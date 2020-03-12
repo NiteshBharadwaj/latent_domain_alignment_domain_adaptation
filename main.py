@@ -21,13 +21,13 @@ parser.add_argument('--data', type=str, default='', metavar='N',
                     help='digits,cars')
 parser.add_argument('--record_folder', type=str, default='record', metavar='N',
                     help='record folder')
-parser.add_argument('--batch-size', type=int, default=32, metavar='N',
+parser.add_argument('--batch-size', type=int, default=64, metavar='N',
                     help='input batch size for training (default: 64)')
 parser.add_argument('--checkpoint_dir', type=str, default='checkpoint', metavar='N',
                     help='source only or not')
 parser.add_argument('--eval_only', action='store_true', default=False,
                     help='evaluation only option')
-parser.add_argument('--lr', type=float, default=0.0002, metavar='LR',
+parser.add_argument('--lr', type=float, default=0.0001, metavar='LR',
                     help='learning rate (default: 0.0002)')
 parser.add_argument('--max_epoch', type=int, default=200, metavar='N',
                     help='how many epochs')
