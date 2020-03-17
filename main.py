@@ -77,10 +77,12 @@ def main():
     
     record_train = '%s/%s_%s.txt' % (args.record_folder, args.target,record_num)
     record_test = '%s/%s_%s_test.txt' % (args.record_folder, args.target, record_num)
+    record_val = '%s/%s_%s_val.txt' % (args.record_folder, args.target, record_num)
     while os.path.exists(record_train):
         record_num += 1
         record_train = '%s/%s_%s.txt' % (args.record_folder, args.target, record_num)
         record_test = '%s/%s_%s_test.txt' % (args.record_folder, args.target, record_num)
+        record_val = '%s/%s_%s_val.txt' % (args.record_folder, args.target, record_num)
 
     if not os.path.exists(args.checkpoint_dir):
         os.mkdir(args.checkpoint_dir)
@@ -107,8 +109,10 @@ def main():
                 raise Exception('One step solver not defined')
             count += num
             if t % 1 == 0:
-                test(solver, t, is_train_perf=True, record_file=record_test, save_model=args.save_model)
-                test(solver, t, is_train_perf=False, record_file=record_test, save_model=args.save_model)
+                test(solver, t, 'train', record_file=record_test, save_model=args.save_model)
+                best = test(solver, t, 'val', record_file=record_val, save_model=args.save_model)
+                if best:
+                    test(solver, t, 'test', record_file=record_test, save_model=args.save_model)
 
 
 if __name__ == '__main__':
