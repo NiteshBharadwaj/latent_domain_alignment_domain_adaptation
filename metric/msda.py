@@ -78,9 +78,10 @@ def k_moment_soft(output_s, output_t, k, domain_prob):
 	return euclidean(output_s_mean, output_t) + moment_soft(output_s, domain_prob)
 
 def msda_regulizer_soft(output_s, output_t, belta_moment, domain_prob):
-	# print('s1:{}, s2:{}, s3:{}, s4:{}'.format(output_s1.shape, output_s2.shape, output_s3.shape, output_t.shape))
+	# print('s1:{}, s2:{}, s3:{}, s4:{}'.format(output_s1.shape, output_s2.shape, output_s3.shape, output_t.shape))        
 	reg_info = 0
-	# print(reg_info)
+	#domain_prob = (domain_prob*0 + 1)/domain_prob.shape[1]
+
 	for i in range(belta_moment):
 		reg_info += k_moment_soft(output_s, output_t, i + 1, domain_prob)
 

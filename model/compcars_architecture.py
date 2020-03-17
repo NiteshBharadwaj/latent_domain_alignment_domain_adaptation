@@ -17,6 +17,11 @@ class Feature_ResNet18(nn.Module):
 		super(Feature_ResNet18, self).__init__()
 		self.model = models.resnet18(pretrained=True)
 
+		self.fc2 = nn.Linear(512, 2048)
+		nn.init.xavier_uniform_(self.fc2.weight, .1)
+		nn.init.constant_(self.fc2.bias, 0.)
+		self.bn_fc2 = nn.BatchNorm1d(2048)
+
 		# num_ftrs = self.model.fc.in_features
 		# self.model.fc = nn.Linear(num_ftrs, 1716)
 		# nn.init.xavier_uniform_(self.model.fc.weight, .1)
@@ -29,7 +34,7 @@ class Feature_ResNet18(nn.Module):
 		# self.fc3 = nn.Linear(4096, 2048)
 		# self.bn3_fc = nn.BatchNorm1d(2048)
 
-		# self.relu = nn.ReLU(inplace=True)
+		self.relu = nn.ReLU(inplace=True)
 
 	def forward(self, x, reverse=False):
 		x = self.model.conv1(x)
@@ -47,7 +52,8 @@ class Feature_ResNet18(nn.Module):
 
 		x = self.model.avgpool(x)
 		x = x.view(x.size(0), -1)
-		# x = self.model.fc(x)
+
+		x = self.relu(self.bn_fc2(self.fc2(x)))
 
 
 		# x = self.relu(self.bn1_fc(self.fc1(x_feat)))
@@ -66,19 +72,21 @@ class Predictor_ResNet18(nn.Module):
 	def __init__(self, num_classes, prob=0.5):
 		super(Predictor_ResNet18, self).__init__()
 		self.num_classes = num_classes
-		# self.fc3 = nn.Linear(2048, num_classes)
-
-		self.fc3 = nn.Linear(512, num_classes)
+		# self.fc2 = nn.Linear(512, 2048)
+		self.relu = nn.ReLU()
+		self.fc3 = nn.Linear(2048, num_classes)
 		nn.init.xavier_uniform_(self.fc3.weight, .1)
 		nn.init.constant_(self.fc3.bias, 0.)
-
-		self.bn_fc3 = nn.BatchNorm1d(num_classes)
+		# nn.init.xavier_uniform_(self.fc2.weight, .1)
+		# nn.init.constant_(self.fc2.bias, 0.)
+		# self.bn_fc2 = nn.BatchNorm1d(2048)
 		self.prob = prob
 
 	def set_lambda(self, lambd):
 		self.lambd = lambd
 
 	def forward(self, x, reverse=False):
+		# x = self.relu(self.bn_fc2(self.fc2(x)))
 		x = self.fc3(x)
 		return x
 
@@ -95,6 +103,8 @@ class DomainPredictor_ResNet18(nn.Module):
 		self.bn3 = nn.BatchNorm2d(1024)
 		self.avgpool = nn.AvgPool2d(4)
 		self.fc4 = nn.Linear(1024, num_domains)
+
+		# self.idm = nn.Linear(128*32*32, num_domains)
 
 		self.prob = prob
 		self.num_domains = num_domains
@@ -114,6 +124,9 @@ class DomainPredictor_ResNet18(nn.Module):
 		x = self.avgpool(x)
 		x = x.view(x.shape[0],-1)       
 		x = self.fc4(x)
+
+		# x = x_feat.view(x_feat.size(0), -1)
+		# x = self.idm(x)
 
 		return x
 
