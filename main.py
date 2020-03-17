@@ -83,9 +83,9 @@ def main():
     
         checkpoint_dir = '%s/%s_%s' % (args.record_folder, args.target, record_num)
     if not os.path.exists(checkpoint_dir):
-        os.mkdir(checkpoint_dir)
+        os.makedirs(checkpoint_dir)
     if not os.path.exists(args.record_folder):
-        os.mkdir(args.record_folder)
+        os.makedirs(args.record_folder)
     args.checkpoint_dir = checkpoint_dir
     classifier_disc = True if args.class_disc=='yes' else False
     
