@@ -69,10 +69,6 @@ print(args)
 def main():
     # if not args.one_step:
 
-    solver = Solver(args, target=args.target, learning_rate=args.lr, batch_size=args.batch_size,
-                    optimizer=args.optimizer, 
-                    checkpoint_dir=args.checkpoint_dir,
-                    save_epoch=args.save_epoch)
     record_num = 0
     
     record_train = '%s/%s_%s.txt' % (args.record_folder, args.target,record_num)
@@ -91,6 +87,11 @@ def main():
         os.mkdir(args.record_folder)
     args.checkpoint_dir = checkpoint_dir
     classifier_disc = True if args.class_disc=='yes' else False
+    
+    solver = Solver(args, target=args.target, learning_rate=args.lr, batch_size=args.batch_size,
+                    optimizer=args.optimizer, 
+                    checkpoint_dir=args.checkpoint_dir,
+                    save_epoch=args.save_epoch)
     if args.eval_only:
         solver.test(0)
     else:
