@@ -81,6 +81,7 @@ def main():
         record_test = '%s/%s_%s_test.txt' % (args.record_folder, args.target, record_num)
         record_val = '%s/%s_%s_val.txt' % (args.record_folder, args.target, record_num)
     
+        checkpoint_dir = '%s/%s_%s' % (args.record_folder, args.target, record_num)
     if not os.path.exists(checkpoint_dir):
         os.mkdir(checkpoint_dir)
     if not os.path.exists(args.record_folder):
