@@ -2,25 +2,19 @@ import os
 from tqdm import tqdm 
 
 dataset = ['mnistm', 'mnist', 'usps', 'svhn', 'syn']
+
 epochs = 100
 gpuid = 0
-experiments = ['hard_cluster','soft_cluster']
-k = 4
+experiments = ['soft_cluster','hard_cluster']
+#,'source_only']
 
-for data in tqdm(dataset):
+k_list = [4]
+#k_list = [2,4,5,6,8,10]
+
+for k in tqdm(k_list):
     for exp in tqdm(experiments):
-        for i in tqdm(range(5)):
-            command = 'bash experiment_do.sh %s %d %d record/%s_%s_clus_%d %s digits %d' % (data,epochs,gpuid,data,exp,k,exp,k)
+        for data in tqdm(dataset):
+            command = 'bash experiment_do.sh %s %d %d record/%s_%s_clus_%d %s digits %d yes' % (data,epochs,gpuid,data,exp,k,exp,k)
             print(command)
             os.system(command)
-            #bash experiment_do.sh  usps 100 0 record/usps_MSDA_{exp_type} digits 4
-
-k_list = [1,2,5,8,10]
-
-for data in tqdm(dataset):
-    for exp in tqdm(experiments):
-        for k in tqdm(k_list):
-            command = 'bash experiment_do.sh %s %d %d record/%s_%s_clus_%d %s digits %d' % (data,epochs,gpuid,data,exp,k,exp,k)
-            print(command)
-            os.system(command)
-
+            # bash experiment_do.sh mnistm 100 0 record/mnistm_baseline soft_cluster digits 4 yes
