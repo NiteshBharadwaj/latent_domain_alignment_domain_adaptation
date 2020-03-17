@@ -89,13 +89,21 @@ def main():
     args.checkpoint_dir = checkpoint_dir
     classifier_disc = True if args.class_disc=='yes' else False
     
-    solver = Solver(args, target=args.target, learning_rate=args.lr, batch_size=args.batch_size,
+    if args.eval_only:
+        checkpoint_dir = '%s/%s_%s' % (args.record_folder, args.target, record_num-1)
+        args.checkpoint_dir = checkpoint_dir 
+        solver = Solver(args, target=args.target, learning_rate=args.lr, batch_size=args.batch_size,
                     optimizer=args.optimizer, 
                     checkpoint_dir=args.checkpoint_dir,
                     save_epoch=args.save_epoch)
-    if args.eval_only:
-        solver.test(0)
+
+        test(solver, 0, 'test', record_file=None, save_model=False)
     else:
+
+        solver = Solver(args, target=args.target, learning_rate=args.lr, batch_size=args.batch_size,
+                    optimizer=args.optimizer, 
+                    checkpoint_dir=args.checkpoint_dir,
+                    save_epoch=args.save_epoch)
         count = 0
         for t in range(args.max_epoch):
             print(t)

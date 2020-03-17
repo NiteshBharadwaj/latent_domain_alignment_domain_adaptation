@@ -69,7 +69,9 @@ class Solver(object):
         # print(self.dataset['S1'].shape)
         print('model_loaded')
 
+        self.set_optimizer(which_opt=optimizer, lr=learning_rate)
         if args.eval_only:
+            print('Loading state from: ','%s/%s_model_best.pth' % (self.checkpoint_dir, self.target))
             checkpoint = torch.load('%s/%s_model_best.pth' % (self.checkpoint_dir, self.target))
             self.G.load_state_dict(checkpoint['G_state_dict'])
             self.C1.load_state_dict(checkpoint['C1_state_dict'])
@@ -87,7 +89,6 @@ class Solver(object):
         self.DP.cuda()
         self.interval = interval
 
-        self.set_optimizer(which_opt=optimizer, lr=learning_rate)
         self.lr = learning_rate
         print('initialize complete')
 
