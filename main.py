@@ -10,6 +10,7 @@ from solver_MSDA import Solver
 import os
 from train_msda_hard import train_MSDA as train_MSDA_hard
 from train_msda_soft import train_MSDA_soft
+from train_msda_single import train_MSDA_single
 from test import test
 from train_source_only import train_source_only
 
@@ -28,7 +29,7 @@ parser.add_argument('--data', type=str, default='', metavar='N',
                     help='digits,cars')
 parser.add_argument('--record_folder', type=str, default='record', metavar='N',
                     help='record folder')
-parser.add_argument('--batch-size', type=int, default=64, metavar='N',
+parser.add_argument('--batch-size', type=int, default=128, metavar='N',
                     help='input batch size for training (default: 64)')
 parser.add_argument('--checkpoint_dir', type=str, default='checkpoint', metavar='N',
                     help='source only or not')
@@ -115,6 +116,9 @@ def main():
                 elif args.dl_type=='source_only':
                     torch.cuda.empty_cache()
                     num= train_source_only(solver,t,record_file=record_train)
+                elif args.dl_type=='source_target_only':
+                    torch.cuda.empty_cache()
+                    num= train_MSDA_single(solver,t,classifier_disc,record_file=record_train)
                 else:
                     num = train_MSDA_hard(solver,t, classifier_disc, record_file=record_train)
             else:

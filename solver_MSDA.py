@@ -40,6 +40,8 @@ class Solver(object):
                 self.datasets, self.dataset_test, self.dataset_valid = dataset_combined(target, self.batch_size,args.num_domain)
             elif args.dl_type == 'source_only':
                 self.datasets, self.dataset_test, self.dataset_valid = dataset_combined(target, self.batch_size,args.num_domain)
+            elif args.dl_type == 'source_target_only':
+                self.datasets, self.dataset_test, self.dataset_valid = dataset_combined(target, self.batch_size,args.num_domain)
             else:
                 raise Exception('Type of experiment undefined')
 
@@ -56,10 +58,12 @@ class Solver(object):
         elif args.data == 'cars':
             if args.dl_type == 'soft_cluster':
                 self.datasets, self.dataset_test, self.dataset_valid = cars_combined(target, self.batch_size)
+            elif args.dl_type == 'source_target_only':
+                self.datasets, self.dataset_test, self.dataset_valid = cars_combined(target, self.batch_size)
             print('load finished!')
             self.entropy_wt = 0.1
             self.msda_wt = 1e-4
-            self.to_detach = False
+            self.to_detach = True
             num_classes = 163
             num_domains = args.num_domain
             self.G = Generator_cars()
@@ -203,9 +207,9 @@ class Solver(object):
         output_s_c1, output_t_c1 = self.C1_all_domain_soft(feat_s, feat_t)
         output_s_c2, output_t_c2 = self.C2_all_domain_soft(feat_s, feat_t)
         if self.to_detach:
-            loss_msda = msda.msda_regulizer_soft(feat_s, feat_t, 5, domain_prob.detach()) * self.entropy_wt
+            loss_msda = msda.msda_regulizer_soft(feat_s, feat_t, 5, domain_prob.detach()) * self.msda_wt
         else:
-            loss_msda = msda.msda_regulizer_soft(feat_s, feat_t, 5, domain_prob) * self.entropy_wt
+            loss_msda = msda.msda_regulizer_soft(feat_s, feat_t, 5, domain_prob) * self.msda_wt
         if (math.isnan(loss_msda.data.item())):
             raise Exception('msda loss is nan')
         loss_s_c1 = \

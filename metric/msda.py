@@ -87,3 +87,16 @@ def msda_regulizer_soft(output_s, output_t, belta_moment, domain_prob):
 
 	return reg_info / 6
 # return euclidean(output_s1, output_t)
+
+def k_moment_single(output_s, output_t, k):
+	output_s_k = (output_s**k)
+	output_s_mean = output_s_k.mean(0)
+	output_t = (output_t**k).mean(0)
+	return euclidean(output_s_mean, output_t)
+
+def msda_regulizer_single(output_s, output_t, belta_moment):
+	reg_info = 0
+	for i in range(belta_moment):
+		reg_info += k_moment_single(output_s, output_t, i + 1)
+
+	return reg_info / 6
