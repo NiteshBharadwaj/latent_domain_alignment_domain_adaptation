@@ -49,7 +49,7 @@ parser.add_argument('--resume_epoch', type=int, default=100, metavar='N',
                     help='epoch to resume')
 parser.add_argument('--save_epoch', type=int, default=1, metavar='N',
                     help='when to restore the model')
-parser.add_argument('--save_model', action='store_true', default=False,
+parser.add_argument('--save_model', action='store_true', default=True,
                     help='save_model or not')
 parser.add_argument('--seed', type=int, default=1, metavar='S',
                     help='random seed (default: 1)')
@@ -78,16 +78,18 @@ def main():
     record_train = '%s/%s_%s.txt' % (args.record_folder, args.target,record_num)
     record_test = '%s/%s_%s_test.txt' % (args.record_folder, args.target, record_num)
     record_val = '%s/%s_%s_val.txt' % (args.record_folder, args.target, record_num)
+    checkpoint_dir = '%s/%s_%s' % (args.record_folder, args.target, record_num)
     while os.path.exists(record_train):
         record_num += 1
         record_train = '%s/%s_%s.txt' % (args.record_folder, args.target, record_num)
         record_test = '%s/%s_%s_test.txt' % (args.record_folder, args.target, record_num)
         record_val = '%s/%s_%s_val.txt' % (args.record_folder, args.target, record_num)
-
-    if not os.path.exists(args.checkpoint_dir):
-        os.mkdir(args.checkpoint_dir)
+    
+    if not os.path.exists(checkpoint_dir):
+        os.mkdir(checkpoint_dir)
     if not os.path.exists(args.record_folder):
         os.mkdir(args.record_folder)
+    args.checkpoint_dir = checkpoint_dir
     classifier_disc = True if args.class_disc=='yes' else False
     if args.eval_only:
         solver.test(0)
@@ -109,7 +111,8 @@ def main():
                 raise Exception('One step solver not defined')
             count += num
             if t % 1 == 0:
-                test(solver, t, 'train', record_file=record_test, save_model=args.save_model)
+                if args.data=='cars':
+                    test(solver, t, 'train', record_file=record_test, save_model=args.save_model)
                 best = test(solver, t, 'val', record_file=record_val, save_model=args.save_model)
                 if best:
                     test(solver, t, 'test', record_file=record_test, save_model=args.save_model)

@@ -65,7 +65,7 @@ class Solver(object):
         print('model_loaded')
 
         if args.eval_only:
-            checkpoint = torch.load('%s/%s_model_epoch%s.pth' % (self.checkpoint_dir, self.target, args.resume_epoch))
+            checkpoint = torch.load('%s/%s_model_best.pth' % (self.checkpoint_dir, self.target))
             self.G.load_state_dict(checkpoint['G_state_dict'])
             self.C1.load_state_dict(checkpoint['C1_state_dict'])
             self.C2.load_state_dict(checkpoint['C2_state_dict'])

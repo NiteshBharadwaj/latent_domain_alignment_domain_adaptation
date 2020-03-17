@@ -64,7 +64,7 @@ def test(solver, epoch, split, record_file=None, save_model=False):
     best = False
     if split=='val':
         if save_model and epoch % solver.save_epoch == 0 and test_loss < solver.best_loss:
-            print('Saving best model','%s/%s_model_epoch%s.pth' % (solver.checkpoint_dir, solver.target, epoch))
+            print('Saving best model','%s/%s_model_best.pth' % (solver.checkpoint_dir, solver.target))
             checkpoint = {}
             checkpoint['G_state_dict'] = solver.G.state_dict()
             checkpoint['C1_state_dict'] = solver.C1.state_dict()
@@ -73,9 +73,9 @@ def test(solver, epoch, split, record_file=None, save_model=False):
 
             checkpoint['G_state_dict_opt'] = solver.opt_g.state_dict()
             checkpoint['C1_state_dict_opt'] = solver.opt_c1.state_dict()
-            checkpoint['C2_state_dict_opt'] = solver.op2_c2.state_dict()
+            checkpoint['C2_state_dict_opt'] = solver.opt_c2.state_dict()
             checkpoint['DP_state_dict_opt'] = solver.opt_dp.state_dict()
-            torch.save(checkpoint, '%s/%s_model_epoch%s.pth' % (solver.checkpoint_dir, solver.target, epoch))
+            torch.save(checkpoint, '%s/%s_model_best.pth' % (solver.checkpoint_dir, solver.target))
 
         if test_loss < solver.best_loss:
             solver.best_loss = test_loss

@@ -68,6 +68,8 @@ def dataset_read(target, batch_size):
 
     target_train, target_train_label, target_test, target_test_label = return_dataset(target)
     indices_tar = np.arange(0,target_test.shape[0])
+
+    np.random.seed(42)
     np.random.shuffle(indices_tar)
     val_split = int(0.05*target_test.shape[0])
     target_val = target_test[indices_tar[:val_split]]
@@ -130,7 +132,8 @@ def dataset_hard_cluster(target, batch_size,num_clus):
 
     target_train, target_train_label, target_test, target_test_label = return_dataset(target)
 
-    indices_tar = np.arange(0,target_test.shape[0])
+    indices_tar = np.arange(0,target_test.shape[0]) 
+    np.random.seed(42)
     np.random.shuffle(indices_tar)
     val_split = int(0.05*target_test.shape[0])
     target_val = target_test[indices_tar[:val_split]]
@@ -238,6 +241,7 @@ def dataset_combined(target, batch_size,num_clus):
     target_train, target_train_label, target_test, target_test_label = return_dataset(target)
 
     indices_tar = np.arange(0,target_test.shape[0])
+    np.random.seed(42)
     np.random.shuffle(indices_tar)
     val_split = int(0.05*target_test.shape[0])
     target_val = target_test[indices_tar[:val_split]]
