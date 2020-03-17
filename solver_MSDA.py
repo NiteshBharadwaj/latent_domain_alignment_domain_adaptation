@@ -46,7 +46,9 @@ class Solver(object):
             print('load finished!')
             num_classes = 10
             num_domains = args.num_domain
-
+            self.entropy_wt = 0.01
+            self.msda_wt = 0.1
+            self.to_detach = False
             self.G = Generator_digit()
             self.C1 = Classifier_digit()
             self.C2 = Classifier_digit()
@@ -55,6 +57,9 @@ class Solver(object):
             if args.dl_type == 'soft_cluster':
                 self.datasets, self.dataset_test, self.dataset_valid = cars_combined(target, self.batch_size)
             print('load finished!')
+            self.entropy_wt = 0.1
+            self.msda_wt = 1e-4
+            self.to_detach = False
             num_classes = 163
             num_domains = args.num_domain
             self.G = Generator_cars()
@@ -179,7 +184,10 @@ class Solver(object):
         feat_s_comb, feat_t_comb = self.feat_soft_all_domain(img_s, img_t)
         feat_s, conv_feat_s = feat_s_comb
         feat_t, conv_feat_t = feat_t_comb
-        domain_logits = self.DP(conv_feat_s.detach())
+        if self.to_detach:
+            domain_logits = self.DP(conv_feat_s.detach())
+        else:
+            domain_logits = self.DP(conv_feat_s)
         entropy_loss, domain_prob = self.entropy_loss(domain_logits)
         # print(domain_prob)
 
@@ -189,12 +197,14 @@ class Solver(object):
 
         if (math.isnan(entropy_loss.data.item())):
             raise Exception('entropy loss is nan')
-        entropy_loss = entropy_loss * 0.1
+        entropy_loss = entropy_loss * self.entropy_wt
 
         output_s_c1, output_t_c1 = self.C1_all_domain_soft(feat_s, feat_t)
         output_s_c2, output_t_c2 = self.C2_all_domain_soft(feat_s, feat_t)
-
-        loss_msda = msda.msda_regulizer_soft(feat_s, feat_t, 5, domain_prob.detach()) * 1e-4
+        if self.to_detach:
+            loss_msda = msda.msda_regulizer_soft(feat_s, feat_t, 5, domain_prob.detach()) * self.entropy_wt
+        else:
+            loss_msda = msda.msda_regulizer_soft(feat_s, feat_t, 5, domain_prob) * self.entropy_wt
         if (math.isnan(loss_msda.data.item())):
             raise Exception('msda loss is nan')
         loss_s_c1 = \
