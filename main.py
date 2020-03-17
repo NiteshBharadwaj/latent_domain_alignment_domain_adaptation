@@ -8,11 +8,18 @@ sys.path.append('./datasets')
 sys.path.append('./metric');
 from solver_MSDA import Solver
 import os
+from train_msda_hard import train_MSDA as train_MSDA_hard
+from train_msda_soft import train_MSDA_soft
+from test import test
+from train_source_only import train_source_only
+
 
 # Training settings
 parser = argparse.ArgumentParser(description='PyTorch MSDA Implementation')
 parser.add_argument('--all_use', type=str, default='no', metavar='N',
                     help='use all training data? in usps adaptation')
+parser.add_argument('--class_disc', type=str, default='yes', metavar='N',
+                    help='classifier_discrepancy? yes/no')
 parser.add_argument('--dl_type', type=str, default='', metavar='N',
                     help='original, hard_cluster, combined, soft_cluster')
 parser.add_argument('--num_domain', type=int, default=4, metavar='N',
@@ -79,6 +86,7 @@ def main():
         os.mkdir(args.checkpoint_dir)
     if not os.path.exists(args.record_folder):
         os.mkdir(args.record_folder)
+    classifier_disc = True if args.clas_disc=='yes' else False
     if args.eval_only:
         solver.test(0)
     else:
@@ -89,17 +97,18 @@ def main():
                 # num = solver.train_merge_baseline(t, record_file=record_train)
                 if args.dl_type=='soft_cluster':
                     torch.cuda.empty_cache()
-                    num= solver.train_MSDA_soft(t,record_file=record_train)
+                    num= train_MSDA_soft(solver,t,classifier_disc,record_file=record_train)
+                elif args.dl_type=='source_only':
+                    torch.cuda.empty_cache()
+                    num= train_source_only(solver,t,record_file=record_train)
                 else:
-                    num = solver.train_MSDA(t, record_file=record_train)
+                    num = train_MSDA_hard(solver,t, classifier_disc, record_file=record_train)
             else:
-                num = solver.train_onestep(t, record_file=record_train)
+                raise Exception('One step solver not defined')
             count += num
             if t % 1 == 0:
-                solver.test(t, is_train_perf=True, record_file=record_test, save_model=args.save_model)
-                solver.test(t, is_train_perf=False, record_file=record_test, save_model=args.save_model)
-            # if count >= 20000:
-            #     break
+                test(solver, t, is_train_perf=True, record_file=record_test, save_model=args.save_model)
+                test(solver, t, is_train_perf=False, record_file=record_test, save_model=args.save_model)
 
 
 if __name__ == '__main__':

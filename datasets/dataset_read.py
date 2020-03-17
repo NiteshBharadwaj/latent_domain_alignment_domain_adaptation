@@ -62,10 +62,18 @@ def dataset_read(target, batch_size):
 
     T = {}
     T_test = {}
+    T_val = {}
     domain_all = ['mnistm', 'mnist', 'usps', 'svhn', 'syn']
     domain_all.remove(target)
 
     target_train, target_train_label, target_test, target_test_label = return_dataset(target)
+    indices_tar = np.arange(0,target_test.shape[0])
+    indices_tar = np.random.shuffle(indices_tar)
+    val_split = int(0.05*target_test.shape[0])
+    target_val = target_test[indices_tar[:val_split]]
+    target_val_label = target_test_label[indices_tar[:val_split]]
+    target_test = target_test[indices_tar[val_split:]]
+    target_test_label = target_test_label[indices_tar[val_split:]]
 
     for i in range(len(domain_all)):
         source_train, source_train_label, source_test, source_test_label = return_dataset(domain_all[i])
@@ -86,6 +94,9 @@ def dataset_read(target, batch_size):
     T_test['imgs'] = target_test
     T_test['labels'] = target_test_label
 
+    T_val['imgs'] = target_val
+    T_val['labels'] = target_val_label
+
     scale = 32
 
     train_loader = UnalignedDataLoader()
@@ -97,7 +108,14 @@ def dataset_read(target, batch_size):
 
     dataset_test = test_loader.load_data()
 
-    return dataset, dataset_test
+    S_val = {}
+    S_val['imgs'] = 'gg'
+    S_val['labels'] = 'lol'
+    val_loader = UnalignedDataLoader()
+    val_loader.initialize(S_val, T_val, batch_size, batch_size, scale=scale)
+
+    dataset_valid = val_loader.load_data()
+    return dataset, dataset_test, dataset_valid
 
 
 def dataset_hard_cluster(target, batch_size,num_clus):
