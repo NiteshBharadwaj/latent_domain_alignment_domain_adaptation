@@ -86,7 +86,7 @@ def main():
         os.mkdir(args.checkpoint_dir)
     if not os.path.exists(args.record_folder):
         os.mkdir(args.record_folder)
-    classifier_disc = True if args.clas_disc=='yes' else False
+    classifier_disc = True if args.class_disc=='yes' else False
     if args.eval_only:
         solver.test(0)
     else:

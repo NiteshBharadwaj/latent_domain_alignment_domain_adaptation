@@ -33,11 +33,13 @@ class Solver(object):
         print('dataset loading')
         if args.data == 'digits':
             if args.dl_type == 'original':
-                self.datasets, self.dataset_test = dataset_read(target, self.batch_size)
+                self.datasets, self.dataset_test, self.dataset_valid = dataset_read(target, self.batch_size)
             elif args.dl_type == 'hard_cluster':
-                self.datasets, self.dataset_test = dataset_hard_cluster(target, self.batch_size,args.num_domain)
+                self.datasets, self.dataset_test, self.dataset_valid = dataset_hard_cluster(target, self.batch_size,args.num_domain)
             elif args.dl_type == 'soft_cluster':
-                self.datasets, self.dataset_test = dataset_combined(target, self.batch_size,args.num_domain)
+                self.datasets, self.dataset_test, self.dataset_valid = dataset_combined(target, self.batch_size,args.num_domain)
+            elif args.dl_type == 'source_only':
+                self.datasets, self.dataset_test, self.dataset_valid = dataset_combined(target, self.batch_size,args.num_domain)
             else:
                 raise Exception('Type of experiment undefined')
 
