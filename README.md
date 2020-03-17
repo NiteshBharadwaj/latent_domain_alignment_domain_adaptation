@@ -20,9 +20,9 @@ To clone the repository
 $ git clone git@github.com:NiteshBharadwaj/code_MSDA_digit.git
 ```
 
-GPU: 8Gi, CPU: 8Gi, Batch Size: 128, 
-    Training Time USPS: < 5min Acc 96% (Same as paper in 3 epochs) 
-    Training Time MNIST-M: < 2hrs Acc 73% (Same as in paper in 80 epochs)
+- GPU: 8Gi, CPU: 8Gi, Batch Size: 128, 
+	- Training Time USPS: < 5min Acc 96% (Same as paper in 3 epochs) 
+	- Training Time MNIST-M: < 2hrs Acc 73% (Same as in paper in 80 epochs)
 
 ## Setup for different Datasets
 
