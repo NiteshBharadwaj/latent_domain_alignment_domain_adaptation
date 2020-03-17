@@ -2,7 +2,7 @@ import os
 base_dir = 'data_cropped'
 import scipy.io as sio
 import numpy as np
-from random import shuffle
+import random
 
 def split_(train_file, label_dir):
     paths = []
@@ -122,7 +122,8 @@ def read_comp_cars(target):
         labels_train_sh = [labels_train[i] for i in range(len(paths_train)) if i not in unav_train]
 
         rel_paths_test = split_(test_file, label_dir)
-        shuffle(rel_paths_test)
+        rel_paths_test.sort()
+        random.Random(42).shuffle(rel_paths_test)
         valid_size = 6*len(rel_paths_test)//10
         rel_paths_valid = rel_paths_test[:valid_size]
         rel_paths_test = rel_paths_test[valid_size:]
