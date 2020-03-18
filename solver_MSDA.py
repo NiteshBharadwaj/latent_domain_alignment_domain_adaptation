@@ -9,8 +9,10 @@ from torch.autograd import Variable
 from model.build_gen_digits import Generator as Generator_digit, Classifier as Classifier_digit, \
     DomainPredictor as DP_Digit
 from model.build_gen import Generator as Generator_cars, Classifier as Classifier_cars, DomainPredictor as DP_cars
+from model.build_gen_office import Generator as Generator_office, Classifier as Classifier_office, DomainPredictor as DP_office
 from datasets.dataset_read import dataset_read, dataset_hard_cluster, dataset_combined
 from datasets.cars import cars_combined
+from datasets.office import office_combined
 import numpy as np
 import math
 from scipy.stats import entropy
@@ -72,6 +74,23 @@ class Solver(object):
             self.C1 = Classifier_cars(num_classes)
             self.C2 = Classifier_cars(num_classes)
             self.DP = DP_cars(num_domains)
+        elif args.data == 'office':
+            if args.dl_type == 'soft_cluster':
+                self.datasets, self.dataset_test, self.dataset_valid = office_combined(target, self.batch_size)
+            elif args.dl_type == 'source_target_only':
+                self.datasets, self.dataset_test, self.dataset_valid = office_combined(target, self.batch_size)
+            elif args.dl_type == 'source_only':
+                self.datasets, self.dataset_test, self.dataset_valid = office_combined(target, self.batch_size)
+            print('load finished!')
+            self.entropy_wt = 0.1
+            self.msda_wt = 1e-4
+            self.to_detach = True
+            num_classes = 31
+            num_domains = args.num_domain
+            self.G = Generator_office()
+            self.C1 = Classifier_office(num_classes)
+            self.C2 = Classifier_office(num_classes)
+            self.DP = DP_office(num_domains)
         # print(self.dataset['S1'].shape)
         print('model_loaded')
 
