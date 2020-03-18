@@ -123,6 +123,10 @@ def main():
                     num = train_MSDA_hard(solver,t, classifier_disc, record_file=record_train)
             else:
                 raise Exception('One step solver not defined')
+            solver.sche_g.step()
+            solver.sche_c1.step()
+            solver.sche_c2.step()
+            solver.sche_dp.step()
             count += num
             if t % 1 == 0:
                 if args.data=='cars':

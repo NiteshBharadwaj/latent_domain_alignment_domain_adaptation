@@ -60,6 +60,8 @@ class Solver(object):
                 self.datasets, self.dataset_test, self.dataset_valid = cars_combined(target, self.batch_size)
             elif args.dl_type == 'source_target_only':
                 self.datasets, self.dataset_test, self.dataset_valid = cars_combined(target, self.batch_size)
+            elif args.dl_type == 'source_only':
+                self.datasets, self.dataset_test, self.dataset_valid = cars_combined(target, self.batch_size)
             print('load finished!')
             self.entropy_wt = 0.1
             self.msda_wt = 1e-4
@@ -92,6 +94,14 @@ class Solver(object):
         self.C2.cuda()
         self.DP.cuda()
         self.interval = interval
+        if args.data=='cars':
+            milestones = [10,15]
+        else:
+            milestones = [100]
+        self.sche_g = torch.optim.lr_scheduler.MultiStepLR(self.opt_g, milestones, gamma=0.1)
+        self.sche_c1 = torch.optim.lr_scheduler.MultiStepLR(self.opt_c1, milestones, gamma=0.1)
+        self.sche_c2 = torch.optim.lr_scheduler.MultiStepLR(self.opt_c2, milestones, gamma=0.1)
+        self.sche_dp = torch.optim.lr_scheduler.MultiStepLR(self.opt_dp, milestones, gamma=0.1)
 
         self.lr = learning_rate
         print('initialize complete')
