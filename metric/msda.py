@@ -96,7 +96,10 @@ def k_moment_single(output_s, output_t, k):
 
 def msda_regulizer_single(output_s, output_t, belta_moment):
 	reg_info = 0
-	for i in range(belta_moment):
-		reg_info += k_moment_single(output_s, output_t, i + 1)
+	reg_info += k_moment_single(output_s, output_t, 1)
+	output_s_ = output_s -output_s.mean(0)
+	output_t_ = output_t -output_t.mean(0)
+	for i in range(1,belta_moment):
+		reg_info += k_moment_single(output_s_, output_t_, i + 1)
 
 	return reg_info / 6

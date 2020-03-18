@@ -22,6 +22,12 @@ class Feature_ResNet18(nn.Module):
 		nn.init.constant_(self.fc2.bias, 0.)
 		self.bn_fc2 = nn.BatchNorm1d(2048)
 
+		self.fc3 = nn.Linear(2048, 2048)
+		nn.init.xavier_uniform_(self.fc3.weight, .1)
+		nn.init.constant_(self.fc3.bias, 0.)
+		self.bn_fc3 = nn.BatchNorm1d(2048)
+        
+
 		# num_ftrs = self.model.fc.in_features
 		# self.model.fc = nn.Linear(num_ftrs, 1716)
 		# nn.init.xavier_uniform_(self.model.fc.weight, .1)
@@ -53,8 +59,14 @@ class Feature_ResNet18(nn.Module):
 		x = self.model.avgpool(x)
 		x = x.view(x.size(0), -1)
 
+# 		x1 = x.detach() 
 		x = self.relu(self.bn_fc2(self.fc2(x)))
+#		x = self.relu(self.bn_fc3(self.fc3(x)))
 
+
+# 		x2 = x 
+# 		x2 = self.relu(self.bn_fc2(self.fc2(x2)))
+# 		x2 = self.relu(self.bn_fc3(self.fc3(x2)))
 
 		# x = self.relu(self.bn1_fc(self.fc1(x_feat)))
 		# x = F.dropout(x, training=self.training)

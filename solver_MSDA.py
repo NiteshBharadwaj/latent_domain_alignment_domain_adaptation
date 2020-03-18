@@ -114,7 +114,7 @@ class Solver(object):
         self.DP.cuda()
         self.interval = interval
         if args.data=='cars':
-            milestones = [10,15]
+            milestones = [100]
         else:
             milestones = [100]
         self.sche_g = torch.optim.lr_scheduler.MultiStepLR(self.opt_g, milestones, gamma=0.1)
