@@ -57,25 +57,56 @@ def msda_regulizer(source_output, target_output, beta_moment):
 
     return reg_info / 6
 
+def moment_soft(output_s, domain_prob, output_t, k):
+    output_s = output_s**k
+    domain_prob_sum = domain_prob.sum(0)
+    domain_prob_normalized = domain_prob/domain_prob_sum
+    domain_embeddings = torch.matmul(domain_prob_normalized.t(), output_s)
+    loss1 = 0
+    cross_domain_terms = 0
+    for i in range(len(domain_embeddings)):
+        for j in range(len(domain_embeddings)):
+            if(i != j and j > i):
+                loss1 += euclidean(domain_embeddings[i,:], domain_embeddings[j,:])
+                cross_domain_terms += 1
+    loss1 /= cross_domain_terms
+    loss2 = 0
+    for i in range(len(domain_embeddings)):
+        loss2 += euclidean(domain_embeddings[i,:], output_t)
+    loss2 /= len(domain_embeddings)
+    #loss2 = euclidean(output_s.mean(0), output_t)
 
-def moment_soft(output_s, domain_prob):
-	output_s = output_s.reshape(output_s.shape[0], output_s.shape[1],1)
-	domain_prob = domain_prob.reshape(domain_prob.shape[0], 1, domain_prob.shape[1])
-	output_prob = torch.matmul(output_s, domain_prob)
-	output_prob_sum = domain_prob.sum(0)
-	output_prob = output_prob/output_prob_sum.reshape(1, 1, domain_prob.shape[2])
-	loss = 0
-	for i in range(output_prob.shape[2]):
-		for j in range(i+1,output_prob.shape[2]):
-			loss += euclidean(output_prob[:,i,:], output_prob[:,j,:])
-	return loss
+    return loss1 + loss2
+
+
+
+# def moment_soft(output_s, domain_prob):
+#     output_s = output_s.reshape(output_s.shape[0], output_s.shape[1],1)
+#     domain_prob = domain_prob.reshape(domain_prob.shape[0], 1, domain_prob.shape[1])
+#     #print('shape of domain_prob : ', domain_prob.size())
+#     output_prob = torch.matmul(output_s, domain_prob)
+#     output_prob_sum = domain_prob.sum(0)
+#     #print('shape of output prob sum : ', output_prob_sum.size())
+#     output_prob = output_prob/output_prob_sum.reshape(1, 1, domain_prob.shape[2])
+#     loss = 0
+#     # print('shape of output prob: ', output_prob.size())
+#     # print(output_prob[0,0,:])
+#     # print(output_prob[0,1,:])
+#     for i in range(output_prob.shape[2]):
+#     	for j in range(i+1,output_prob.shape[2]):
+#     		loss += euclidean(output_prob[:,i,:], output_prob[:,j,:])
+#     return loss
 
 
 def k_moment_soft(output_s, output_t, k, domain_prob):
-	output_s_k = (output_s**k)
-	output_s_mean = output_s_k.mean(0)
-	output_t = (output_t**k).mean(0)
-	return euclidean(output_s_mean, output_t) + moment_soft(output_s, domain_prob)
+    output_s_k = (output_s**k)
+    output_s_mean = output_s_k.mean(0)
+    output_t = (output_t**k).mean(0)
+    # print('shape of output_s_mean : ', output_s_mean.size())
+    # print('shape of output_s : ', output_s.size())
+    #return euclidean(output_s_mean, output_t) + moment_soft(output_s, domain_prob)
+    return euclidean(output_s_mean, output_t)
+    return moment_soft(output_s, domain_prob, output_t, k)
 
 def msda_regulizer_soft(output_s, output_t, belta_moment, domain_prob):
 	# print('s1:{}, s2:{}, s3:{}, s4:{}'.format(output_s1.shape, output_s2.shape, output_s3.shape, output_t.shape))

@@ -8,11 +8,15 @@ import msda
 from torch.autograd import Variable
 from model.build_gen_digits import Generator as Generator_digit, Classifier as Classifier_digit, \
     DomainPredictor as DP_Digit
-from model.build_gen import Generator as Generator_cars, Classifier as Classifier_cars, DomainPredictor as DP_cars
-from datasets.dataset_read import dataset_read, dataset_hard_cluster, dataset_combined
+from model.build_gen_office import Generator as Generator_office, Classifier as Classifier_office, DomainPredictor as DP_office
+#from datasets.dataset_read import dataset_read, dataset_hard_cluster, dataset_combined
 from datasets.cars import cars_combined
+from datasets.office import office_combined
 import numpy as np
 import math
+import matplotlib
+#import Image
+from matplotlib import pyplot as plt
 
 
 # Training settings
@@ -59,6 +63,16 @@ class Solver(object):
             self.C1 = Classifier_cars(num_classes)
             self.C2 = Classifier_cars(num_classes)
             self.DP = DP_cars(num_domains)
+        elif args.data == 'office':
+            if args.dl_type == 'soft_cluster':
+                self.datasets, self.dataset_test = office_combined(target, self.batch_size)
+            print('load finished!')
+            num_classes = 31
+            num_domains = args.num_domain
+            self.G = Generator_office()
+            self.C1 = Classifier_office(num_classes)
+            self.C2 = Classifier_office(num_classes)
+            self.DP = DP_office(num_domains)     
         # print(self.dataset['S1'].shape)
         print('model_loaded')
 
@@ -238,14 +252,16 @@ class Solver(object):
         data_symbol = 'T'
         data_label_symbol = 'T_label'
         if is_train_perf:
+            # from copy import deepcopy
+            # self.datasets_copy = deepcopy(self.datasets)
             which_dataset = self.datasets
             data_symbol = 'S'
             data_label_symbol = 'S_label'
-
+        start = 0    
         with torch.no_grad():
            for batch_idx, data in enumerate(which_dataset):
                if batch_idx >= 100:
-                   break
+                   continue
 
                img = data[data_symbol]
                label = data[data_label_symbol]
@@ -265,10 +281,11 @@ class Solver(object):
                	label_all = label_all + label.data.cpu().numpy().tolist()
 
                #print(feat.shape)
-               
+               start +=  label.data.size()[0]
+               #print(start, is_train_perf)
                output1 = self.C1(feat)
                
-               test_loss += F.nll_loss(output1, label).data.item()
+               test_loss += nn.CrossEntropyLoss()(output1, label).data.item()
                pred1 = output1.data.max(1)[1]
                k = label.data.size()[0]
                correct1 += pred1.eq(label.data).cpu().sum()
@@ -422,20 +439,43 @@ class Solver(object):
         criterion = HLoss().cuda()
         return criterion(output)
 
-    def loss_soft_all_domain(self, img_s, img_t, label_s):
+    def loss_soft_all_domain(self, img_s, img_t, label_s, correct, total, epoch):
         feat_s_comb, feat_t_comb = self.feat_soft_all_domain(img_s, img_t)
         feat_s, conv_feat_s = feat_s_comb
         feat_t, conv_feat_t = feat_t_comb
-        domain_logits = self.DP(conv_feat_s)
+        domain_logits = self.DP(conv_feat_s.detach())
         entropy_loss, domain_prob = self.entropy_loss(domain_logits)
+        total_domains = domain_prob.size()[1]
+        domains = domain_prob.data.max(1)[1]
+        #print(domains)
+        # if(epoch == 5):
+        #     for i in range(total_domains):
+        #         i_index = ((domains == i).nonzero()).squeeze()
+        #         img_s_i = img_s[i_index,:,:]
+        #         for k in range(img_s_i.size()[0]):
+        #             img_ = img_s_i[k, :, :, :].squeeze().permute(1,2,0)
+        #             img_ = img_.cpu().detach().numpy()
+        #             #print(img_.shape)
+        #             #print(img_.size())
+        #             index = i_index[k]
+        #             plt.imshow(img_) 
+        #             plt.savefig(str(i)+'/'+str(index.item())+'.png')
+                #im = Image.fromarray(img_.cpu().sum().item())
+                #im.save()
+                #matplotlib.image.imsave(str(i)+'/'+str(index), img_.cpu().sum().item())
+
+
+
+
         if (math.isnan(entropy_loss.data.item())):
             raise Exception('entropy loss is nan')
-        entropy_loss = 0.01 * entropy_loss
+        entropy_loss = 0.1 * entropy_loss
 
         output_s_c1, output_t_c1 = self.C1_all_domain_soft(feat_s, feat_t)
         output_s_c2, output_t_c2 = self.C2_all_domain_soft(feat_s, feat_t)
 
-        loss_msda = 0.1 * msda.msda_regulizer_soft(feat_s, feat_t, 5, domain_prob)
+        loss_msda = 1e-2 * msda.msda_regulizer_soft(feat_s, feat_t, 5, domain_prob.detach())
+        #loss_msda = mmd.mix_rbf_mmd2(feat_s, feat_t, [1, 2, 5, 10])
         if (math.isnan(loss_msda.data.item())):
             raise Exception('msda loss is nan')
         loss_s_c1 = \
@@ -446,7 +486,11 @@ class Solver(object):
             self.softmax_loss_all_domain_soft(output_s_c2, label_s)
         if (math.isnan(loss_s_c2.data.item())):
             raise Exception(' c2 loss is nan')
-        return loss_s_c1, loss_s_c2, loss_msda, entropy_loss
+
+        pred = output_s_c1.data.max(1)[1]
+        correct += pred.eq(label_s.data).cpu().sum().item()
+        total += label_s.data.size()[0]
+        return loss_s_c1, loss_s_c2, loss_msda, entropy_loss, correct, total
 
     def train_MSDA_soft(self, epoch, record_file=None):
         criterion = nn.CrossEntropyLoss().cuda()
@@ -456,26 +500,40 @@ class Solver(object):
         self.DP.train()
         torch.cuda.manual_seed(1)
 
+        from copy import deepcopy
+        #self.datasets_copy = deepcopy(self.datasets)
+
         batch_idx_g = 0
+        correct = 0
+        total = 0
 
         for batch_idx, data in enumerate(self.datasets):
             batch_idx_g = batch_idx
             img_t = Variable(data['T'].cuda())
             img_s = Variable(data['S'].cuda())
             label_s = Variable(data['S_label'].long().cuda())
-            if img_s.size()[0] < self.batch_size or img_t.size()[0] < self.batch_size:
-                break
-
+            #print((img_s.size()[0], img_t.size()[0]))
+            # if img_s.size()[0] < self.batch_size or img_t.size()[0] < self.batch_size:
+            #     continue
+            #print((img_s.size()[0], img_t.size()[0]))
             self.reset_grad()
 
-            loss_s_c1, loss_s_c2, loss_msda, entropy_loss = self.loss_soft_all_domain(img_s, img_t, label_s)
+            loss_s_c1, loss_s_c2, loss_msda, entropy_loss, correct, total = self.loss_soft_all_domain(img_s, img_t, label_s, correct, total, epoch)
 
-            loss = loss_s_c1 #+ loss_s_c2 + loss_msda + entropy_loss
+            
+
+            #correct1 += pred1.eq(label.data).cpu().sum()
+            #loss = loss_s_c1 #+ loss_s_c2 + loss_msda + entropy_loss
+
+            loss = loss_s_c1 + loss_msda #+ entropy_loss
 
             loss.backward()
 
             self.opt_g.step()
             self.opt_c1.step()
+            #self.opt_dp.step()
+            #self.opt_c2.step()
+            #self.reset_grad()
             # self.opt_c2.step()
             # self.opt_dp.step()
             # self.reset_grad()
@@ -520,6 +578,7 @@ class Solver(object):
             #         record.close()
 
             if batch_idx % 10 == 0:
+                print((loss_s_c1, loss_msda, loss))
                 print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss1: {:.6f}\t Loss2: {:.6f}\t Loss_mmd: {:.6f}\t Loss_entropy: {:.6f}\t Discrepancy: {:.6f}'.format(
                     epoch, batch_idx, 100,
                     100. * batch_idx / 70000, loss_s_c1.data.item(), 0, 0, 0, 0))
@@ -527,6 +586,7 @@ class Solver(object):
                     record = open(record_file, 'a')
                     record.write('%s %s %s %s %s %s\n' % (0, loss_s_c1.data.item(), 0, 0, 0, 0))
                     record.close()
+        print('accuracy during training : ', correct/total)
         return batch_idx_g
 
     def train_MMD(self, epoch, record_file=None):

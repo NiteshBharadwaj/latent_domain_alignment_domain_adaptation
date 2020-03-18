@@ -22,3 +22,4 @@ do
 done
 
 #eg. ./experiment_do.sh  usps 100 0 record/usps_MSDA_{exp_type} digits 4
+#eg. ./experiment_do.sh dslr 100 0 record/dslr_source_only soft_cluster office 2

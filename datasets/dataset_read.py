@@ -1,6 +1,7 @@
 import sys
 
 sys.path.append('../loader')
+sys.path.append('../data')
 from unaligned_data_loader import UnalignedDataLoader
 from .unaligned_data_loader_combined import UnalignedDataLoader as CombinedDataLoader
 from svhn import load_svhn

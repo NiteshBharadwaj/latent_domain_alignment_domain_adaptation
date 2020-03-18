@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.io import loadmat
 
-base_dir = './data'
+base_dir = '../data'
 def load_mnist(scale=True, usps=False, all_use=False):
     mnist_data = loadmat(base_dir + '/mnist_data.mat')
     if scale:
@@ -38,3 +38,5 @@ def load_mnist(scale=True, usps=False, all_use=False):
     print('mnist test y shape->', test_label.shape)
 
     return mnist_train, train_label, mnist_test, test_label
+
+a,b,c,d = load_mnist(scale=True)

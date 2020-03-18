@@ -42,6 +42,7 @@ class Feature_ResNet18(nn.Module):
 		x = self.model.layer3(x)
 		x = self.model.layer4(x)
 
+		
 		x_feat = x.view(x.size(0), 512*8*8)
 
 		x = self.model.avgpool(x)
