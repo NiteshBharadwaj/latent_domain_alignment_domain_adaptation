@@ -67,7 +67,7 @@ class Solver(object):
             print('load finished!')
             self.entropy_wt = 0.1
             self.msda_wt = 1e-4
-            self.to_detach = True
+            self.to_detach = False
             num_classes = 163
             num_domains = args.num_domain
             self.G = Generator_cars()
@@ -83,8 +83,8 @@ class Solver(object):
                 self.datasets, self.dataset_test, self.dataset_valid = office_combined(target, self.batch_size)
             print('load finished!')
             self.entropy_wt = 0.1
-            self.msda_wt = 1e-4
-            self.to_detach = True
+            self.msda_wt = 1e-2
+            self.to_detach = False
             num_classes = 31
             num_domains = args.num_domain
             self.G = Generator_office()
@@ -236,9 +236,9 @@ class Solver(object):
         output_s_c1, output_t_c1 = self.C1_all_domain_soft(feat_s, feat_t)
         output_s_c2, output_t_c2 = self.C2_all_domain_soft(feat_s, feat_t)
         if self.to_detach:
-            loss_msda = msda.msda_regulizer_soft(feat_s, feat_t, 5, domain_prob.detach()) * self.msda_wt
+            loss_msda = msda.msda_regulizer_soft(feat_s, feat_t, 3, domain_prob.detach()) * self.msda_wt
         else:
-            loss_msda = msda.msda_regulizer_soft(feat_s, feat_t, 5, domain_prob) * self.msda_wt
+            loss_msda = msda.msda_regulizer_soft(feat_s, feat_t, 3, domain_prob) * self.msda_wt
         if (math.isnan(loss_msda.data.item())):
             raise Exception('msda loss is nan')
         loss_s_c1 = \
@@ -258,7 +258,10 @@ class HLoss(nn.Module):
 
     def forward(self, x):
         input_ = F.softmax(x, dim=1)
+        prob2 = 1-input_.sum(dim=0)
+        prob2[prob2<0]=0
         mask = input_.ge(0.000001)
         mask_out = torch.masked_select(input_, mask)
         entropy = -(torch.sum(mask_out * torch.log(mask_out)))
-        return entropy / float(input_.size(0)), input_ + 1e-5
+        loss = entropy/ float(input_.size(0)) + prob2.sum()/prob2.shape[0]
+        return loss, input_ + 1e-5

@@ -16,11 +16,12 @@ class Feature_ResNet18(nn.Module):
 	def __init__(self):
 		super(Feature_ResNet18, self).__init__()
 		self.model = models.resnet18(pretrained=True)
-
-		self.fc2 = nn.Linear(512, 2048)
+		for param in self.model.parameters():
+			param.requires_grad = False
+		self.fc2 = nn.Linear(512, 1024)
 		nn.init.xavier_uniform_(self.fc2.weight, .1)
 		nn.init.constant_(self.fc2.bias, 0.)
-		self.bn_fc2 = nn.BatchNorm1d(2048)
+		self.bn_fc2 = nn.BatchNorm1d(1024)
 
 		self.fc3 = nn.Linear(2048, 2048)
 		nn.init.xavier_uniform_(self.fc3.weight, .1)
@@ -51,7 +52,7 @@ class Feature_ResNet18(nn.Module):
 		x = self.model.layer1(x)
 		x = self.model.layer2(x)
 
-		x_feat = x
+		x_feat = x.detach()
 
 		x = self.model.layer3(x)
 		x = self.model.layer4(x)
@@ -60,7 +61,7 @@ class Feature_ResNet18(nn.Module):
 		x = x.view(x.size(0), -1)
 
 # 		x1 = x.detach() 
-		x = self.relu(self.bn_fc2(self.fc2(x)))
+		x = self.relu(self.bn_fc2(self.fc2(x.detach())))
 #		x = self.relu(self.bn_fc3(self.fc3(x)))
 
 
@@ -86,20 +87,21 @@ class Predictor_ResNet18(nn.Module):
 		self.num_classes = num_classes
 		# self.fc2 = nn.Linear(512, 2048)
 		self.relu = nn.ReLU()
-		self.fc3 = nn.Linear(2048, num_classes)
+		self.fc3 = nn.Linear(1024, num_classes)
 		nn.init.xavier_uniform_(self.fc3.weight, .1)
 		nn.init.constant_(self.fc3.bias, 0.)
 		# nn.init.xavier_uniform_(self.fc2.weight, .1)
 		# nn.init.constant_(self.fc2.bias, 0.)
 		# self.bn_fc2 = nn.BatchNorm1d(2048)
 		self.prob = prob
+		self.drop = nn.Dropout(0.5)
 
 	def set_lambda(self, lambd):
 		self.lambd = lambd
 
 	def forward(self, x, reverse=False):
 		# x = self.relu(self.bn_fc2(self.fc2(x)))
-		x = self.fc3(x)
+		x = self.fc3(self.drop(x))
 		return x
 
 class DomainPredictor_ResNet18(nn.Module):

@@ -16,11 +16,17 @@ class Feature_ResNet18(nn.Module):
 	def __init__(self):
 		super(Feature_ResNet18, self).__init__()
 		self.model = models.resnet18(pretrained=True)
+		for param in self.model.parameters():
+			param.requires_grad = False
 
-		self.fc2 = nn.Linear(512, 2048)
+		self.fc2 = nn.Linear(512, 512)
 		nn.init.xavier_uniform_(self.fc2.weight, .1)
 		nn.init.constant_(self.fc2.bias, 0.)
-		self.bn_fc2 = nn.BatchNorm1d(2048)
+		self.bn_fc2 = nn.BatchNorm1d(512)
+		self.fc3 = nn.Linear(512, 256)
+		nn.init.xavier_uniform_(self.fc3.weight, .1)
+		nn.init.constant_(self.fc3.bias, 0.)
+		self.bn_fc3 = nn.BatchNorm1d(256)
 
 		# num_ftrs = self.model.fc.in_features
 		# self.model.fc = nn.Linear(num_ftrs, 1716)
@@ -35,6 +41,7 @@ class Feature_ResNet18(nn.Module):
 		# self.bn3_fc = nn.BatchNorm1d(2048)
 
 		self.relu = nn.ReLU(inplace=True)
+		self.drop = nn.Dropout(0.5)
 
 	def forward(self, x, reverse=False):
 		x = self.model.conv1(x)
@@ -45,7 +52,7 @@ class Feature_ResNet18(nn.Module):
 		x = self.model.layer1(x)
 		x = self.model.layer2(x)
 
-		x_feat = x
+		x_feat = x.detach()
 
 		x = self.model.layer3(x)
 		x = self.model.layer4(x)
@@ -53,7 +60,9 @@ class Feature_ResNet18(nn.Module):
 		x = self.model.avgpool(x)
 		x = x.view(x.size(0), -1)
 
-		x = self.relu(self.bn_fc2(self.fc2(x)))
+		x = self.drop(self.relu(self.bn_fc2(self.fc2(x.detach()))))
+		x = self.relu(self.bn_fc3(self.fc3(x)))
+
 
 
 		# x = self.relu(self.bn1_fc(self.fc1(x_feat)))
@@ -74,7 +83,8 @@ class Predictor_ResNet18(nn.Module):
 		self.num_classes = num_classes
 		# self.fc2 = nn.Linear(512, 2048)
 		self.relu = nn.ReLU()
-		self.fc3 = nn.Linear(2048, num_classes)
+		self.drop = nn.Dropout(0.5)
+		self.fc3 = nn.Linear(256, num_classes)
 		nn.init.xavier_uniform_(self.fc3.weight, .1)
 		nn.init.constant_(self.fc3.bias, 0.)
 		# nn.init.xavier_uniform_(self.fc2.weight, .1)
@@ -101,8 +111,8 @@ class DomainPredictor_ResNet18(nn.Module):
 		self.bn2 = nn.BatchNorm2d(512)
 		self.conv3 = nn.Conv2d(512, 1024, kernel_size=3, stride=2, padding=1)
 		self.bn3 = nn.BatchNorm2d(1024)
-		self.avgpool = nn.AvgPool2d(4)
-		self.fc4 = nn.Linear(1024, num_domains)
+		self.avgpool = nn.AvgPool2d(28)
+		self.fc4 = nn.Linear(128, num_domains)
 
 		# self.idm = nn.Linear(128*32*32, num_domains)
 
@@ -114,13 +124,13 @@ class DomainPredictor_ResNet18(nn.Module):
 	def set_lambda(self, lambd):
 		self.lambd = lambd
 
-	def forward(self, x_feat, reverse=False):
+	def forward(self, x, reverse=False):
 
-		x = self.relu(self.bn1(self.conv1(x_feat)))
-		if reverse:
-			x = grad_reverse(x, self.lambd)
-		x = self.relu(self.bn2(self.conv2(x)))
-		x = self.relu(self.bn3(self.conv3(x)))
+# 		x = self.relu(self.bn1(self.conv1(x)))
+# 		if reverse:
+# 			x = grad_reverse(x, self.lambd)
+# 		x = self.relu(self.bn2(self.conv2(x)))
+# 		x = self.relu(self.bn3(self.conv3(x)))
 		x = self.avgpool(x)
 		x = x.view(x.shape[0],-1)       
 		x = self.fc4(x)

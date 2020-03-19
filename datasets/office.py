@@ -10,7 +10,7 @@ import numpy as np
 # from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 from sklearn.cluster import KMeans
-
+import torch
 
 def return_dataset(target):
     return read_office_domain(target)
@@ -21,15 +21,20 @@ def office_combined(target, batch_size):
     S1_test = {}
     S1_valid = {}
 
-    S = [{},{}]
-    S_test = [{},{}]
-    S_valid = [{},{}]
+#     S = [{},{}]
+#     S_test = [{},{}]
+#     S_valid = [{},{}]
+
+    S = [{}]
+    S_test = [{}]
+    S_valid = [{}]
 
     T = {}
     T_test = {}
     T_valid = {}
-    #domain_all = ['CCWeb', 'CCSurv']
-    domain_all = ['amazon','dslr','webcam']
+    
+    domain_all = ['amazon','dslr']
+    #domain_all = ['amazon','dslr','webcam']
     domain_all.remove(target)
 
     target_train, target_train_label, target_test, target_test_label, target_valid, target_valid_label = return_dataset(target)
@@ -59,13 +64,15 @@ def office_combined(target, batch_size):
     train_loader = CombinedDataLoader()
     train_loader.initialize(S, T, batch_size, batch_size, scale=scale, split='Train')
     dataset = train_loader.load_data()
-
+    for i in range(len(domain_all)):
+        S_test[i]['imgs'] = [S_test[i]['imgs'][0]]
+        S_test[i]['labels'] = [S_test[i]['labels'][0]]
     test_loader = CombinedDataLoader()
     test_loader.initialize(S_test, T_test, batch_size, batch_size, scale=scale, split='Test')
     dataset_test = test_loader.load_data()
 
     valid_loader = CombinedDataLoader()
-    valid_loader.initialize(S_valid, T_valid, batch_size, batch_size, scale=scale, split='Test')
+    valid_loader.initialize(S_test, T_valid, batch_size, batch_size, scale=scale, split='Test')
     dataset_valid = valid_loader.load_data()
     
 

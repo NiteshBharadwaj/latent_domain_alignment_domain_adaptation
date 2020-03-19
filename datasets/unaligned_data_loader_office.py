@@ -106,6 +106,12 @@ class CombinedData(Dataset):
     def __getitem__(self, index):
         S, S_paths,t,t_paths = None, None, None, None
         i = index%self.num_datasets
+        if (np.prod(self.stop_S)>0 and self.stop_t==True) or self.iter > self.max_dataset_size:
+            for i in range(len(self.stop_S)):
+                self.stop_S[i] = False
+            self.stop_t = False
+            self.iter=0
+            raise StopIteration()
         try:
             S, S_paths = next(self.data_loader_S_iter[i])
         except StopIteration:
@@ -120,16 +126,11 @@ class CombinedData(Dataset):
                 self.stop_t = True
                 self.data_loader_t_iter = iter(self.data_loader_t)
                 t, t_paths = next(self.data_loader_t_iter)
+                
 
-        if (np.prod(self.stop_S)>0 and self.stop_t==True) or self.iter > self.max_dataset_size:
-            for i in range(len(self.stop_S)):
-                self.stop_S[i] = False
-            self.stop_t = False
-            raise StopIteration()
-        else:
-            self.iter += 1 
-            return {'S': S, 'S_label': S_paths,
-                    'T': t, 'T_label': t_paths}
+        self.iter += 1 
+        return {'S': S, 'S_label': S_paths,
+                'T': t, 'T_label': t_paths}
 
     def __len__(self):
         return self.max_dataset_size*self.num_datasets
