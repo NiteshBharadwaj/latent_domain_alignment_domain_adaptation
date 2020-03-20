@@ -66,7 +66,7 @@ class Solver(object):
                 self.datasets, self.dataset_test, self.dataset_valid = cars_combined(target, self.batch_size)
             print('load finished!')
             self.entropy_wt = 0.1
-            self.msda_wt = 1e-4
+            self.msda_wt = 0.25
             self.to_detach = False
             num_classes = 163
             num_domains = args.num_domain
@@ -82,8 +82,8 @@ class Solver(object):
             elif args.dl_type == 'source_only':
                 self.datasets, self.dataset_test, self.dataset_valid = office_combined(target, self.batch_size)
             print('load finished!')
-            self.entropy_wt = 0.1
-            self.msda_wt = 1e-2
+            self.entropy_wt = 1
+            self.msda_wt = 0.25
             self.to_detach = False
             num_classes = 31
             num_domains = args.num_domain
@@ -246,7 +246,7 @@ class Solver(object):
         if (math.isnan(loss_s_c1.data.item())):
             raise Exception(' c1 loss is nan')
         loss_s_c2 = \
-            self.softmax_loss_all_domain_soft(output_s_c2, label_s)
+            self.softmax_loss_all_domain_soft(output_s_c2, label_s)*0
         if (math.isnan(loss_s_c2.data.item())):
             raise Exception(' c2 loss is nan')
         return loss_s_c1, loss_s_c2, loss_msda, entropy_loss, kl_loss

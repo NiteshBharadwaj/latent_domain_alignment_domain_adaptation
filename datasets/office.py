@@ -21,20 +21,20 @@ def office_combined(target, batch_size):
     S1_test = {}
     S1_valid = {}
 
-#     S = [{},{}]
-#     S_test = [{},{}]
-#     S_valid = [{},{}]
+    S = [{},{}]
+    S_test = [{},{}]
+    S_valid = [{},{}]
 
-    S = [{}]
-    S_test = [{}]
-    S_valid = [{}]
+#     S = [{}]
+#     S_test = [{}]
+#     S_valid = [{}]
 
     T = {}
     T_test = {}
     T_valid = {}
     
-    domain_all = ['amazon','dslr']
-    #domain_all = ['amazon','dslr','webcam']
+#     domain_all = ['amazon','dslr']
+    domain_all = ['amazon','dslr','webcam']
     domain_all.remove(target)
 
     target_train, target_train_label, target_test, target_test_label, target_valid, target_valid_label = return_dataset(target)

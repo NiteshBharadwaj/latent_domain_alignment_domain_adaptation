@@ -74,8 +74,8 @@ def read_comp_cars(target):
 
         paths_test = [os.path.join(img_dir,x) for x in rel_paths_test]
 
-        paths_valid = ['gg']
-        labels_valid = ['lol']
+        paths_valid = [paths_test[0]]
+        labels_valid = [labels_test[0]]
         
     if target=='CCSurv':
         main_dir_tr = os.path.join(base_dir, 'CCWeb', 'data')

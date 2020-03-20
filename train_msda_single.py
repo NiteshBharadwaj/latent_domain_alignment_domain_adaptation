@@ -12,7 +12,7 @@ def loss_single_domain(solver, img_s, img_t, label_s):
     feat_t, conv_feat_t = feat_t_comb
     output_s_c1, output_t_c1 = solver.C1_all_domain_soft(feat_s, feat_t)
     output_s_c2, output_t_c2 = solver.C2_all_domain_soft(feat_s, feat_t)
-    loss_msda = msda.msda_regulizer_single(feat_s, feat_t, 5) * solver.msda_wt
+    loss_msda = msda.msda_regulizer_single(feat_s, feat_t, 3) * solver.msda_wt
 
     if (math.isnan(loss_msda.data.item())):
         raise Exception('msda loss is nan')
