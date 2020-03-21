@@ -2,7 +2,7 @@
 Latent Domain Factorization for Multisource Domain Adaptation
 ==================
 
-_ Recent works have shown that domain adaptation can be improved in multi-source domain settings if we align each pair of source domains apart from typical source to target domain adaptation. We posit that any source domain is inherently composed of multiple source domains, either by means of appearance, pose or style and propose a solution that discovers latent domains from the source domain automatically. Our end-to-end novel 'soft-MMD' loss function ensures that those latent domains whose domain shifts when aligned improve target domain adaptation. Our method outperforms domain adaptation methods that presume a single underlying domain. _
+Recent works have shown that domain adaptation can be improved in multi-source domain settings if we align each pair of source domains apart from typical source to target domain adaptation. We posit that any source domain is inherently composed of multiple source domains, either by means of appearance, pose or style and propose a solution that discovers latent domains from the source domain automatically. Our end-to-end novel 'soft-MMD' loss function ensures that those latent domains whose domain shifts when aligned improve target domain adaptation. Our method outperforms domain adaptation methods that presume a single underlying domain.
 
 ### Requirements
 -----------
