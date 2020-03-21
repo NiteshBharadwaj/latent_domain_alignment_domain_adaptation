@@ -46,6 +46,19 @@ $ git clone git@github.com:NiteshBharadwaj/code_MSDA_digit.git
 ```
 - Change second argument to usps/svhn/syn to reproduce the corresponding results
 
+### Office-31
+- Download dataset 
+	- https://mega.nz/#F!dTAEDaaT!McxSMcL4Mf_hfID1Q7tSGA
+
+- Create a folder "data" and "record" in main working directory
+- Extract contents of the zip file to ./data
+- Run the following bash script
+```
+    bash ./experiment_do.sh amazon 200 0 record/amazon_source_only source_only office 2 False
+```
+- Change second argument to dslr/webcam
+
+
 ### CompCars     
 - In 'data' folder create 'CCWeb' and 'CCSurv' sub folders
 - From main directory, run 
