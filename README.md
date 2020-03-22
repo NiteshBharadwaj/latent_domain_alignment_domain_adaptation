@@ -24,6 +24,33 @@ $ git clone git@github.com:NiteshBharadwaj/code_MSDA_digit.git
 	- Training Time USPS: < 5min Acc 96% (Same as paper in 3 epochs) 
 	- Training Time MNIST-M: < 2hrs Acc 73% (Same as in paper in 80 epochs)
 
+## Result Replication From Report
+- Setup dataset using the instructions from subsequent sections
+- Download the pre-trained models from the following google drive [link] and extract to "records" folder.
+- Change the flag "eval_only" in main.py to "True"
+- Bash scripts:
+```
+    bash ./experiment_do.sh [TAR DOM] 100 0 record/[EXPT_DIRECTORY] [DATA] [NUM CLUSTERS] no 	
+```
+Choices: 
+DATA - digits, cars, office
+TAR_DOM (digits) - mnistm, svhn, usps, syn, mnist
+TAR_DOM (cars) - CCSurv
+TAR_DOM (office) - amazon, dslr
+NUM_CLUSTERS - >1 (Choose from report)
+EXPT_DIRECTORY - Any top level directory inside records folder (to replicate the corresponding experiment's results)
+
+
+e.g.
+```
+   bash ./experiment_do.sh CCSurv 100 0 record/cars_src_agg source_only cars 6 no
+   bash ./experiment_do.sh CCSurv 100 0 record/cars_src_tar source_only cars 6 no
+   bash ./experiment_do.sh CCSurv 100 0 record/cars_soft6_agg soft_cluster cars 6 no
+   bash ./experiment_do.sh dslr 100 0 record/odslr_src_agg_3000 source_only office 6 no
+   bash ./experiment_do.sh dslr 100 0 record/odslr_src_tr_long source_target_only office 2 no
+   bash ./experiment_do.sh dslr 100 0 record/odslr_soft12_agg source_target_only office 12 no
+   bash ./experiment_do.sh dslr 100 0 record/odslr_soft6_agg_2 source_target_only office 6 no                             
+```
 ## Setup for different Datasets
 
 ### Digit-Five
@@ -40,11 +67,13 @@ $ git clone git@github.com:NiteshBharadwaj/code_MSDA_digit.git
 ```    
 - Create a folder "data" and "record" in main working directory
 - Extract contents of the zip file to ./data
-- Run the following bash script
+- Run the following bash script to train
 ```
     bash experiment_do.sh mnistm 100 0 record/mnistm soft_cluster digits 4 yes
 ```
-- Change second argument to usps/svhn/syn to reproduce the corresponding results
+- Change second argument to usps/svhn/syn to train corresponding models
+
+
 
 ### Office-31
 - Download dataset 
