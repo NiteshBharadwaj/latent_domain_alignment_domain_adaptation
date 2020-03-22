@@ -26,7 +26,7 @@ $ git clone git@github.com:NiteshBharadwaj/code_MSDA_digit.git
 
 ## Result Replication From Report
 - Setup dataset using the instructions from subsequent sections
-- Download the pre-trained models from the following google drive [link] and extract to "records" folder.
+- Download the pre-trained models from the following google drive [link](https://drive.google.com/drive/folders/1FGzOuXNRHfgP9KS2OZKoxeyzH4XXCsya?usp=sharing) and extract to "records" folder.
 - Change the flag "eval_only" in main.py to "True"
 - Bash scripts:
 ```
