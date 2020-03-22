@@ -41,6 +41,36 @@ def model_num_to_car_name(image_folder):
             map1[int(folder2)] = int(folder)
     return map1
 
+def get_aux_labels(file_name1, file_name2, label_dir):
+    features = []
+    with open(file_name1,'r') as f:
+        for line in f:
+            feature_file = os.path.join(label_dir, line.split('.')[0]+'.txt')
+            tmp = [0]*2
+            idx = 0
+            with open(feature_file, 'r') as f2:
+                for line2 in f2:
+                    tmp[idx] = int(line2.split('\n')[0])
+                    idx += 1
+                    if idx==2:
+                        break
+                    # tmp.append(line2.split('\n')[0])
+            features.append(tmp)
+    with open(file_name2,'r') as f:
+        for line in f:
+            feature_file = os.path.join(label_dir, line.split('.')[0]+'.txt')
+            tmp = [0]*2
+            idx = 0
+            with open(feature_file, 'r') as f2:
+                for line2 in f2:
+                    tmp[idx] = int(line2.split('\n')[0])
+                    idx += 1
+                    if idx==2:
+                        break
+                    # tmp.append(line2.split('\n')[0])
+            features.append(tmp)
+    return features
+
 def read_comp_cars(target):
     label_map = {}
     if target=='CCWeb':
@@ -65,12 +95,30 @@ def read_comp_cars(target):
         print("Num Train classes {}, {}, {}, {}".format(target, len(np.unique(np.array(labels_train))), min(labels_train), max(labels_train)))
         print("train_num_images {} ,{}".format(target,len(labels_train)))
         
+        # -------------------------------------
+        aux_labels_train = get_aux_labels(train_file, test_file, label_dir)
+        assert(len(aux_labels_train) == len(labels_train))
+        labels_train_tmp = []
+        for i in range(len(labels_train)):
+            labels_train_tmp.append([labels_train[i], aux_labels_train[i][0], aux_labels_train[i][1]])
+        labels_train = labels_train_tmp
+        # -------------------------------------
+
         paths_train = [os.path.join(img_dir,x) for x in rel_paths_train]
         labels_test = [int(x.split('/')[0]) for x in rel_paths_test]
 
         labels_test = [label_map[i] for i in labels_test] 
         print("Num Test classes {}, {}".format(target, len(np.unique(np.array(labels_test))), min(labels_test), max(labels_test)))
         print("test_num_images {} ,{}".format(target,len(labels_test)))
+
+        # -------------------------------------
+        aux_labels_test = get_aux_labels(train_file, test_file, label_dir)
+        assert(len(aux_labels_test) == len(labels_test))
+        labels_test_tmp = []
+        for i in range(len(labels_test)):
+            labels_test_tmp.append([labels_test[i], aux_labels_test[i][0], aux_labels_test[i][1]])
+        labels_test = labels_test_tmp
+        # -------------------------------------
 
         paths_test = [os.path.join(img_dir,x) for x in rel_paths_test]
 
@@ -121,6 +169,11 @@ def read_comp_cars(target):
         paths_train_sh = [paths_train[i] for i in range(len(paths_train)) if i not in unav_train]
         labels_train_sh = [labels_train[i] for i in range(len(paths_train)) if i not in unav_train]
 
+        # -------------------------------------
+        labels_train_tmp = [[i,-1,-1] for i in labels_train]
+        labels_train = labels_train_tmp
+        # -------------------------------------
+
         rel_paths_test = split_(test_file, label_dir)
         rel_paths_test.sort()
         random.Random(42).shuffle(rel_paths_test)
@@ -140,6 +193,11 @@ def read_comp_cars(target):
         paths_test_sh = [paths_test[i] for i in range(len(paths_test)) if i not in unav_test]
         labels_test_sh = [labels_test[i] for i in range(len(paths_test)) if i not in unav_test]
         
+        # -------------------------------------
+        labels_test_sh_tmp = [[i,-1,-1] for i in labels_test_sh]
+        labels_test_sh = labels_test_sh_tmp
+        # -------------------------------------
+
 
 
         labels_valid = [int(x.split('/')[0]) for x in rel_paths_valid] 
@@ -153,6 +211,10 @@ def read_comp_cars(target):
         paths_valid_sh = [paths_valid[i] for i in range(len(paths_valid)) if i not in unav_valid]
         labels_valid_sh = [labels_valid[i] for i in range(len(paths_valid)) if i not in unav_valid]
 
+        # -------------------------------------
+        labels_valid_sh_tmp = [[i,-1,-1] for i in labels_valid_sh]
+        labels_valid_sh = labels_valid_sh_tmp
+        # -------------------------------------
 
         #paths_train = paths_train_sh
         paths_test = paths_test_sh

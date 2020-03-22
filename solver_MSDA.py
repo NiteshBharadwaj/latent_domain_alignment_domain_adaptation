@@ -69,11 +69,12 @@ class Solver(object):
             self.msda_wt = 0.25
             self.to_detach = False
             num_classes = 163
+            aux_classes = 6
             num_domains = args.num_domain
             self.G = Generator_cars()
             self.C1 = Classifier_cars(num_classes)
             self.C2 = Classifier_cars(num_classes)
-            self.DP = DP_cars(num_domains)
+            self.DP = DP_cars(num_domains, aux_classes)
         elif args.data == 'office':
             if args.dl_type == 'soft_cluster':
                 self.datasets, self.dataset_test, self.dataset_valid = office_combined(target, self.batch_size)
@@ -219,15 +220,21 @@ class Solver(object):
         feat_s, conv_feat_s = feat_s_comb
         feat_t, conv_feat_t = feat_t_comb
         if self.to_detach:
-            domain_logits = self.DP(conv_feat_s.detach())
+            if self.args.data=='cars':
+                domain_logits, aux_logits = self.DP(conv_feat_s.detach())
+            else:
+                domain_logits = self.DP(conv_feat_s.detach())
         else:
-            domain_logits = self.DP(conv_feat_s)
+            if self.args.data=='cars':
+                domain_logits, aux_logits = self.DP(conv_feat_s)
+            else:
+                domain_logits = self.DP(conv_feat_s)
         entropy_loss, domain_prob = self.entropy_loss(domain_logits)
-        # print(domain_prob)
 
-        # kl_loss = self.get_kl_loss(domain_prob)
-        # kl_loss = kl_loss * 0.1
-        kl_loss = 0
+        aux_loss = 0
+        if self.args.data=='cars':
+            aux_loss = self.softmax_loss_all_domain_soft(aux_logits, label_s[:,1])
+
 
         if (math.isnan(entropy_loss.data.item())):
             raise Exception('entropy loss is nan')
@@ -241,15 +248,19 @@ class Solver(object):
             loss_msda = msda.msda_regulizer_soft(feat_s, feat_t, 3, domain_prob) * self.msda_wt
         if (math.isnan(loss_msda.data.item())):
             raise Exception('msda loss is nan')
-        loss_s_c1 = \
-            self.softmax_loss_all_domain_soft(output_s_c1, label_s)
+        if self.args.data=='cars':
+            loss_s_c1 = self.softmax_loss_all_domain_soft(output_s_c1, label_s[:,0])
+        else:
+            loss_s_c1 = self.softmax_loss_all_domain_soft(output_s_c1, label_s)
         if (math.isnan(loss_s_c1.data.item())):
             raise Exception(' c1 loss is nan')
-        loss_s_c2 = \
-            self.softmax_loss_all_domain_soft(output_s_c2, label_s)*0
+        if self.args.data=='cars':
+            loss_s_c2 = self.softmax_loss_all_domain_soft(output_s_c2, label_s[:,0])*0
+        else:
+            loss_s_c2 = self.softmax_loss_all_domain_soft(output_s_c2, label_s)*0
         if (math.isnan(loss_s_c2.data.item())):
             raise Exception(' c2 loss is nan')
-        return loss_s_c1, loss_s_c2, loss_msda, entropy_loss, kl_loss
+        return loss_s_c1, loss_s_c2, loss_msda, entropy_loss, aux_loss
 
 
 class HLoss(nn.Module):

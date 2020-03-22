@@ -3,6 +3,7 @@ import torch.utils.data as data
 from PIL import Image
 import numpy as np
 import cv2
+import torch
 
 def resize2SquareKeepingAspectRation(img, size, interpolation):
     h, w = img.shape[:2]
@@ -52,6 +53,8 @@ class Dataset(data.Dataset):
         img_path, target = self.data[index], self.labels[index]
         img = Image.open(img_path)
         img = np.array(img)
+        avg_pixel_val = np.mean(img)
+        intensity_val = avg_pixel_val//43
         img = img[...,:3]
         img = transform(img) 
         img = Image.fromarray(img)
@@ -63,6 +66,11 @@ class Dataset(data.Dataset):
         if self.transform is not None:
             img = self.transform(img)
             # return img, target
-        return img, target*1.0
+
+        return_tar = [float(i) for i in target]
+        return_tar[1] = intensity_val
+        return img, torch.Tensor(return_tar)
+        # return img, target*1.0
+        
     def __len__(self):
         return len(self.data)

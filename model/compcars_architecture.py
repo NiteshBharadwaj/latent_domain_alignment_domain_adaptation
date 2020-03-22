@@ -17,7 +17,15 @@ class Feature_ResNet18(nn.Module):
 		super(Feature_ResNet18, self).__init__()
 		self.model = models.resnet18(pretrained=True)
 		for param in self.model.parameters():
+			param.requires_grad = True
+		for param in self.model.conv1.parameters():
 			param.requires_grad = False
+		for param in self.model.bn1.parameters():
+			param.requires_grad = False
+		for param in self.model.layer1.parameters():
+			param.requires_grad = False
+		for param in self.model.layer2.parameters():
+			param.requires_grad = False            
 
 		self.fc2 = nn.Linear(512, 2048)
 		nn.init.xavier_uniform_(self.fc2.weight, .1)
@@ -54,13 +62,13 @@ class Feature_ResNet18(nn.Module):
 
 		x_feat = x.detach()
 
-		x = self.model.layer3(x)
+		x = self.model.layer3(x_feat)
 		x = self.model.layer4(x)
 
 		x = self.model.avgpool(x)
 		x = x.view(x.size(0), -1)
 
-		x = self.drop(self.relu(self.bn_fc2(self.fc2(x.detach()))))
+		x = self.drop(self.relu(self.bn_fc2(self.fc2(x))))
 		x = self.relu(self.bn_fc3(self.fc3(x)))
 
 
@@ -101,7 +109,7 @@ class Predictor_ResNet18(nn.Module):
 		return x
 
 class DomainPredictor_ResNet18(nn.Module):
-	def __init__(self, num_domains, prob=0.5):
+	def __init__(self, num_domains, aux_classes, prob=0.5):
 		super(DomainPredictor_ResNet18, self).__init__()
 
 		self.conv1 = nn.Conv2d(128, 256, kernel_size=3, stride=2, padding=1)
@@ -112,9 +120,13 @@ class DomainPredictor_ResNet18(nn.Module):
 		self.conv3 = nn.Conv2d(512, 1024, kernel_size=3, stride=2, padding=1)
 		self.bn3 = nn.BatchNorm2d(1024)
 		self.avgpool = nn.AvgPool2d(32)
-		self.fc4 = nn.Linear(128, num_domains)
+		# self.fc4 = nn.Linear(128, num_domains)
 
-		# self.idm = nn.Linear(128*32*32, num_domains)
+		self.fc4 = nn.Linear(128, 32)
+		self.bn_fc4 = nn.BatchNorm1d(32)
+		self.dp_layer = nn.Linear(32, num_domains)
+		self.aux_layer = nn.Linear(32, aux_classes)
+
 
 		self.prob = prob
 		self.num_domains = num_domains
@@ -133,12 +145,15 @@ class DomainPredictor_ResNet18(nn.Module):
 # 		x = self.relu(self.bn3(self.conv3(x)))
 		x = self.avgpool(x)
 		x = x.view(x.shape[0],-1)       
-		x = self.fc4(x)
+		x = self.relu(self.bn_fc4(self.fc4(x)))
+
+		dp_pred = self.dp_layer(x)
+		aux_pred = self.aux_layer(x)
 
 		# x = x_feat.view(x_feat.size(0), -1)
 		# x = self.idm(x)
 
-		return x
+		return dp_pred, aux_pred
 
 # ---------------------------------------------- AlexNet -----------------------------------------
 

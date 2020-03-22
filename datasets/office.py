@@ -25,15 +25,15 @@ def office_combined(target, batch_size):
     S_test = [{},{}]
     S_valid = [{},{}]
 
-#     S = [{}]
-#     S_test = [{}]
-#     S_valid = [{}]
+#    S = [{}]
+#    S_test = [{}]
+#    S_valid = [{}]
 
     T = {}
     T_test = {}
     T_valid = {}
     
-#     domain_all = ['amazon','dslr']
+#    domain_all = ['amazon','dslr']
     domain_all = ['amazon','dslr','webcam']
     domain_all.remove(target)
 

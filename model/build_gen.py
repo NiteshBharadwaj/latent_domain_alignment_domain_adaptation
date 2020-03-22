@@ -17,5 +17,5 @@ def Classifier(num_classes):
     # if source == 'svhn':
     return compcars_architecture.Predictor_ResNet18(num_classes)
 
-def DomainPredictor(num_domains):
-    return compcars_architecture.DomainPredictor_ResNet18(num_domains)
+def DomainPredictor(num_domains, aux_classes):
+    return compcars_architecture.DomainPredictor_ResNet18(num_domains, aux_classes)

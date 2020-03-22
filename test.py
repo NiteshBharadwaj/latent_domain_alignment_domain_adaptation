@@ -37,23 +37,14 @@ def test(solver, epoch, split, record_file=None, save_model=False):
             feat, _ = solver.G(img)
             # print('feature.shape:{}'.format(feat.shape))
 
-            if batch_idx == 0:
-                label_all = label.data.cpu().numpy().tolist()
-
-                # feature_all = feat.data.cpu().numpy()
-            else:
-                # feature_all = np.ma.row_stack((feature_all, feat.data.cpu().numpy()))
-                # feature_all = feature_all.data
-                label_all = label_all + label.data.cpu().numpy().tolist()
-
             # print(feat.shape)
 
             output1 = solver.C1(feat)
 
-            test_loss += nn.CrossEntropyLoss()(output1, label).data.item()
+            test_loss += nn.CrossEntropyLoss()(output1, label[:,0]).data.item()
             pred1 = output1.data.max(1)[1]
-            k = label.data.size()[0]
-            correct1 += pred1.eq(label.data).cpu().sum()
+            k = label[:,0].data.size()[0]
+            correct1 += pred1.eq(label[:,0].data).cpu().sum()
             size += k
     # np.savez('result_plot_sv_t', feature_all, label_all )
     test_loss = test_loss / (size + 1e-6)
