@@ -179,7 +179,6 @@ class Solver(object):
         return softmax_loss
 
     def loss_all_domain(self, img_s, img_t, label_s):
-
         feat_s, feat_t = self.feat_all_domain(img_s, img_t)
 
         C1_feat_s, C1_feat_t = self.C1_all_domain(feat_s, feat_t)
@@ -191,15 +190,18 @@ class Solver(object):
         return loss_source_C1, loss_source_C2, loss_msda
 
     def feat_soft_all_domain(self, img_s, img_t):
+        # Takes input source and target images returns the feature from feature extractor
         return self.G(img_s), self.G(img_t)
 
     def C1_all_domain_soft(self, feat1, feat_t):
+        #Takes source and target features from feature extractor and returns classifier output features
         return self.C1(feat1), self.C1(feat_t)
 
     def C2_all_domain_soft(self, feat1, feat_t):
         return self.C2(feat1), self.C2(feat_t)
 
     def softmax_loss_all_domain_soft(self, output, label_s):
+        # takes logits and labels and  returns the cross entropy loss 
         criterion = nn.CrossEntropyLoss().cuda()
         return criterion(output, label_s)
 
@@ -208,6 +210,7 @@ class Solver(object):
         return criterion(output)
 
     def get_kl_loss(self, domain_probs):
+        #IGNORE
         bs, num_domains = domain_probs.size()
         domain_prob_sum = domain_probs.sum(0)
         uniform_prob = (torch.ones(num_domains)*(1/num_domains)).cuda()
@@ -215,6 +218,7 @@ class Solver(object):
 
 
     def loss_soft_all_domain(self, img_s, img_t, label_s):
+        # Takes source images, target images, source labels and returns classifier loss, domain adaptation loss and entropy loss
         feat_s_comb, feat_t_comb = self.feat_soft_all_domain(img_s, img_t)
         feat_s, conv_feat_s = feat_s_comb
         feat_t, conv_feat_t = feat_t_comb
@@ -252,6 +256,7 @@ class Solver(object):
         return loss_s_c1, loss_s_c2, loss_msda, entropy_loss, kl_loss
 
 
+# Takes input tensor of shape (N x num_domains) and computes the entropy loss sum(p * logp)
 class HLoss(nn.Module):
     def __init__(self):
         super(HLoss, self).__init__()

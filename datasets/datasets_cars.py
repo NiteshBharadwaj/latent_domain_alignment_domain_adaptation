@@ -25,6 +25,7 @@ def transform(img):
 
 
 class Dataset(data.Dataset):
+    # Dataloader for cars
     """Args:
         transform (callable, optional): A function/transform that  takes in an PIL image
             and returns a transformed version. E.g, ``transforms.RandomCrop``

@@ -77,6 +77,7 @@ class CombinedData(Dataset):
 
 
 class UnalignedDataLoader():
+    # Returns paired dataloader for source and target domain images and labels. 
     def __init__(self):
 
         self.__imagenet_pca = {

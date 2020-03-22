@@ -42,6 +42,7 @@ def model_num_to_car_name(image_folder):
     return map1
 
 def read_comp_cars(target):
+    # Returns train, test and validation images and labels for source or target domain
     label_map = {}
     if target=='CCWeb':
         main_dir =os.path.join(base_dir,target,'data')

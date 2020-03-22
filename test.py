@@ -58,7 +58,7 @@ def test(solver, epoch, split, record_file=None, save_model=False):
     # np.savez('result_plot_sv_t', feature_all, label_all )
     test_loss = test_loss / (size + 1e-6)
 
-    print('\n{} set: Average loss: {:.4f}, Accuracy C1: {}/{} ({:.0f}%)  \n'.format(split,test_loss, correct1, size,
+    print('\n{} set: Average loss: {:.4f}, Accuracy C1: {}/{} ({:.06f}%)  \n'.format(split,test_loss, correct1, size,
                                                                                            100. * correct1 / (
                                                                                                        size + 1e-6)))
     best = False

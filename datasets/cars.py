@@ -17,6 +17,7 @@ def return_dataset(target):
 
 
 def cars_combined(target, batch_size):
+    # Returns dataloader for train, test and validation split for source or target domain. 
     S1 = {}
     S1_test = {}
     S1_valid = {}
