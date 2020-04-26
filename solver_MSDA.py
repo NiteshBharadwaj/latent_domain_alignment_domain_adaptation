@@ -31,6 +31,7 @@ class Solver(object):
         self.args = args
 
         self.best_loss = 9999999
+        self.best_acc = 0
 
         print('dataset loading')
         if args.data == 'digits':
