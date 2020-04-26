@@ -13,6 +13,7 @@ from train_msda_soft import train_MSDA_soft
 from train_msda_single import train_MSDA_single
 from test import test
 from train_source_only import train_source_only
+from generate_plots import generate_plots
 
 
 # Training settings
@@ -33,7 +34,7 @@ parser.add_argument('--batch-size', type=int, default=128, metavar='N',
                     help='input batch size for training (default: 64)')
 parser.add_argument('--checkpoint_dir', type=str, default='checkpoint', metavar='N',
                     help='source only or not')
-parser.add_argument('--eval_only', action='store_true', default=True,
+parser.add_argument('--eval_only', action='store_true', default=False,
                     help='evaluation only option')
 parser.add_argument('--lr', type=float, default=0.0005, metavar='LR',
                     help='learning rate (default: 0.0002)')
@@ -76,6 +77,10 @@ def main():
     record_test = '%s/%s_%s_test.txt' % (args.record_folder, args.target, record_num)
     record_val = '%s/%s_%s_val.txt' % (args.record_folder, args.target, record_num)
     checkpoint_dir = '%s/%s_%s' % (args.record_folder, args.target, record_num)
+    plot_before_source = '%s/%s_%s_plot_before_source.png' % (args.record_folder, args.target, record_num)
+    plot_before_target = '%s/%s_%s_plot_before_target.png' % (args.record_folder, args.target, record_num)
+    plot_after_source = '%s/%s_%s_plot_after_source.png' % (args.record_folder, args.target, record_num)
+    plot_after_target = '%s/%s_%s_plot_after_target.png' % (args.record_folder, args.target, record_num)
     while os.path.exists(record_train):
         record_num += 1
         record_train = '%s/%s_%s.txt' % (args.record_folder, args.target, record_num)
@@ -99,6 +104,7 @@ def main():
                     save_epoch=args.save_epoch)
 
         test(solver, 0, 'test', record_file=None, save_model=False)
+        #generate_plots(solver, 0, 'test', plot_before_source, plot_before_target, plot_after_source, plot_after_target, False)
     else:
 
         solver = Solver(args, target=args.target, learning_rate=args.lr, batch_size=args.batch_size,
@@ -134,6 +140,7 @@ def main():
                 best = test(solver, t, 'val', record_file=record_val, save_model=args.save_model)
                 if best:
                     test(solver, t, 'test', record_file=record_test, save_model=args.save_model)
+        generate_plots(solver, 0, 'test', plot_before_source, plot_before_target, plot_after_source, plot_after_target, False)
 
 
 if __name__ == '__main__':

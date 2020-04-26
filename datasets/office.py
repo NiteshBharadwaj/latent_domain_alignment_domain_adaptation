@@ -21,23 +21,39 @@ def office_combined(target, batch_size):
     S1_test = {}
     S1_valid = {}
 
-    S = [{},{}]
-    S_test = [{},{}]
-    S_valid = [{},{}]
-
-#     S = [{}]
-#     S_test = [{}]
-#     S_valid = [{}]
+#     S = [{},{}]
+#     S_test = [{},{}]
+#     S_valid = [{},{}]
 
     T = {}
     T_test = {}
     T_valid = {}
     
 #     domain_all = ['amazon','dslr']
-    domain_all = ['amazon','dslr','webcam']
-    domain_all.remove(target)
+#     #domain_all = ['amazon','webcam','dslr']
+#     domain_all.remove(target)
+    
+    domain_dict = {'a' : 'amazon', 'w' : 'webcam', 'd' : 'dslr'}
+    target_domain = domain_dict[target[-1]]
+    source_domains = target[:-1]
+    domain_all = []
+    for char in source_domains:
+        domain_all.append(domain_dict[char])
+    
+    S = []
+    S_test = []
+    S_valid = []
+    
+    for i in range(len(domain_all)):
+        S.append({})
+        S_test.append({})
+        S_valid.append({})
+    
+    
+    
+    
 
-    target_train, target_train_label, target_test, target_test_label, target_valid, target_valid_label = return_dataset(target)
+    target_train, target_train_label, target_test, target_test_label, target_valid, target_valid_label = return_dataset(target_domain)
 
     for i in range(len(domain_all)):
         source_train, source_train_label, source_test, source_test_label, source_valid, source_valid_label = return_dataset(domain_all[i])
