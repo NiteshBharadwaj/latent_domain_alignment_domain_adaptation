@@ -201,12 +201,12 @@ class UnalignedDataLoader():
         max_size = 0
         for i in range(len(source)):
             data_sources.append(Dataset(source[i]['imgs'], source[i]['labels'], transform=transform_source))
-            data_loader_s.append(torch.utils.data.DataLoader(data_sources[i], batch_size=batch_size1, shuffle=True, num_workers=3))
+            data_loader_s.append(torch.utils.data.DataLoader(data_sources[i], batch_size=batch_size1, shuffle=(split=='Train'), num_workers=3))
             max_size = max(max_size,len(data_sources[i]))
         self.dataset_s = data_loader_s
 
         dataset_target = Dataset(target['imgs'], target['labels'], transform=transform_target)
-        data_loader_t = torch.utils.data.DataLoader(dataset_target, batch_size=batch_size2, shuffle=True, num_workers=3)
+        data_loader_t = torch.utils.data.DataLoader(dataset_target, batch_size=batch_size2, shuffle=(split=='Train'), num_workers=3)
 
         self.dataset_t = dataset_target
         self.paired_data = CombinedData(data_loader_s, data_loader_t,
