@@ -87,58 +87,35 @@ class Lighting(object):
         return img.add(rgb.view(3, 1, 1).expand_as(img))
 
 
-class CombinedData(Dataset):
-    def __init__(self, data_loader_S, data_loader_t, max_dataset_size):
+class Data(Dataset):
+    def __init__(self, data_loader_t, max_dataset_size):
         super(Dataset,self).__init__()
-        self.data_loader_S = data_loader_S
-        self.num_S = len(data_loader_S)
-        self.stop_S = []
         self.stop_t = False
-        for i in range(self.num_S):
-            self.stop_S.append(False)
         self.max_dataset_size = max_dataset_size
-        self.num_datasets = self.num_S
-        self.data_loader_S_iter = []
-        for i in range(self.num_S):
-            self.data_loader_S_iter.append(iter(self.data_loader_S[i]))
         self.data_loader_t = data_loader_t
         self.data_loader_t_iter = iter(self.data_loader_t)
         self.iter = 0
 
     def __getitem__(self, index):
-        S, S_paths,t,t_paths = None, None, None, None
-        i = index%self.num_datasets
-        if (np.prod(self.stop_S)>0 and self.stop_t==True) or self.iter > self.max_dataset_size:
-            for i in range(len(self.stop_S)):
-                self.stop_S[i] = False
-            self.stop_t = False
-            self.iter=0
-            raise StopIteration()
-        try:
-            S, S_paths = next(self.data_loader_S_iter[i])
-        except StopIteration:
-            if S is None or S_paths is None:
-                self.stop_S[i] = True
-                self.data_loader_S_iter[i] = iter(self.data_loader_S[i])
-                S, S_paths = next(self.data_loader_S_iter[i])
+        t,t_paths = None, None
         try:
             t, t_paths = next(self.data_loader_t_iter)
         except StopIteration:
             if t is None or t_paths is None:
-                self.stop_t = True
                 self.data_loader_t_iter = iter(self.data_loader_t)
-                t, t_paths = next(self.data_loader_t_iter)
+                self.iter = 0
+                raise StopIteration()
                 
 
         self.iter += 1 
-        return {'S': S, 'S_label': S_paths,
+        return {'S': t, 'S_label': t_paths,
                 'T': t, 'T_label': t_paths}
 
     def __len__(self):
         return self.max_dataset_size*self.num_datasets
 
 
-class UnalignedDataLoader():
+class TestDataLoader():
     def __init__(self):
 
         self.__imagenet_pca = {
@@ -203,19 +180,19 @@ class UnalignedDataLoader():
         max_size = 0
         for i in range(len(source)):
             data_sources.append(Dataset(source[i]['imgs'], source[i]['labels'], transform=transform_source))
-            data_loader_s.append(torch.utils.data.DataLoader(data_sources[i], batch_size=batch_size1, shuffle=(split=='Train'), num_workers=3, worker_init_fn=worker_init_fn))
+            data_loader_s.append(torch.utils.data.DataLoader(data_sources[i], batch_size=batch_size1, shuffle=(split=='Train'), num_workers=0, worker_init_fn=worker_init_fn))
             max_size = max(max_size,len(data_sources[i]))
         self.dataset_s = data_loader_s
 
         dataset_target = Dataset(target['imgs'], target['labels'], transform=transform_target)
-        data_loader_t = torch.utils.data.DataLoader(dataset_target, batch_size=batch_size2, shuffle=(split=='Train'), num_workers=3,worker_init_fn=worker_init_fn)
+        data_loader_t = torch.utils.data.DataLoader(dataset_target, batch_size=batch_size2, shuffle=(split=='Train'), num_workers=0,worker_init_fn=worker_init_fn)
 
         self.dataset_t = dataset_target
-        self.paired_data = CombinedData(data_loader_s, data_loader_t,
+        self.paired_data = Data(data_loader_t,
                                       float("inf"))
 
         self.num_datasets = len(source)
-        self.num_samples = min(max(max_size,len(self.dataset_t)), float("inf"))*self.num_datasets
+        self.num_samples = len(self.dataset_t)
 
 
     def name(self):

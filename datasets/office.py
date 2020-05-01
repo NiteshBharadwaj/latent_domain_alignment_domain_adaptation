@@ -3,6 +3,7 @@ import sys
 sys.path.append('../loader')
 sys.path.append('./datasets')
 from unaligned_data_loader_office import UnalignedDataLoader as CombinedDataLoader
+from test_loader_office import TestDataLoader as TestDataLoader
 from OfficeRead import read_office_domain
 # User imports for hard-cluster code
 import numpy as np
@@ -83,11 +84,11 @@ def office_combined(target, batch_size):
     for i in range(len(domain_all)):
         S_test[i]['imgs'] = [S_test[i]['imgs'][0]]
         S_test[i]['labels'] = [S_test[i]['labels'][0]]
-    test_loader = CombinedDataLoader()
+    test_loader = TestDataLoader()
     test_loader.initialize(S_test, T_test, batch_size, batch_size, scale=scale, split='Test')
     dataset_test = test_loader.load_data()
 
-    valid_loader = CombinedDataLoader()
+    valid_loader = TestDataLoader()
     valid_loader.initialize(S_test, T_valid, batch_size, batch_size, scale=scale, split='Test')
     dataset_valid = valid_loader.load_data()
     

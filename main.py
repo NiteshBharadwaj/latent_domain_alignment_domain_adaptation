@@ -1,7 +1,8 @@
 from __future__ import print_function
 import argparse
 import torch
-
+import random
+import numpy as np
 import sys
 sys.path.append('./model')
 sys.path.append('./datasets')
@@ -60,17 +61,30 @@ parser.add_argument('--source', type=str, default='svhn', metavar='N',
 parser.add_argument('--target', type=str, default='mnist', metavar='N', help='target dataset')
 parser.add_argument('--use_abs_diff', action='store_true', default=False,
                     help='use absolute difference value as a measurement')
+
 args = parser.parse_args()
 args.cuda = not args.no_cuda and torch.cuda.is_available()
+
 torch.manual_seed(args.seed)
 if args.cuda:
     torch.cuda.manual_seed(args.seed)
 print(args)
 
 
-def main():
-    # if not args.one_step:
 
+def main():
+
+    # if not args.one_step:
+    seed = args.seed
+    random.seed(seed)
+    os.environ['PYTHONHASHSEED'] = str(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed) # if you are using multi-GPU.
+    #torch.backends.cudnn.benchmark = False
+    torch.backends.cudnn.deterministic = True
+    #torch.backends.cudnn.enabled = False 
     record_num = 0
     
     record_train = '%s/%s_%s.txt' % (args.record_folder, args.target,record_num)
