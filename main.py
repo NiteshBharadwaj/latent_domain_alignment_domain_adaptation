@@ -21,6 +21,8 @@ from generate_plots import generate_plots
 parser = argparse.ArgumentParser(description='PyTorch MSDA Implementation')
 parser.add_argument('--all_use', type=str, default='no', metavar='N',
                     help='use all training data? in usps adaptation')
+parser.add_argument('--to_detach', type=str, default='no', metavar='N',
+                    help='classifier_discrepancy? yes/no')
 parser.add_argument('--class_disc', type=str, default='yes', metavar='N',
                     help='classifier_discrepancy? yes/no')
 parser.add_argument('--dl_type', type=str, default='', metavar='N',
@@ -37,6 +39,8 @@ parser.add_argument('--checkpoint_dir', type=str, default='checkpoint', metavar=
                     help='source only or not')
 parser.add_argument('--eval_only', action='store_true', default=False,
                     help='evaluation only option')
+parser.add_argument('--kl_wt', type=float, default=0.0, metavar='LR',
+                    help='learning rate (default: 0)')
 parser.add_argument('--lr', type=float, default=0.0005, metavar='LR',
                     help='learning rate (default: 0.0002)')
 parser.add_argument('--max_epoch', type=int, default=200, metavar='N',
@@ -108,7 +112,7 @@ def main():
         os.makedirs(args.record_folder)
     args.checkpoint_dir = checkpoint_dir
     classifier_disc = True if args.class_disc=='yes' else False
-    
+    args.to_detach = True if args.to_detach=='yes' else False
     if args.eval_only:
         checkpoint_dir = '%s/%s_%s' % (args.record_folder, args.target, record_num-1)
         args.checkpoint_dir = checkpoint_dir 
@@ -154,7 +158,7 @@ def main():
                 best = test(solver, t, 'val', record_file=record_val, save_model=args.save_model)
                 if best:
                     test(solver, t, 'test', record_file=record_test, save_model=args.save_model)
-        generate_plots(solver, 0, 'test', plot_before_source, plot_before_target, plot_after_source, plot_after_target, False)
+        #generate_plots(solver, 0, 'test', plot_before_source, plot_before_target, plot_after_source, plot_after_target, False)
 
 
 if __name__ == '__main__':

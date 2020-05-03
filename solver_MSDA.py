@@ -16,6 +16,8 @@ from datasets.office import office_combined
 import numpy as np
 import math
 from scipy.stats import entropy
+from matplotlib import pyplot as plt
+from PIL import Image
 
 # Training settings
 class Solver(object):
@@ -53,7 +55,7 @@ class Solver(object):
             num_domains = args.num_domain
             self.entropy_wt = 0.01
             self.msda_wt = 0.1
-            self.to_detach = False
+            self.to_detach = args.to_detach
             self.G = Generator_digit()
             self.C1 = Classifier_digit()
             self.C2 = Classifier_digit()
@@ -68,7 +70,7 @@ class Solver(object):
             print('load finished!')
             self.entropy_wt = 0.1
             self.msda_wt = 0.25
-            self.to_detach = False
+            self.to_detach = args.to_detach
             num_classes = 163
             num_domains = args.num_domain
             self.G = Generator_cars()
@@ -85,7 +87,8 @@ class Solver(object):
             print('load finished!')
             self.entropy_wt = 1
             self.msda_wt = 0.25
-            self.to_detach = False
+            self.kl_wt = args.kl_wt
+            self.to_detach = args.to_detach
             num_classes = 31
             num_domains = args.num_domain
             self.G = Generator_office()
@@ -213,12 +216,16 @@ class Solver(object):
     def get_kl_loss(self, domain_probs):
         #IGNORE
         bs, num_domains = domain_probs.size()
-        domain_prob_sum = domain_probs.sum(0)
+        domain_prob_sum = domain_probs.sum(0)/bs
         uniform_prob = (torch.ones(num_domains)*(1/num_domains)).cuda()
         return (domain_prob_sum*(domain_prob_sum.log()-uniform_prob.log())).sum()
 
+    def get_domain_entropy(self, domain_probs):
+        bs, num_domains = domain_probs.size()
+        domain_prob_sum = domain_probs.sum(0)/bs
+        return -(domain_prob_sum*(domain_prob_sum.log())).sum()
 
-    def loss_soft_all_domain(self, img_s, img_t, label_s):
+    def loss_soft_all_domain(self, img_s, img_t, label_s, epoch):
         # Takes source images, target images, source labels and returns classifier loss, domain adaptation loss and entropy loss
         feat_s_comb, feat_t_comb = self.feat_soft_all_domain(img_s, img_t)
         feat_s, conv_feat_s = feat_s_comb
@@ -228,11 +235,35 @@ class Solver(object):
         else:
             domain_logits = self.DP(conv_feat_s)
         entropy_loss, domain_prob = self.entropy_loss(domain_logits)
-        # print(domain_prob)
+        #print(domain_prob)
 
-        # kl_loss = self.get_kl_loss(domain_prob)
-        # kl_loss = kl_loss * 0.1
-        kl_loss = 0
+        kl_loss = -self.get_domain_entropy(domain_prob)
+        kl_loss = kl_loss * self.kl_wt
+        
+        
+#         kl_loss = self.get_kl_loss(domain_prob)
+#         kl_loss = kl_loss * self.kl_wt
+        
+#         kl_loss = 0
+
+#         total_domains = domain_prob.size()[1]
+#         domains = domain_prob.data.max(1)[1]
+#         print(domains)
+#         if(epoch % 100 == 0):
+#             for i in range(total_domains):
+#                 i_index = ((domains == i).nonzero()).squeeze()
+#                 img_s_i = img_s[i_index,:,:]
+#                 for k in range(img_s_i.size()[0]):
+#                     img_ = img_s_i[k, :, :, :].squeeze().permute(1,2,0)
+#                     img_ = img_.cpu().detach().numpy()
+#                     #print(img_.shape)
+#                     #print(img_.size())
+#                     index = i_index[k]
+#                     plt.imshow(img_) 
+#                     plt.savefig(str(i)+'/'+str(index.item())+'.png')
+#                 im = Image.fromarray(img_.sum().item())
+#                 im.save()
+#                 matplotlib.image.imsave(str(i)+'/'+str(index), img_.cpu().sum().item())
 
         if (math.isnan(entropy_loss.data.item())):
             raise Exception('entropy loss is nan')

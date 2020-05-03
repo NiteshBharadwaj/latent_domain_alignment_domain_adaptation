@@ -113,7 +113,6 @@ class DomainPredictor_ResNet18(nn.Module):
 		self.bn3 = nn.BatchNorm2d(1024)
 		self.avgpool = nn.AvgPool2d(28)
 		self.fc4 = nn.Linear(128, num_domains)
-
 		# self.idm = nn.Linear(128*32*32, num_domains)
 
 		self.prob = prob
