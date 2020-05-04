@@ -135,8 +135,8 @@ def main():
                     checkpoint_dir=args.checkpoint_dir,
                     save_epoch=args.save_epoch)
 
-        #test(solver, 0, 'test', record_file=None, save_model=False)
-        #view_clusters(solver, clusters_file)
+        test(solver, 0, 'test', record_file=None, save_model=False)
+        view_clusters(solver, clusters_file)
         plot_tsne1(solver, plot_before_source, plot_before_target, plot_after_source, plot_after_target, all_plots, plot_domain, args.data)
         solver = Solver(args, target=args.target, learning_rate=args.lr, batch_size=args.batch_size,
                     optimizer=args.optimizer, 
