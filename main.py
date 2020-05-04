@@ -16,7 +16,7 @@ from test import test
 from view_clusters import view_clusters
 from train_source_only import train_source_only
 from generate_plots import generate_plots
-from plot_tsne import plot_tsne
+from plot_tsne import plot_tsne1,plot_tsne2
 
 
 # Training settings
@@ -135,9 +135,14 @@ def main():
                     checkpoint_dir=args.checkpoint_dir,
                     save_epoch=args.save_epoch)
 
-        test(solver, 0, 'test', record_file=None, save_model=False)
-        view_clusters(solver, clusters_file)
-        plot_tsne(solver, plot_before_source, plot_before_target, plot_after_source, plot_after_target, all_plots, plot_domain, args.data)
+        #test(solver, 0, 'test', record_file=None, save_model=False)
+        #view_clusters(solver, clusters_file)
+        plot_tsne1(solver, plot_before_source, plot_before_target, plot_after_source, plot_after_target, all_plots, plot_domain, args.data)
+        solver = Solver(args, target=args.target, learning_rate=args.lr, batch_size=args.batch_size,
+                    optimizer=args.optimizer, 
+                    checkpoint_dir=args.checkpoint_dir,
+                    save_epoch=args.save_epoch)
+        plot_tsne2(solver, plot_before_source, plot_before_target, plot_after_source, plot_after_target, all_plots, plot_domain, args.data)
         #generate_plots(solver, 0, 'test', plot_before_source, plot_before_target, plot_after_source, plot_after_target, False)
     else:
 

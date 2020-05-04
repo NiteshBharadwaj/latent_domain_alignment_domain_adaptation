@@ -67,7 +67,7 @@ def scatter(x, colors, labelsOfInterest, figSize):
 # y = np.hstack([digits.target[digits.target==i]
 #                for i in range(10)])
 # digits_proj = TSNE(random_state=RS).fit_transform(X)
-def plot_tsne(solver,plot_before_source, plot_before_target, plot_after_source, plot_after_target, all_plots, plot_domains, dataset):
+def plot_tsne1(solver,plot_before_source, plot_before_target, plot_after_source, plot_after_target, all_plots, plot_domains, dataset):
     solver.G.eval()
     solver.C1.eval()
     solver.C2.eval()
@@ -106,6 +106,7 @@ def plot_tsne(solver,plot_before_source, plot_before_target, plot_after_source, 
                 #print(img_transformed_l.size())
                 #print(img_l.size())
                 #cur_y = label[l_index,]
+                #print(img_l.size())
                 if(img_l.size()[0] > 0):
                     try:
                         a = img_l.size()[3]
@@ -119,7 +120,8 @@ def plot_tsne(solver,plot_before_source, plot_before_target, plot_after_source, 
                     #source_label_torch.append(cur_y)
                     cur_y = torch.zeros([img_l.size()[0]]).fill_(l)
                     source_label_torch.append(cur_y)
-                    
+                    #print(img_l.size())
+                    #print(cur_y.size())
                     if(before_source_bool == False):
                         before_source_torch = img_l
                         #print(before_source_torch.size())
@@ -181,6 +183,8 @@ def plot_tsne(solver,plot_before_source, plot_before_target, plot_after_source, 
                     img_transformed_l = img_transformed_l.view(img_transformed_l.size()[0], -1)
                     cur_y = torch.zeros([img_l.size()[0]]).fill_(l)
                     target_label_torch.append(cur_y)
+                    #print(img_l.size())
+                    #print(cur_y.size())
                     if(before_target_bool == False):
                         before_target_torch = img_l
                         #print(before_source_torch.size())
@@ -219,23 +223,39 @@ def plot_tsne(solver,plot_before_source, plot_before_target, plot_after_source, 
         
 #############################################################################
         
+def plot_tsne2(solver,plot_before_source, plot_before_target, plot_after_source, plot_after_target, all_plots, plot_domains, dataset): 
+    solver.G.eval()
+    solver.C1.eval()
+    solver.C2.eval()
+    solver.DP.eval()
+    
+    if(dataset == 'office'):
+        labelsOfInterest = [2,8,14,22,30]
+    if(dataset == 'digits'):
+        labelsOfInterest = [1,4,6,9]
+        
+    with torch.no_grad():
         
         prev = solver.batch_size
         domain_x_torch = 0
         domain_x_bool = False
         domain_y_torch = []
         domain_y_bool = False
-        
+        total = 0
         if(solver.dl_type == 'soft_cluster'):
-            
+            #print('here')
             for batch_idx, data in enumerate(solver.datasets):
-                
+                #print('here1')
                 img_t = data['T'].cuda()
                 img = data['S'].cuda()
                 label = data['S_label'].long().cuda()
                 _, img_transformed = solver.G(img.cuda())
                 
                 #print(img.size()[0])
+                #print(img.size())
+                total += img.size()[0]
+                if(total > 1000):
+                    break
                 if(img.size()[0] > prev):
                     break
                 prev = img.size()[0]
@@ -257,6 +277,8 @@ def plot_tsne(solver,plot_before_source, plot_before_target, plot_after_source, 
                         img_transformed_i = img_transformed_i.view(img_transformed_i.size()[0], -1)
                         cur_y = torch.zeros([img_i.size()[0]]).fill_(i)
                         domain_y_torch.append(cur_y)
+                        #print(img_i.size())
+                        #print(cur_y.size())
                         if(domain_x_bool == False):
                             domain_x_torch = img_transformed_i
                             domain_x_bool = True
