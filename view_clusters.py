@@ -4,10 +4,13 @@ import torchvision
 from torch.autograd import Variable
 
 def view_clusters(solver,clusters_file):
-    solver.G.train()
-    solver.C1.train()
-    solver.C2.train()
-    solver.DP.train()
+    if(solver.dl_type != 'soft_cluster'):
+        print('no clusters for dl type : ', solver.dl_type)
+        return
+    solver.G.eval()
+    solver.C1.eval()
+    solver.C2.eval()
+    solver.DP.eval()
     #torch.cuda.manual_seed(1)
 
     batch_idx_g = 0

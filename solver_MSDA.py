@@ -29,6 +29,7 @@ class Solver(object):
         self.checkpoint_dir = checkpoint_dir
         self.save_epoch = save_epoch
         self.use_abs_diff = args.use_abs_diff
+        self.dl_type = args.dl_type
 
         self.args = args
 
