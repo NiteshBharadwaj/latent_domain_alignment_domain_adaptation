@@ -16,6 +16,7 @@ from test import test
 from view_clusters import view_clusters
 from train_source_only import train_source_only
 from generate_plots import generate_plots
+from plot_tsne import plot_tsne
 
 
 # Training settings
@@ -107,6 +108,8 @@ def main():
     plot_before_target = '%s/%s_%s_plot_before_target.png' % (args.record_folder, args.target, record_num)
     plot_after_source = '%s/%s_%s_plot_after_source.png' % (args.record_folder, args.target, record_num)
     plot_after_target = '%s/%s_%s_plot_after_target.png' % (args.record_folder, args.target, record_num)
+    all_plots = '%s/%s_%s_all_plots.png' % (args.record_folder, args.target, record_num)
+    plot_domain = '%s/%s_%s_domain_plot.png' % (args.record_folder, args.target, record_num)
     clusters_file = []
     for i in range(args.num_domain):
         clusters_file.append('%s/cluster_%s.png' % (args.record_folder, str(i)))
@@ -134,6 +137,7 @@ def main():
 
         test(solver, 0, 'test', record_file=None, save_model=False)
         view_clusters(solver, clusters_file)
+        plot_tsne(solver, plot_before_source, plot_before_target, plot_after_source, plot_after_target, all_plots, plot_domain, args.data)
         #generate_plots(solver, 0, 'test', plot_before_source, plot_before_target, plot_after_source, plot_after_target, False)
     else:
 

@@ -7,4 +7,4 @@
 # bash ./experiment_do.sh da 1500 0 record_office_variance/dslr_amazon_soft_cluster_8_2 soft_cluster office 8 no 2
 # bash ./experiment_do.sh da 1500 0 record_office_variance/dslr_amazon_soft_cluster_8_3 soft_cluster office 8 no True 1
 
-bash ./experiment_do.sh da 1500 0 record_office_variance_2/dslr_amazon_soft_cluster_8_1 soft_cluster office 8 1 no
+bash ./experiment_do.sh da 1500 0 record_office_variance_2/dslr_amazon_soft_cluster_8_1 soft_cluster office 8 1 yes

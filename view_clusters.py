@@ -22,11 +22,12 @@ def view_clusters(solver,clusters_file):
     for i in range(solver.num_domains):
         arrayOfClustersbool.append(False)
     
+    
     for batch_idx, data in enumerate(solver.datasets):
         batch_idx_g = batch_idx
-        img_t = Variable(data['T'].cuda())
-        img_s = Variable(data['S'].cuda())
-        label_s = Variable(data['S_label'].long().cuda())
+        img_t = data['T'].cuda()
+        img_s = data['S'].cuda()
+        label_s = data['S_label'].long().cuda()
 #         if img_s.size()[0] < solver.batch_size or img_t.size()[0] < solver.batch_size:
 #             break
         if(img_s.size()[0] > prev):
