@@ -8,7 +8,7 @@ def train_source_only(solver, epoch, record_file=None):
     solver.C1.train()
     solver.C2.train()
     solver.DP.train()
-    torch.cuda.manual_seed(1)
+    #torch.cuda.manual_seed(1)
 
     batch_idx_g = 0
 

@@ -31,7 +31,7 @@ def train_MSDA_single(solver, epoch, classifier_disc=True, record_file=None):
     solver.C1.train()
     solver.C2.train()
     solver.DP.train()
-    torch.cuda.manual_seed(1)
+    #torch.cuda.manual_seed(1)
 
     batch_idx_g = 0
 

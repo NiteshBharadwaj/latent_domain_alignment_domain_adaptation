@@ -13,6 +13,7 @@ from train_msda_hard import train_MSDA as train_MSDA_hard
 from train_msda_soft import train_MSDA_soft
 from train_msda_single import train_MSDA_single
 from test import test
+from view_clusters import view_clusters
 from train_source_only import train_source_only
 from generate_plots import generate_plots
 
@@ -37,8 +38,10 @@ parser.add_argument('--batch-size', type=int, default=128, metavar='N',
                     help='input batch size for training (default: 64)')
 parser.add_argument('--checkpoint_dir', type=str, default='checkpoint', metavar='N',
                     help='source only or not')
-parser.add_argument('--eval_only', action='store_true', default=False,
-                    help='evaluation only option')
+# parser.add_argument('--eval_only', action='store_true', default=False,
+#                     help='evaluation only option')
+parser.add_argument('--eval_only', type=str, default='no', metavar='N',
+                    help='Evaluate only? yes/no')
 parser.add_argument('--kl_wt', type=float, default=0.0, metavar='LR',
                     help='learning rate (default: 0)')
 parser.add_argument('--lr', type=float, default=0.0005, metavar='LR',
@@ -79,6 +82,11 @@ print(args)
 def main():
 
     # if not args.one_step:
+    boolDict = {
+        'yes' : True,
+        'no' : False
+    }
+    args.eval_only = boolDict[args.eval_only]
     seed = args.seed
     random.seed(seed)
     os.environ['PYTHONHASHSEED'] = str(seed)
@@ -99,6 +107,9 @@ def main():
     plot_before_target = '%s/%s_%s_plot_before_target.png' % (args.record_folder, args.target, record_num)
     plot_after_source = '%s/%s_%s_plot_after_source.png' % (args.record_folder, args.target, record_num)
     plot_after_target = '%s/%s_%s_plot_after_target.png' % (args.record_folder, args.target, record_num)
+    clusters_file = []
+    for i in range(args.num_domain):
+        clusters_file.append('%s/cluster_%s.png' % (args.record_folder, str(i)))
     while os.path.exists(record_train):
         record_num += 1
         record_train = '%s/%s_%s.txt' % (args.record_folder, args.target, record_num)
@@ -122,6 +133,7 @@ def main():
                     save_epoch=args.save_epoch)
 
         test(solver, 0, 'test', record_file=None, save_model=False)
+        view_clusters(solver, clusters_file)
         #generate_plots(solver, 0, 'test', plot_before_source, plot_before_target, plot_after_source, plot_after_target, False)
     else:
 
@@ -158,6 +170,9 @@ def main():
                 best = test(solver, t, 'val', record_file=record_val, save_model=args.save_model)
                 if best:
                     test(solver, t, 'test', record_file=record_test, save_model=args.save_model)
+                    view_clusters(solver, clusters_file)
+                    #print('clustering images saved in!')
+                
         #generate_plots(solver, 0, 'test', plot_before_source, plot_before_target, plot_after_source, plot_after_target, False)
 
 

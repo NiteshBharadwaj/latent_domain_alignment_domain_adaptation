@@ -87,8 +87,8 @@ class Predictor_ResNet18(nn.Module):
 		self.fc3 = nn.Linear(256, num_classes)
 		nn.init.xavier_uniform_(self.fc3.weight, .1)
 		nn.init.constant_(self.fc3.bias, 0.)
-		# nn.init.xavier_uniform_(self.fc2.weight, .1)
-		# nn.init.constant_(self.fc2.bias, 0.)
+# 		nn.init.xavier_uniform_(self.fc2.weight, .1)
+# 		nn.init.constant_(self.fc2.bias, 0.)
 		# self.bn_fc2 = nn.BatchNorm1d(2048)
 		self.prob = prob
 

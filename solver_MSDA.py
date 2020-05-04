@@ -53,6 +53,7 @@ class Solver(object):
             print('load finished!')
             num_classes = 10
             num_domains = args.num_domain
+            self.num_domains = num_domains
             self.entropy_wt = 0.01
             self.msda_wt = 0.1
             self.to_detach = args.to_detach
@@ -73,6 +74,7 @@ class Solver(object):
             self.to_detach = args.to_detach
             num_classes = 163
             num_domains = args.num_domain
+            self.num_domains = num_domains
             self.G = Generator_cars()
             self.C1 = Classifier_cars(num_classes)
             self.C2 = Classifier_cars(num_classes)
@@ -91,6 +93,7 @@ class Solver(object):
             self.to_detach = args.to_detach
             num_classes = 31
             num_domains = args.num_domain
+            self.num_domains = num_domains
             self.G = Generator_office()
             self.C1 = Classifier_office(num_classes)
             self.C2 = Classifier_office(num_classes)
@@ -99,6 +102,7 @@ class Solver(object):
         print('model_loaded')
 
         self.set_optimizer(which_opt=optimizer, lr=learning_rate)
+        print('ARGS EVAL ONLY : ', args.eval_only)
         if args.eval_only:
             print('Loading state from: ','%s/%s_model_best.pth' % (self.checkpoint_dir, self.target))
             checkpoint = torch.load('%s/%s_model_best.pth' % (self.checkpoint_dir, self.target))
@@ -285,7 +289,7 @@ class Solver(object):
             self.softmax_loss_all_domain_soft(output_s_c2, label_s)*0
         if (math.isnan(loss_s_c2.data.item())):
             raise Exception(' c2 loss is nan')
-        return loss_s_c1, loss_s_c2, loss_msda, entropy_loss, kl_loss
+        return loss_s_c1, loss_s_c2, loss_msda, entropy_loss, kl_loss, domain_prob
 
 
 # Takes input tensor of shape (N x num_domains) and computes the entropy loss sum(p * logp)
