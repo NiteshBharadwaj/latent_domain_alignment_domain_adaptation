@@ -105,18 +105,21 @@ def plot_tsne(solver,plot_before_source, plot_before_target, plot_after_source, 
                 img_transformed_l = img_transformed[l_index,:]
                 #print(img_transformed_l.size())
                 #print(img_l.size())
-                cur_y = label[l_index,]
+                #cur_y = label[l_index,]
                 if(img_l.size()[0] > 0):
                     try:
                         a = img_l.size()[3]
                     except:
                         img_l = torch.unsqueeze(img_l, 0)
                         img_transformed_l = torch.unsqueeze(img_transformed_l, 0)
-                        cur_y = torch.unsqueeze(cur_y,0)
+                        #cur_y = torch.unsqueeze(cur_y,0)
                     #print(img_transformed_l.size())
                     img_l = img_l.view(img_l.size()[0], -1)
                     img_transformed_l = img_transformed_l.view(img_transformed_l.size()[0], -1)
+                    #source_label_torch.append(cur_y)
+                    cur_y = torch.zeros([img_l.size()[0]]).fill_(l)
                     source_label_torch.append(cur_y)
+                    
                     if(before_source_bool == False):
                         before_source_torch = img_l
                         #print(before_source_torch.size())
@@ -165,17 +168,18 @@ def plot_tsne(solver,plot_before_source, plot_before_target, plot_after_source, 
                 l_index = ((label == l).nonzero()).squeeze()
                 img_l = img[l_index,:,:,:]
                 img_transformed_l = img_transformed[l_index,:]
-                cur_y = label[l_index,]
+                #cur_y = label[l_index,]
                 if(img_l.size()[0] > 0):
                     try:
                         a = img_l.size()[3]
                     except:
                         img_l = torch.unsqueeze(img_l, 0)
                         img_transformed_l = torch.unsqueeze(img_transformed_l, 0)
-                        cur_y = torch.unsqueeze(cur_y,0)
+                        #cur_y = torch.unsqueeze(cur_y,0)
                     #print(img_transformed_l.size())
                     img_l = img_l.view(img_l.size()[0], -1)
                     img_transformed_l = img_transformed_l.view(img_transformed_l.size()[0], -1)
+                    cur_y = torch.zeros([img_l.size()[0]]).fill_(l)
                     target_label_torch.append(cur_y)
                     if(before_target_bool == False):
                         before_target_torch = img_l
