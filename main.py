@@ -117,6 +117,7 @@ def main():
     clusters_file = []
     for i in range(args.num_domain):
         clusters_file.append('%s/cluster_%s.png' % (args.record_folder, str(i)))
+    probs_csv = '%s/best_%s.csv' % (args.record_folder, 'probs')
     while os.path.exists(record_train):
         record_num += 1
         record_train = '%s/%s_%s.txt' % (args.record_folder, args.target, record_num)
@@ -140,7 +141,7 @@ def main():
                     save_epoch=args.save_epoch)
 
         test(solver, 0, 'test', record_file=None, save_model=False)
-        view_clusters(solver, clusters_file)
+        view_clusters(solver, clusters_file, probs_csv)
         plot_tsne1(solver, plot_before_source, plot_before_target, plot_after_source, plot_after_target, all_plots, plot_domains, args.data)
         solver = Solver(args, target=args.target, learning_rate=args.lr, batch_size=args.batch_size,
                     optimizer=args.optimizer, 
@@ -182,7 +183,7 @@ def main():
                 best = test(solver, t, 'val', record_file=record_val, save_model=args.save_model)
                 if best:
                     test(solver, t, 'test', record_file=record_test, save_model=args.save_model)
-                    view_clusters(solver, clusters_file)
+                    view_clusters(solver, clusters_file, probs_csv)
                     #print('clustering images saved in!')
                 
         #generate_plots(solver, 0, 'test', plot_before_source, plot_before_target, plot_after_source, plot_after_target, False)
