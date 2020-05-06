@@ -132,12 +132,12 @@ class DomainPredictor_ResNet18(nn.Module):
 # 		x = self.relu(self.bn3(self.conv3(x)))
 		x = self.avgpool(x)
 		x = x.view(x.shape[0],-1)       
-		x = self.fc4(x)
+		output = self.fc4(x)
 
 		# x = x_feat.view(x_feat.size(0), -1)
 		# x = self.idm(x)
 
-		return x
+		return output, x
 
 # ---------------------------------------------- AlexNet -----------------------------------------
 
@@ -203,8 +203,8 @@ class DomainPredictor_AlexNet(nn.Module):
 		if reverse:
 			x = grad_reverse(x, self.lambd)
 		x = self.relu(self.bn2_fc(self.fc2(x)))
-		x = self.fc3(x)
-		return x
+		output = self.fc3(x)
+		return output, x
 
 # ----------------------------------- Noob Architecture ----------------------------------------
 class Feature(nn.Module): # Input -> SxS
@@ -286,8 +286,8 @@ class DomainPredictor(nn.Module):
 		if reverse:
 			x = grad_reverse(x, self.lambd)
 		x = self.relu(self.bn2_fc(self.fc2(x)))
-		x = self.fc3(x)
-		return x
+		output = self.fc3(x)
+		return output, x
 
 
 # ----------------------------------- ------------- ----------------------------------------

@@ -236,9 +236,9 @@ class Solver(object):
         feat_s, conv_feat_s = feat_s_comb
         feat_t, conv_feat_t = feat_t_comb
         if self.to_detach:
-            domain_logits = self.DP(conv_feat_s.detach())
+            domain_logits, _ = self.DP(conv_feat_s.detach())
         else:
-            domain_logits = self.DP(conv_feat_s)
+            domain_logits, _ = self.DP(conv_feat_s)
         entropy_loss, domain_prob = self.entropy_loss(domain_logits)
         #print(domain_prob)
 

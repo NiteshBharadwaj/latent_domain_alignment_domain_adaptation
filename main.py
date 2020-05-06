@@ -4,6 +4,7 @@ import torch
 import random
 import numpy as np
 import sys
+import os
 sys.path.append('./model')
 sys.path.append('./datasets')
 sys.path.append('./metric');
@@ -108,8 +109,11 @@ def main():
     plot_before_target = '%s/%s_%s_plot_before_target.png' % (args.record_folder, args.target, record_num)
     plot_after_source = '%s/%s_%s_plot_after_source.png' % (args.record_folder, args.target, record_num)
     plot_after_target = '%s/%s_%s_plot_after_target.png' % (args.record_folder, args.target, record_num)
-    all_plots = '%s/%s_%s_all_plots.png' % (args.record_folder, args.target, record_num)
-    plot_domain = '%s/%s_%s_domain_plot.png' % (args.record_folder, args.target, record_num)
+    all_plots = '%s/%s_%s_source_target_plots.png' % (args.record_folder, args.target, record_num)
+    plot_domain1 = '%s/%s_%s_latent_domain_plot_conv.png' % (args.record_folder, args.target, record_num)
+    plot_domain2 = '%s/%s_%s_latent_domain_plot_last.png' % (args.record_folder, args.target, record_num)
+    plot_domain3 = '%s/%s_%s_latent_domain_plots.png' % (args.record_folder, args.target, record_num)
+    plot_domains = [plot_domain1, plot_domain2, plot_domain3]
     clusters_file = []
     for i in range(args.num_domain):
         clusters_file.append('%s/cluster_%s.png' % (args.record_folder, str(i)))
@@ -137,13 +141,12 @@ def main():
 
         test(solver, 0, 'test', record_file=None, save_model=False)
         view_clusters(solver, clusters_file)
-        plot_tsne1(solver, plot_before_source, plot_before_target, plot_after_source, plot_after_target, all_plots, plot_domain, args.data)
+        plot_tsne1(solver, plot_before_source, plot_before_target, plot_after_source, plot_after_target, all_plots, plot_domains, args.data)
         solver = Solver(args, target=args.target, learning_rate=args.lr, batch_size=args.batch_size,
                     optimizer=args.optimizer, 
                     checkpoint_dir=args.checkpoint_dir,
                     save_epoch=args.save_epoch)
-        plot_tsne2(solver, plot_before_source, plot_before_target, plot_after_source, plot_after_target, all_plots, plot_domain, args.data)
-        #generate_plots(solver, 0, 'test', plot_before_source, plot_before_target, plot_after_source, plot_after_target, False)
+        plot_tsne2(solver, plot_before_source, plot_before_target, plot_after_source, plot_after_target, all_plots, plot_domains, args.data)
     else:
 
         solver = Solver(args, target=args.target, learning_rate=args.lr, batch_size=args.batch_size,

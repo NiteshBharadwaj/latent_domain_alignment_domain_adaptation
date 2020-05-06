@@ -11,7 +11,7 @@ import matplotlib.patheffects as PathEffects
 import matplotlib
 from PIL import Image
 #%matplotlib inline
-
+import os
 import seaborn as sns
 sns.set_style('darkgrid')
 sns.set_palette('muted')
@@ -34,7 +34,7 @@ def get_concat_v(im1, im2):
 
 
 
-def scatter(x, colors, labelsOfInterest, figSize):
+def scatter(x, colors, labelsOfInterest, figSize, plotName):
     # We choose a color palette with seaborn.
     palette = np.array(sns.color_palette("hls", max(labelsOfInterest)+1))
 
@@ -45,6 +45,8 @@ def scatter(x, colors, labelsOfInterest, figSize):
                     c=palette[colors.astype(np.int)])
     plt.xlim(-25, 25)
     plt.ylim(-25, 25)
+    plt.title(plotName)
+    #ax.legend([plotName])
     ax.axis('off')
     ax.axis('tight')
 
@@ -138,13 +140,13 @@ def plot_tsne1(solver,plot_before_source, plot_before_target, plot_after_source,
         before_source_torch = before_source_torch.data.cpu().numpy()
         after_source_torch = after_source_torch.data.cpu().numpy()
         
-        scatter(TSNE(random_state=RS).fit_transform(before_source_torch),source_label_torch,labelsOfInterest,(5,5))
-        plt.savefig(plot_before_source, dpi=120)
-        print('source before plot saved in : ', plot_before_source)
+#         scatter(TSNE(random_state=RS).fit_transform(before_source_torch),source_label_torch,labelsOfInterest,(5,5))
+#         plt.savefig(plot_before_source, dpi=120)
+#         print('source before plot saved in : ', plot_before_source)
         
-        scatter(TSNE(random_state=RS).fit_transform(after_source_torch),source_label_torch,labelsOfInterest,(5,5))
-        plt.savefig(plot_after_source, dpi=120)
-        print('source after plot saved in : ', plot_after_source)
+#         scatter(TSNE(random_state=RS).fit_transform(after_source_torch),source_label_torch,labelsOfInterest,(5,5))
+#         plt.savefig(plot_after_source, dpi=120)
+#         print('source after plot saved in : ', plot_after_source)
         
         
         
@@ -201,14 +203,36 @@ def plot_tsne1(solver,plot_before_source, plot_before_target, plot_after_source,
         before_target_torch = before_target_torch.data.cpu().numpy()
         after_target_torch = after_target_torch.data.cpu().numpy()
         
-        scatter(TSNE(random_state=RS).fit_transform(before_target_torch),target_label_torch,labelsOfInterest,(5,5))
+#         scatter(TSNE(random_state=RS).fit_transform(before_target_torch),target_label_torch,labelsOfInterest,(5,5))
+#         plt.savefig(plot_before_target, dpi=120)
+#         print('target before plot saved in : ', plot_before_target)
+        
+#         scatter(TSNE(random_state=RS).fit_transform(after_target_torch),target_label_torch,labelsOfInterest,(5,5))
+#         plt.savefig(plot_after_target, dpi=120)
+#         print('target after plot saved in : ', plot_after_source)
+        
+        
+#         before_torch = torch.cat((before_source_torch,before_target))
+        before_torch = np.concatenate((before_source_torch,before_target_torch), axis=0)
+        after_torch = np.concatenate((after_source_torch,after_target_torch), axis=0)
+        #labels = np.concatenate((source_label_torch, target_label_torch), axis=0)
+        
+        source_num = source_label_torch.shape[0]
+        
+        beforeTSNE = TSNE(random_state=RS).fit_transform(before_torch)
+        scatter(beforeTSNE[:source_num,:], source_label_torch, labelsOfInterest, (5,5), 'source before')
+        plt.savefig(plot_before_source, dpi=120)
+        scatter(beforeTSNE[source_num:,:], target_label_torch, labelsOfInterest, (5,5), 'target before')
         plt.savefig(plot_before_target, dpi=120)
-        print('target before plot saved in : ', plot_before_target)
+        print('before training plots saved')
         
-        scatter(TSNE(random_state=RS).fit_transform(after_target_torch),target_label_torch,labelsOfInterest,(5,5))
+        afterTSNE = TSNE(random_state=RS).fit_transform(after_torch)
+        scatter(afterTSNE[:source_num,:], source_label_torch, labelsOfInterest, (5,5), 'source after')
+        plt.savefig(plot_after_source, dpi=120)
+        scatter(afterTSNE[source_num:,:], target_label_torch, labelsOfInterest, (5,5), 'target after')
         plt.savefig(plot_after_target, dpi=120)
-        print('target after plot saved in : ', plot_after_source)
-        
+        print('after training plots saved')
+       
         before_source = Image.open(plot_before_source)
         after_source = Image.open(plot_after_source)
         before_target = Image.open(plot_before_target)
@@ -217,6 +241,12 @@ def plot_tsne1(solver,plot_before_source, plot_before_target, plot_after_source,
         v2 = get_concat_v(after_source, after_target)
         final = get_concat_h(v1,v2)
         final.save(all_plots)
+        print('source target plots saved in : ', all_plots)
+        
+        os.remove(plot_before_source)
+        os.remove(plot_after_source)
+        os.remove(plot_before_target)
+        os.remove(plot_after_target)
         
         
         
@@ -237,8 +267,10 @@ def plot_tsne2(solver,plot_before_source, plot_before_target, plot_after_source,
     with torch.no_grad():
         
         prev = solver.batch_size
-        domain_x_torch = 0
-        domain_x_bool = False
+        domain_x1_torch = 0
+        domain_x1_bool = False
+        domain_x2_torch = 0
+        domain_x2_bool = False
         domain_y_torch = []
         domain_y_bool = False
         total = 0
@@ -249,7 +281,9 @@ def plot_tsne2(solver,plot_before_source, plot_before_target, plot_after_source,
                 img_t = data['T'].cuda()
                 img = data['S'].cuda()
                 label = data['S_label'].long().cuda()
-                _, img_transformed = solver.G(img.cuda())
+                _, img_transformed1 = solver.G(img.cuda())
+                _, img_transformed2 = solver.DP(img_transformed1.cuda())
+                
                 
                 #print(img.size()[0])
                 #print(img.size())
@@ -266,34 +300,50 @@ def plot_tsne2(solver,plot_before_source, plot_before_target, plot_after_source,
                 for i in range(solver.num_domains):
                     i_index = ((best_domains == i).nonzero()).squeeze()
                     img_i = img[i_index,:,:,:]
-                    img_transformed_i = img_transformed[i_index,:,:,:]
+                    img_transformed1_i = img_transformed1[i_index,:,:,:]
+                    img_transformed2_i = img_transformed2[i_index,:]
                     if(img_i.size()[0] > 0):
                         try:
                             a = img_i.size()[3]
                         except:
                             img_i = torch.unsqueeze(img_i, 0)
-                            img_transformed_i = torch.unsqueeze(img_transformed_i, 0)
+                            img_transformed1_i = torch.unsqueeze(img_transformed1_i, 0)
+                            img_transformed2_i = torch.unsqueeze(img_transformed2_i, 0)
                         #cur_y = torch.zeros([img_i.size()[0]], dtype=torch.int32)
-                        img_transformed_i = img_transformed_i.view(img_transformed_i.size()[0], -1)
+                        img_transformed1_i = img_transformed1_i.view(img_transformed1_i.size()[0], -1)
+                        img_transformed2_i = img_transformed1_i.view(img_transformed2_i.size()[0], -1)
                         cur_y = torch.zeros([img_i.size()[0]]).fill_(i)
                         domain_y_torch.append(cur_y)
                         #print(img_i.size())
                         #print(cur_y.size())
-                        if(domain_x_bool == False):
-                            domain_x_torch = img_transformed_i
-                            domain_x_bool = True
+                        if(domain_x1_bool == False):
+                            domain_x1_torch = img_transformed1_i
+                            domain_x1_bool = True
+                            domain_x2_torch = img_transformed2_i
+                            domain_x2_bool = True
                         else:
-                            domain_x_torch = torch.cat((domain_x_torch, img_transformed_i), 0)
+                            domain_x1_torch = torch.cat((domain_x1_torch, img_transformed1_i), 0)
+                            domain_x2_torch = torch.cat((domain_x2_torch, img_transformed2_i), 0)
             domain_y_torch = tuple(domain_y_torch)
             domain_y_torch = torch.cat(domain_y_torch,axis=0)
             domain_y_torch = domain_y_torch.data.cpu().numpy()
 
-            domain_x_torch = domain_x_torch.data.cpu().numpy()
+            domain_x1_torch = domain_x1_torch.data.cpu().numpy()
+            domain_x2_torch = domain_x2_torch.data.cpu().numpy()
 
-            scatter(TSNE(random_state=RS).fit_transform(domain_x_torch),domain_y_torch,[i for i in range(solver.num_domains)], (8,8))
-            plt.savefig(plot_domains, dpi=120)
+            scatter(TSNE(random_state=RS).fit_transform(domain_x1_torch),domain_y_torch,[i for i in range(solver.num_domains)], (8,8), 'latent domains conv features')
+            plt.savefig(plot_domains[0], dpi=120)
             
-            print('domain tsne plot saved in : ', plot_domains)
+            scatter(TSNE(random_state=RS).fit_transform(domain_x2_torch),domain_y_torch,[i for i in range(solver.num_domains)], (8,8), 'latent domains last layer')
+            plt.savefig(plot_domains[1], dpi=120)
+            
+            
+            final = get_concat_h(Image.open(plot_domains[0]),Image.open(plot_domains[1]))
+            final.save(plot_domains[2])
+            print('latent domain plots saved in : ', plot_domains[2])
+            
+            os.remove(plot_domains[0])
+            os.remove(plot_domains[1])
                 
                 
                 
