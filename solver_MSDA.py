@@ -57,6 +57,7 @@ class Solver(object):
             self.num_domains = num_domains
             self.entropy_wt = 0.01
             self.msda_wt = 0.1
+            self.kl_wt = args.kl_wt
             self.to_detach = args.to_detach
             self.G = Generator_digit()
             self.C1 = Classifier_digit()

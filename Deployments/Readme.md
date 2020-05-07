@@ -17,7 +17,7 @@ Whenever you want to run a pod (Contact nitesh if you are unsure of difference b
   kubectl exec -it [pod-name] /bin/bash 
 ```
 ```
-  ./deploy --name temp-pod --ngpus 1 --type simple_pod
+  ./deploy --name temp-pod --ngpus 0 --type simple_pod
 ```
 
 To check
@@ -30,16 +30,21 @@ Whenever you want to run a job
 Warning: You should not create any infinite loop in a job (atleast by choice). Manjot and his team was banned for this.
 ```
   cd deployments
-  ./deploy --name [job name] --ngpus 1 --type deeplearning_job --meml 16Gi --memr 16Gi --command "[COMMAND HERE]"
+  ./deploy --name [job name] --ngpus 1 --type deeplearning_job --meml 16Gi --memr 16Gi --command "[CMD1;CMD2]"
 ```
 Example:
 ```
-  ./deploy --name latent-digit-job --ngpus 1 --type deeplearning_job --meml 16Gi --memr 16Gi --command " bash experiment_do.sh mnistm 100 0 record/mnistm soft_cluster digits 4 yes"
+  ./deploy --name latent-office-job --ngpus 1 --type deeplearning_job --meml 8Gi --memr 8Gi --command "bash ./experiment_do.sh da 1500 0 record_office/dslr_amazon_soft_cluster_8_1 soft_cluster office 8 0.02 1 /localdata/office/ no"
 ```
 
-If you want to install new packages before starting a job or pod, check the commands in deploy.py
+If you want to install new packages or unzip files to local before starting a job or pod, checkout deploy.py
 
 
+GPU Monitoring:
+https://grafana.nautilus.optiputer.net/d/dRG9q0Ymz/k8s-compute-resources-namespace-gpus?orgId=1&refresh=30s&var-namespace=mc-lab
+https://grafana.nautilus.optiputer.net/d/85a562078cdf77779eaa1add43ccec1e/kubernetes-compute-resources-namespace-pods?orgId=1&refresh=10s&var-datasource=default&var-cluster=&var-namespace=mc-lab
+
+Overall, the pods and jobs that we create should be working at >50% capacity. Otherwise we get warning and ban.
 
 Other commands backup
 ```
