@@ -24,6 +24,10 @@ To check
 ```
  kubectl logs [pod-name]
 ```
+Finally, important when you're done to
+```
+kubectl delete pod [pod name]
+```
 
 
 Whenever you want to run a job 
