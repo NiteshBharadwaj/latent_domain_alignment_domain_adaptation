@@ -63,6 +63,7 @@ def view_clusters(solver,clusters_file,probs_csv):
                     a = img_s_i.size()[3]
                 except:
                     img_s_i = torch.unsqueeze(img_s_i, 0)
+                    cur_probs = torch.unsqueeze(cur_probs, 0)
                 if(arrayOfClustersbool[i] == False):
                     arrayOfClusterstorch[i] = img_s_i
                     arrayOfClustersbool[i] = True
@@ -84,6 +85,8 @@ def view_clusters(solver,clusters_file,probs_csv):
         if(arrayOfClustersbool[i] == True):
             print("cluster no : ", str(i))
             arrayOfClustersprobs[i] = arrayOfClustersprobs[i].data.cpu().numpy()
+#             print(arrayOfClustersprobs[i])
+#             print(arrayOfClustersprobs[i].shape)
             maxProbIndices = arrayOfClustersprobs[i].argsort()[-min(arrayOfClustersprobs[i].shape[0],topk):][::-1]
             maxProbs = arrayOfClustersprobs[i][maxProbIndices].tolist()
             #maxProbIndices = torch.from_numpy(maxProbIndices.copy()).long().cuda()

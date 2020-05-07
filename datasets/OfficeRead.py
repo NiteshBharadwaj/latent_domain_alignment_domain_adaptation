@@ -1,8 +1,8 @@
 import csv
-def read_office_domain(domain):
-	trainFile = './data/office_sample/' + domain + '_data_train.csv'
-	testFile = './data/office_sample/' + domain + '_data_train.csv'
-	validFile = './data/office_sample/' + domain + '_data_train.csv'
+def read_office_domain(domain, office_directory):
+	trainFile = office_directory + domain + '_data_train.csv'
+	testFile = office_directory + domain + '_data_train.csv'
+	validFile = office_directory + domain + '_data_train.csv'
 
 	trainReader = csv.reader(open(trainFile, 'r'))
 	testReader = csv.reader(open(testFile, 'r'))

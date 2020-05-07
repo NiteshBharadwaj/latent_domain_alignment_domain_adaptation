@@ -36,6 +36,8 @@ parser.add_argument('--data', type=str, default='', metavar='N',
                     help='digits,cars')
 parser.add_argument('--record_folder', type=str, default='record', metavar='N',
                     help='record folder')
+parser.add_argument('--office_directory', type=str, default='office_sample', metavar='N',
+                    help='directory for office data')
 parser.add_argument('--batch-size', type=int, default=128, metavar='N',
                     help='input batch size for training (default: 64)')
 parser.add_argument('--checkpoint_dir', type=str, default='checkpoint', metavar='N',
@@ -88,6 +90,8 @@ def main():
         'yes' : True,
         'no' : False
     }
+#     print(args.kl_wt)
+#     print(type(args.kl_wt))
     args.eval_only = boolDict[args.eval_only]
     seed = args.seed
     random.seed(seed)

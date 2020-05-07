@@ -82,11 +82,11 @@ class Solver(object):
             self.DP = DP_cars(num_domains)
         elif args.data == 'office':
             if args.dl_type == 'soft_cluster':
-                self.datasets, self.dataset_test, self.dataset_valid = office_combined(target, self.batch_size)
+                self.datasets, self.dataset_test, self.dataset_valid = office_combined(target, self.batch_size, args.office_directory)
             elif args.dl_type == 'source_target_only':
-                self.datasets, self.dataset_test, self.dataset_valid = office_combined(target, self.batch_size)
+                self.datasets, self.dataset_test, self.dataset_valid = office_combined(target, self.batch_size, args.office_directory)
             elif args.dl_type == 'source_only':
-                self.datasets, self.dataset_test, self.dataset_valid = office_combined(target, self.batch_size)
+                self.datasets, self.dataset_test, self.dataset_valid = office_combined(target, self.batch_size, args.office_directory)
             print('load finished!')
             self.entropy_wt = 1
             self.msda_wt = 0.25
