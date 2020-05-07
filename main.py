@@ -16,7 +16,6 @@ from train_msda_single import train_MSDA_single
 from test import test
 from view_clusters import view_clusters
 from train_source_only import train_source_only
-from generate_plots import generate_plots
 from plot_tsne import plot_tsne1,plot_tsne2
 
 
