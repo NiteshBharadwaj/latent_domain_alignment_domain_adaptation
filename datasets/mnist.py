@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.io import loadmat
 
-base_dir = './data'
+base_dir = '/localdata/digits/Digit-Five'
 def load_mnist(scale=True, usps=False, all_use=False):
     mnist_data = loadmat(base_dir + '/mnist_data.mat')
     if scale:

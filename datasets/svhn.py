@@ -4,7 +4,7 @@ import sys
 
 sys.path.append('../utils/')
 from utils.utils import dense_to_one_hot
-base_dir = './data'
+base_dir = '/localdata/digits/Digit-Five'
 def load_svhn():
     svhn_train = loadmat(base_dir + '/svhn_train_32x32.mat')
     svhn_test = loadmat(base_dir + '/svhn_test_32x32.mat')

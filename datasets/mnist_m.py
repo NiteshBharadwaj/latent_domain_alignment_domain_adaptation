@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.io import loadmat
 
-base_dir = './data'
+base_dir = '/localdata/digits/Digit-Five'
 def load_mnistm(scale=True, usps=False, all_use=False):
     mnistm_data = loadmat(base_dir + '/mnistm_with_label.mat')
     mnistm_train = mnistm_data['train']
