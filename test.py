@@ -64,7 +64,8 @@ def test(solver, epoch, split, record_file=None, save_model=False):
     test_acc =  100. * correct1 / (size + 1e-6)
     best = False
     if split=='val' and size!=0:
-        if save_model and epoch % solver.save_epoch == 0 and test_acc > solver.best_acc:
+#         if save_model and epoch % solver.save_epoch == 0 and test_acc > solver.best_acc:
+        if save_model and epoch % solver.save_epoch == 0 and test_loss < solver.best_loss:
             print('Saving best model','%s/%s_model_best.pth' % (solver.checkpoint_dir, solver.target))
             checkpoint = {}
             checkpoint['G_state_dict'] = solver.G.state_dict()
@@ -78,8 +79,11 @@ def test(solver, epoch, split, record_file=None, save_model=False):
             checkpoint['DP_state_dict_opt'] = solver.opt_dp.state_dict()
             torch.save(checkpoint, '%s/%s_model_best.pth' % (solver.checkpoint_dir, solver.target))
 
-        if test_acc > solver.best_acc and size!=0:
-            solver.best_acc = test_acc
+#         if test_acc > solver.best_acc and size!=0:
+#             solver.best_acc = test_acc
+#             best = True
+        if test_loss < solver.best_loss and size!=0:
+            solver.best_loss = test_loss
             best = True
 
         if record_file:

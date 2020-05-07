@@ -13,11 +13,12 @@ from sklearn.decomposition import PCA
 from sklearn.cluster import KMeans
 import torch
 
-def return_dataset(target, office_directory):
-    return read_office_domain(target, office_directory)
+
+def return_dataset(target, office_directory, is_target, seed_id):
+    return read_office_domain(target, office_directory, is_target, seed_id)
 
 
-def office_combined(target, batch_size, office_directory):
+def office_combined(target, batch_size, office_directory, seed_id):
     S1 = {}
     S1_test = {}
     S1_valid = {}
@@ -54,10 +55,12 @@ def office_combined(target, batch_size, office_directory):
     
     
 
-    target_train, target_train_label, target_test, target_test_label, target_valid, target_valid_label = return_dataset(target_domain, office_directory)
+
+    target_train, target_train_label, target_test, target_test_label, target_valid, target_valid_label = return_dataset(target_domain, office_directory, True, seed_id)
 
     for i in range(len(domain_all)):
-        source_train, source_train_label, source_test, source_test_label, source_valid, source_valid_label = return_dataset(domain_all[i], office_directory)
+        source_train, source_train_label, source_test, source_test_label, source_valid, source_valid_label = return_dataset(domain_all[i], office_directory, False, seed_id)
+
         S[i]['imgs'] = source_train
         S[i]['labels'] = source_train_label
         # input target sample when test, source performance is not important
