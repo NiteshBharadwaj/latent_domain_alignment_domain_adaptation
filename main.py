@@ -35,7 +35,7 @@ parser.add_argument('--data', type=str, default='', metavar='N',
                     help='digits,cars')
 parser.add_argument('--record_folder', type=str, default='record', metavar='N',
                     help='record folder')
-parser.add_argument('--office_directory', type=str, default='office_sample', metavar='N',
+parser.add_argument('--office_directory', type=str, default='.', metavar='N',
                     help='directory for office data')
 parser.add_argument('--batch-size', type=int, default=128, metavar='N',
                     help='input batch size for training (default: 64)')
