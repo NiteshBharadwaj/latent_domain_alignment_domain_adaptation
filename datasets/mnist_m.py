@@ -2,7 +2,8 @@ import numpy as np
 from scipy.io import loadmat
 
 base_dir = './data'
-def load_mnistm(scale=True, usps=False, all_use=False):
+def load_mnistm(directory,scale=True, usps=False, all_use=False):
+    base_dir = directory
     mnistm_data = loadmat(base_dir + '/mnistm_with_label.mat')
     mnistm_train = mnistm_data['train']
     mnistm_test =  mnistm_data['test']

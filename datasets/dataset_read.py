@@ -19,30 +19,30 @@ from sklearn.decomposition import PCA
 from sklearn.cluster import KMeans
 
 
-def return_dataset(data, scale=False, usps=False, all_use='no'):
+def return_dataset(data, scale=False, usps=False, all_use='no', directory="."):
     if data == 'svhn':
         train_image, train_label, \
-        test_image, test_label = load_svhn()
+        test_image, test_label = load_svhn(directory)
     if data == 'mnist':
         train_image, train_label, \
-        test_image, test_label = load_mnist()
+        test_image, test_label = load_mnist(directory)
         # print(train_image.shape)
     if data == 'mnistm':
         train_image, train_label, \
-        test_image, test_label = load_mnistm()
+        test_image, test_label = load_mnistm(directory)
         # print(train_image.shape)
     if data == 'usps':
         train_image, train_label, \
-        test_image, test_label = load_usps()
+        test_image, test_label = load_usps(directory)
     if data == 'synth':
         train_image, train_label, \
-        test_image, test_label = load_syntraffic()
+        test_image, test_label = load_syntraffic(directory)
     if data == 'gtsrb':
         train_image, train_label, \
-        test_image, test_label = load_gtsrb()
+        test_image, test_label = load_gtsrb(directory)
     if data == 'syn':
         train_image, train_label, \
-        test_image, test_label = load_syn()
+        test_image, test_label = load_syn(directory)
 
     return train_image, train_label, test_image, test_label
 
@@ -219,7 +219,8 @@ def dataset_hard_cluster(target, batch_size,num_clus):
     return dataset, dataset_test, dataset_valid
 
 
-def dataset_combined(target, batch_size,num_clus):
+def dataset_combined(target, batch_size, num_clus, directory):
+    print(directory)
     S1 = {}
     S1_test = {}
     S2 = {}
@@ -238,7 +239,7 @@ def dataset_combined(target, batch_size,num_clus):
     domain_all = ['mnistm', 'mnist', 'usps', 'svhn', 'syn']
     domain_all.remove(target)
 
-    target_train, target_train_label, target_test, target_test_label = return_dataset(target)
+    target_train, target_train_label, target_test, target_test_label = return_dataset(target, directory=directory)
 
     indices_tar = np.arange(0,target_test.shape[0])
     np.random.seed(42)
@@ -249,7 +250,7 @@ def dataset_combined(target, batch_size,num_clus):
     target_test = target_test[indices_tar[val_split:]]
     target_test_label = target_test_label[indices_tar[val_split:]]
     for i in range(len(domain_all)):
-        source_train, source_train_label, source_test, source_test_label = return_dataset(domain_all[i])
+        source_train, source_train_label, source_test, source_test_label = return_dataset(domain_all[i], directory=directory)
         S[i]['imgs'] = source_train
         S[i]['labels'] = source_train_label
         # input target sample when test, source performance is not important

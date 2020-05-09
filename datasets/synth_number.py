@@ -6,7 +6,8 @@ sys.path.append('../utils/')
 from utils.utils import dense_to_one_hot
 
 base_dir = './data'
-def load_syn(scale=True, usps=False, all_use=False):
+def load_syn(directory,scale=True, usps=False, all_use=False):
+    base_dir = directory
     syn_data = loadmat(base_dir + '/syn_number.mat')
     syn_train = syn_data['train_data']
     syn_test =  syn_data['test_data']

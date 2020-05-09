@@ -7,7 +7,8 @@ sys.path.append('../utils/')
 from utils.utils import dense_to_one_hot
 base_dir = './data'
 
-def load_usps(all_use=False):
+def load_usps(directory,all_use=False):
+    base_dir = directory
     #f = gzip.open('data/usps_28x28.pkl', 'rb')
     #data_set = pickle.load(f)
     #f.close()

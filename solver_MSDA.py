@@ -35,7 +35,6 @@ class Solver(object):
 
         self.best_loss = 9999999
         self.best_acc = 0
-
         print('dataset loading')
         if args.data == 'digits':
             if args.dl_type == 'original':
@@ -43,11 +42,11 @@ class Solver(object):
             elif args.dl_type == 'hard_cluster':
                 self.datasets, self.dataset_test, self.dataset_valid = dataset_hard_cluster(target, self.batch_size,args.num_domain)
             elif args.dl_type == 'soft_cluster':
-                self.datasets, self.dataset_test, self.dataset_valid = dataset_combined(target, self.batch_size,args.num_domain)
+                self.datasets, self.dataset_test, self.dataset_valid = dataset_combined(target, self.batch_size,args.num_domain, args.office_directory)
             elif args.dl_type == 'source_only':
-                self.datasets, self.dataset_test, self.dataset_valid = dataset_combined(target, self.batch_size,args.num_domain)
+                self.datasets, self.dataset_test, self.dataset_valid = dataset_combined(target, self.batch_size,args.num_domain, args.office_directory)
             elif args.dl_type == 'source_target_only':
-                self.datasets, self.dataset_test, self.dataset_valid = dataset_combined(target, self.batch_size,args.num_domain)
+                self.datasets, self.dataset_test, self.dataset_valid = dataset_combined(target, self.batch_size,args.num_domain, args.office_directory)
             else:
                 raise Exception('Type of experiment undefined')
 
@@ -279,9 +278,9 @@ class Solver(object):
         output_s_c1, output_t_c1 = self.C1_all_domain_soft(feat_s, feat_t)
         output_s_c2, output_t_c2 = self.C2_all_domain_soft(feat_s, feat_t)
         if self.to_detach:
-            loss_msda = msda.msda_regulizer_soft(feat_s, feat_t, 3, domain_prob.detach()) * self.msda_wt
+            loss_msda = msda.msda_regulizer_soft(feat_s, feat_t, 5, domain_prob.detach()) * self.msda_wt
         else:
-            loss_msda = msda.msda_regulizer_soft(feat_s, feat_t, 3, domain_prob) * self.msda_wt
+            loss_msda = msda.msda_regulizer_soft(feat_s, feat_t, 5, domain_prob) * self.msda_wt
         if (math.isnan(loss_msda.data.item())):
             raise Exception('msda loss is nan')
         loss_s_c1 = \
@@ -289,7 +288,7 @@ class Solver(object):
         if (math.isnan(loss_s_c1.data.item())):
             raise Exception(' c1 loss is nan')
         loss_s_c2 = \
-            self.softmax_loss_all_domain_soft(output_s_c2, label_s)*0
+            self.softmax_loss_all_domain_soft(output_s_c2, label_s)
         if (math.isnan(loss_s_c2.data.item())):
             raise Exception(' c2 loss is nan')
         return loss_s_c1, loss_s_c2, loss_msda, entropy_loss, kl_loss, domain_prob

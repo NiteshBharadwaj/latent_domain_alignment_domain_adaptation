@@ -5,7 +5,8 @@ import sys
 sys.path.append('../utils/')
 from utils.utils import dense_to_one_hot
 base_dir = './data'
-def load_svhn():
+def load_svhn(directory):
+    base_dir = directory
     svhn_train = loadmat(base_dir + '/svhn_train_32x32.mat')
     svhn_test = loadmat(base_dir + '/svhn_test_32x32.mat')
     svhn_train_im = svhn_train['X']

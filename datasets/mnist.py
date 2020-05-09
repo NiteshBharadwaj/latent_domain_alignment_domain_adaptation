@@ -2,7 +2,8 @@ import numpy as np
 from scipy.io import loadmat
 
 base_dir = './data'
-def load_mnist(scale=True, usps=False, all_use=False):
+def load_mnist(directory,scale=True, usps=False, all_use=False):
+    base_dir = directory
     mnist_data = loadmat(base_dir + '/mnist_data.mat')
     if scale:
         mnist_train = np.reshape(mnist_data['train_32'], (55000, 32, 32, 1))
