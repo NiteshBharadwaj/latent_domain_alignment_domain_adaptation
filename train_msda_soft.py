@@ -22,9 +22,10 @@ def train_MSDA_soft(solver, epoch, classifier_disc=True, record_file=None):
         solver.reset_grad()
 
         loss_s_c1, loss_s_c2, loss_msda, entropy_loss, kl_loss, domain_prob = solver.loss_soft_all_domain(img_s, img_t, label_s, epoch)
-
+        if not classifier_disc:
+            loss_s_c2 = loss_s_c1
         loss = loss_s_c1 + loss_msda + loss_s_c2 + entropy_loss + kl_loss
-
+        
         loss.backward()
 
         solver.opt_g.step()

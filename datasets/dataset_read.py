@@ -76,7 +76,8 @@ def dataset_read(target, batch_size):
     target_val_label = target_test_label[indices_tar[:val_split]]
     target_test = target_test[indices_tar[val_split:]]
     target_test_label = target_test_label[indices_tar[val_split:]]
-
+    import pdb
+    pdb.set_trace()
     for i in range(len(domain_all)):
         source_train, source_train_label, source_test, source_test_label = return_dataset(domain_all[i])
         S[i]['imgs'] = source_train
@@ -219,7 +220,7 @@ def dataset_hard_cluster(target, batch_size,num_clus):
     return dataset, dataset_test, dataset_valid
 
 
-def dataset_combined(target, batch_size, num_clus, directory):
+def dataset_combined(target, batch_size, num_clus, directory, seed):
     print(directory)
     S1 = {}
     S1_test = {}
@@ -240,15 +241,22 @@ def dataset_combined(target, batch_size, num_clus, directory):
     domain_all.remove(target)
 
     target_train, target_train_label, target_test, target_test_label = return_dataset(target, directory=directory)
-
+    
     indices_tar = np.arange(0,target_test.shape[0])
-    np.random.seed(42)
+    np.random.seed(seed)
     np.random.shuffle(indices_tar)
-    val_split = int(0.05*target_test.shape[0])
-    target_val = target_test[indices_tar[:val_split]]
-    target_val_label = target_test_label[indices_tar[:val_split]]
-    target_test = target_test[indices_tar[val_split:]]
-    target_test_label = target_test_label[indices_tar[val_split:]]
+    target_test = target_test[indices_tar]
+    target_test_label = target_test_label[indices_tar]
+    n_images_per_class = 10
+    valid_mask = []
+    for i in range(10):
+        select_indices = np.where(target_test_label==i)[0][:n_images_per_class]
+        valid_mask.extend(select_indices.tolist())
+    test_mask = [i for i in range(target_test_label.shape[0]) if i not in valid_mask]
+    target_val = target_test[valid_mask]
+    target_val_label = target_test_label[valid_mask]
+    target_test = target_test[test_mask]
+    target_test_label = target_test_label[test_mask]
     for i in range(len(domain_all)):
         source_train, source_train_label, source_test, source_test_label = return_dataset(domain_all[i], directory=directory)
         S[i]['imgs'] = source_train
