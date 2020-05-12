@@ -42,11 +42,11 @@ class Solver(object):
             elif args.dl_type == 'hard_cluster':
                 self.datasets, self.dataset_test, self.dataset_valid = dataset_hard_cluster(target, self.batch_size,args.num_domain)
             elif args.dl_type == 'soft_cluster':
-                self.datasets, self.dataset_test, self.dataset_valid = dataset_combined(target, self.batch_size,args.num_domain, args.office_directory, args.seed)
+                self.datasets, self.dataset_test, self.dataset_valid, self.classwise_dataset = dataset_combined(target, self.batch_size,args.num_domain, args.office_directory, args.seed)
             elif args.dl_type == 'source_only':
-                self.datasets, self.dataset_test, self.dataset_valid = dataset_combined(target, self.batch_size,args.num_domain, args.office_directory, args.seed)
+                self.datasets, self.dataset_test, self.dataset_valid, self.classwise_dataset = dataset_combined(target, self.batch_size,args.num_domain, args.office_directory, args.seed)
             elif args.dl_type == 'source_target_only':
-                self.datasets, self.dataset_test, self.dataset_valid = dataset_combined(target, self.batch_size,args.num_domain, args.office_directory, args.seed)
+                self.datasets, self.dataset_test, self.dataset_valid, self.classwise_dataset = dataset_combined(target, self.batch_size,args.num_domain, args.office_directory, args.seed)
             else:
                 raise Exception('Type of experiment undefined')
 
@@ -55,7 +55,7 @@ class Solver(object):
             num_domains = args.num_domain
             self.num_domains = num_domains
             self.entropy_wt = 0.01
-            self.msda_wt = 0.1
+            self.msda_wt = 0.001
             self.kl_wt = args.kl_wt
             self.to_detach = args.to_detach
             self.G = Generator_digit()
@@ -231,19 +231,23 @@ class Solver(object):
         domain_prob_sum = domain_probs.sum(0)/bs
         return -(domain_prob_sum*(domain_prob_sum.log())).sum()
 
-    def loss_soft_all_domain(self, img_s, img_t, label_s, epoch):
+    def loss_soft_all_domain(self, img_s, img_t, label_s, epoch, img_s_cl):
         # Takes source images, target images, source labels and returns classifier loss, domain adaptation loss and entropy loss
         feat_s_comb, feat_t_comb = self.feat_soft_all_domain(img_s, img_t)
         feat_s, conv_feat_s = feat_s_comb
         feat_t, conv_feat_t = feat_t_comb
+        _, conv_s_cl = self.G(img_s_cl)
         if self.to_detach:
             domain_logits, _ = self.DP(conv_feat_s.detach())
+            cl_s_logits,_ = self.DP(conv_s_cl.detach())
         else:
             domain_logits, _ = self.DP(conv_feat_s)
+            cl_s_logits,_ = self.DP(conv_s_cl)
         entropy_loss, domain_prob = self.entropy_loss(domain_logits)
         #print(domain_prob)
+        _,cl_s_prob = self.entropy_loss(cl_s_logits)
 
-        kl_loss = -self.get_domain_entropy(domain_prob)
+        kl_loss = -self.get_domain_entropy(cl_s_prob)
         kl_loss = kl_loss * self.kl_wt
         
         

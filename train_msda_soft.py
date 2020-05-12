@@ -10,7 +10,7 @@ def train_MSDA_soft(solver, epoch, classifier_disc=True, record_file=None):
     #torch.cuda.manual_seed(1)
 
     batch_idx_g = 0
-
+    classwise_dataset_iterator = iter(solver.classwise_dataset)
     for batch_idx, data in enumerate(solver.datasets):
         batch_idx_g = batch_idx
         img_t = Variable(data['T'].cuda())
@@ -19,9 +19,12 @@ def train_MSDA_soft(solver, epoch, classifier_disc=True, record_file=None):
         if img_s.size()[0] < solver.batch_size or img_t.size()[0] < solver.batch_size:
             break
 
+        classwise_data = next(classwise_dataset_iterator)
+        img_s_cl = Variable(classwise_data['S'].cuda())
+
         solver.reset_grad()
 
-        loss_s_c1, loss_s_c2, loss_msda, entropy_loss, kl_loss, domain_prob = solver.loss_soft_all_domain(img_s, img_t, label_s, epoch)
+        loss_s_c1, loss_s_c2, loss_msda, entropy_loss, kl_loss, domain_prob = solver.loss_soft_all_domain(img_s, img_t, label_s, epoch, img_s_cl)
         if not classifier_disc:
             loss_s_c2 = loss_s_c1
         loss = loss_s_c1 + loss_msda + loss_s_c2 + entropy_loss + kl_loss
@@ -35,7 +38,7 @@ def train_MSDA_soft(solver, epoch, classifier_disc=True, record_file=None):
         loss_dis = loss * 0  # For printing purpose, it's reassigned if classifier_disc=True
         if classifier_disc:
             solver.reset_grad()
-            loss_s_c1, loss_s_c2, loss_msda, entropy_loss, kl_loss, domain_prob = solver.loss_soft_all_domain(img_s, img_t, label_s, epoch)
+            loss_s_c1, loss_s_c2, loss_msda, entropy_loss, kl_loss, domain_prob = solver.loss_soft_all_domain(img_s, img_t, label_s, epoch, img_s_cl)
 
             feat_t, conv_feat_t = solver.G(img_t)
             output_t1 = solver.C1(feat_t)

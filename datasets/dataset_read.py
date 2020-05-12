@@ -3,6 +3,7 @@ import sys
 sys.path.append('../loader')
 from unaligned_data_loader import UnalignedDataLoader
 from .unaligned_data_loader_combined import UnalignedDataLoader as CombinedDataLoader
+from class_wise_data_loader import ClasswiseDataLoader
 from svhn import load_svhn
 from mnist import load_mnist
 from mnist_m import load_mnistm
@@ -280,6 +281,10 @@ def dataset_combined(target, batch_size, num_clus, directory, seed):
     train_loader.initialize(S, T, batch_size, batch_size, scale=scale)
     dataset = train_loader.load_data()
 
+    class_loader = ClasswiseDataLoader()
+    class_loader.initialize(S,batch_size,scale=scale)
+    dataset_class = class_loader.load_data()
+
     test_loader = UnalignedDataLoader()
     test_loader.initialize(S_test, T_test, batch_size, batch_size, scale=scale)
 
@@ -292,4 +297,4 @@ def dataset_combined(target, batch_size, num_clus, directory, seed):
     val_loader.initialize([S_val], T_val, batch_size, batch_size, scale=scale)
 
     dataset_valid = val_loader.load_data()
-    return dataset, dataset_test, dataset_valid
+    return dataset, dataset_test, dataset_valid, dataset_class
