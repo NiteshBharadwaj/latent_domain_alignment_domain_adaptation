@@ -37,7 +37,7 @@ parser.add_argument('--record_folder', type=str, default='record', metavar='N',
                     help='record folder')
 parser.add_argument('--office_directory', type=str, default='.', metavar='N',
                     help='directory for office data')
-parser.add_argument('--batch-size', type=int, default=64, metavar='N',
+parser.add_argument('--batch-size', type=int, default=128, metavar='N',
                     help='input batch size for training (default: 64)')
 parser.add_argument('--checkpoint_dir', type=str, default='checkpoint', metavar='N',
                     help='source only or not')
@@ -47,7 +47,7 @@ parser.add_argument('--eval_only', type=str, default='no', metavar='N',
                     help='Evaluate only? yes/no')
 parser.add_argument('--kl_wt', type=float, default=0.0, metavar='LR',
                     help='learning rate (default: 0)')
-parser.add_argument('--lr', type=float, default=0.0001, metavar='LR',
+parser.add_argument('--lr', type=float, default=0.0005, metavar='LR',
                     help='learning rate (default: 0.0002)')
 parser.add_argument('--max_epoch', type=int, default=200, metavar='N',
                     help='how many epochs')
@@ -184,13 +184,13 @@ def main():
             solver.sche_c2.step()
             solver.sche_dp.step()
             count += num
-            if t % 1 == 0:
+            if t % 10 == 0:
                 if args.data=='cars':
                     test(solver, t, 'train', record_file=record_test, save_model=args.save_model)
                 best = test(solver, t, 'val', record_file=record_val, save_model=args.save_model)
                 if best:
                     test(solver, t, 'test', record_file=record_test, save_model=args.save_model)
-                    #view_clusters(solver, clusters_file, probs_csv)
+                    view_clusters(solver, clusters_file, probs_csv)
                     #print('clustering images saved in!')
                 
         #generate_plots(solver, 0, 'test', plot_before_source, plot_before_target, plot_after_source, plot_after_target, False)
