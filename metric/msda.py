@@ -3,7 +3,7 @@ from itertools import combinations
 
 
 def euclidean(x1, x2):
-    return ((x1 - x2) ** 2).sum().sqrt()
+    return torch.sqrt(((x1 - x2) ** 2).sum() + 1e-8)
 
 
 def k_moment(source_output, target_output, k):
@@ -78,14 +78,13 @@ def k_moment_soft(output_s, output_t, k, domain_prob):
     return moment_soft(output_s_k, domain_prob, output_t)
 
 def msda_regulizer_soft(output_s, output_t, belta_moment, domain_prob):
-	# print('s1:{}, s2:{}, s3:{}, s4:{}'.format(output_s1.shape, output_s2.shape, output_s3.shape, output_t.shape))        
-	reg_info = 0
-	#domain_prob = (domain_prob*0 + 1)/domain_prob.shape[1]
+    # print('s1:{}, s2:{}, s3:{}, s4:{}'.format(output_s1.shape, output_s2.shape, output_s3.shape, output_t.shape))        
+    reg_info = 0
+    reg_info = k_moment_soft(output_s, output_t, 1, domain_prob)
+    for i in range(1,belta_moment):
+        reg_info += k_moment_soft(output_s, output_t, i + 1, domain_prob)
 
-	for i in range(belta_moment):
-		reg_info += k_moment_soft(output_s, output_t, i + 1, domain_prob)
-
-	return reg_info / 6
+    return reg_info / 6
 # return euclidean(output_s1, output_t)
 
 def k_moment_single(output_s, output_t, k):

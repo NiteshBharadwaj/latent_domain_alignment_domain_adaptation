@@ -54,8 +54,8 @@ class Solver(object):
             num_classes = 10
             num_domains = args.num_domain
             self.num_domains = num_domains
-            self.entropy_wt = 0.01
-            self.msda_wt = 0.001
+            self.entropy_wt = args.entropy_wt
+            self.msda_wt = args.msda_wt
             self.kl_wt = args.kl_wt
             self.to_detach = args.to_detach
             self.G = Generator_digit()
@@ -229,6 +229,8 @@ class Solver(object):
     def get_domain_entropy(self, domain_probs):
         bs, num_domains = domain_probs.size()
         domain_prob_sum = domain_probs.sum(0)/bs
+        mask = domain_prob_sum.ge(0.000001)
+        domain_prob_sum = domain_prob_sum*mask + (1-mask.int())*1e-5
         return -(domain_prob_sum*(domain_prob_sum.log())).sum()
 
     def loss_soft_all_domain(self, img_s, img_t, label_s, epoch, img_s_cl):
@@ -244,8 +246,13 @@ class Solver(object):
             domain_logits, _ = self.DP(conv_feat_s)
             cl_s_logits,_ = self.DP(conv_s_cl)
         entropy_loss, domain_prob = self.entropy_loss(domain_logits)
-        #print(domain_prob)
+
         _,cl_s_prob = self.entropy_loss(cl_s_logits)
+
+#        if self.args.eval_only:
+#            print("domain_prob", domain_prob)
+#            print("cl_s_prob", cl_s_prob)
+#            return 0, 0, 0, 0, 0, 0
 
         kl_loss = -self.get_domain_entropy(cl_s_prob)
         kl_loss = kl_loss * self.kl_wt
@@ -254,7 +261,7 @@ class Solver(object):
 #         kl_loss = self.get_kl_loss(domain_prob)
 #         kl_loss = kl_loss * self.kl_wt
         
-#         kl_loss = 0
+#        kl_loss = torch.zeros(1).cuda()
 
 #         total_domains = domain_prob.size()[1]
 #         domains = domain_prob.data.max(1)[1]
@@ -274,7 +281,16 @@ class Solver(object):
 #                 im = Image.fromarray(img_.sum().item())
 #                 im.save()
 #                 matplotlib.image.imsave(str(i)+'/'+str(index), img_.cpu().sum().item())
-
+#        if (feat_s!=feat_s).any():
+#           import pdb
+#           pdb.set_trace()
+#       if (conv_feat_s!=conv_feat_s).any():
+#           import pdb
+#           pdb.set_trace()
+#   
+#       if (domain_prob!=domain_prob).any():
+#           import pdb
+#           pdb.set_trace()
         if (math.isnan(entropy_loss.data.item())):
             raise Exception('entropy loss is nan')
         entropy_loss = entropy_loss * self.entropy_wt
@@ -282,7 +298,7 @@ class Solver(object):
         output_s_c1, output_t_c1 = self.C1_all_domain_soft(feat_s, feat_t)
         output_s_c2, output_t_c2 = self.C2_all_domain_soft(feat_s, feat_t)
         if self.to_detach:
-            loss_msda = msda.msda_regulizer_soft(feat_s, feat_t, 5, domain_prob.detach()) * self.msda_wt
+            loss_msda = msda.msda_regulizer_soft(feat_s, feat_t, 5, domain_prob.detach()) * self.msda_wt 
         else:
             loss_msda = msda.msda_regulizer_soft(feat_s, feat_t, 5, domain_prob) * self.msda_wt
         if (math.isnan(loss_msda.data.item())):
@@ -295,20 +311,33 @@ class Solver(object):
             self.softmax_loss_all_domain_soft(output_s_c2, label_s)
         if (math.isnan(loss_s_c2.data.item())):
             raise Exception(' c2 loss is nan')
+        if (math.isnan(kl_loss.data.item())):
+            raise Exception(' kl loss is nan')
+        #print(loss_s_c1, loss_s_c2, loss_msda, entropy_loss, kl_loss, domain_prob)
+        #print(self.DP.fc3.weight)
+#        print("loss_s_c1", loss_s_c1, "loss_s_c2", loss_s_c2, "loss_msda", loss_msda, "entropy_loss", entropy_loss, "kl_loss", kl_loss)
         return loss_s_c1, loss_s_c2, loss_msda, entropy_loss, kl_loss, domain_prob
 
 
-# Takes input tensor of shape (N x num_domains) and computes the entropy loss sum(p * logp)
 class HLoss(nn.Module):
     def __init__(self):
         super(HLoss, self).__init__()
 
     def forward(self, x):
-        input_ = F.softmax(x, dim=1)
-        prob2 = 1-input_.sum(dim=0)
-        prob2[prob2<0]=0
-        mask = input_.ge(0.000001)
-        mask_out = torch.masked_select(input_, mask)
-        entropy = -(torch.sum(mask_out * torch.log(mask_out)))
-        loss = entropy/ float(input_.size(0)) + prob2.sum()/prob2.shape[0]
-        return loss, input_ + 1e-5
+        domain_prob = F.softmax(x, dim=1)
+        b = F.softmax(x, dim=1) * F.log_softmax(x, dim=1)
+        b = -1.0 * b.mean()
+        return b, domain_prob + 1e-5
+
+# Takes input tensor of shape (N x num_domains) and computes the entropy loss sum(p * logp)
+#class HLoss(nn.Module):
+#    def __init__(self):
+#        super(HLoss, self).__init__()
+
+#    def forward(self, x):
+#        input_ = F.softmax(x, dim=1)
+#        mask = input_.ge(0.000001)
+#        mask_out = input_*mask + (1-mask.int())*1e-5
+#        entropy = -(torch.sum(mask_out * torch.log(mask_out)))
+#        loss = entropy/ float(input_.size(0))
+#        return loss, mask_out

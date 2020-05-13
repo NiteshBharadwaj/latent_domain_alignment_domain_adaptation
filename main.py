@@ -46,7 +46,11 @@ parser.add_argument('--checkpoint_dir', type=str, default='checkpoint', metavar=
 parser.add_argument('--eval_only', type=str, default='no', metavar='N',
                     help='Evaluate only? yes/no')
 parser.add_argument('--kl_wt', type=float, default=0.0, metavar='LR',
-                    help='learning rate (default: 0)')
+                    help='KL_wt (default: 0)')
+parser.add_argument('--msda_wt', type=float, default=0.00001, metavar='LR',
+                    help='msda_wt (default: 0)')
+parser.add_argument('--entropy_wt', type=float, default=0.01, metavar='LR',
+                    help='entropy_wt (default: 0)')
 parser.add_argument('--lr', type=float, default=0.0001, metavar='LR',
                     help='learning rate (default: 0.0002)')
 parser.add_argument('--max_epoch', type=int, default=200, metavar='N',
@@ -143,6 +147,8 @@ def main():
                     checkpoint_dir=args.checkpoint_dir,
                     save_epoch=args.save_epoch)
 
+
+        #train_MSDA_soft(solver,0,classifier_disc)
 
         test(solver, 0, 'test', record_file=None, save_model=False)
         view_clusters(solver, clusters_file, probs_csv)

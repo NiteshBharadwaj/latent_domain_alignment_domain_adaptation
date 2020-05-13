@@ -15,7 +15,7 @@ class Feature(nn.Module):
         self.fc1 = nn.Linear(8192, 3072)
         self.bn1_fc = nn.BatchNorm1d(3072)
         self.fc2 = nn.Linear(3072, 2048)
-        self.bn2_fc = nn.BatchNorm1d(2048)
+        self.bn2_fc = nn.BatchNorm1d(2048, affine=False)
 
     def forward(self, x,reverse=False):
         x = F.max_pool2d(F.relu(self.bn1(self.conv1(x))), stride=2, kernel_size=3, padding=1)
@@ -26,7 +26,8 @@ class Feature(nn.Module):
         x = F.dropout(x, training=self.training)
         if reverse:
             x = grad_reverse(x, self.lambd)
-        x = F.relu(self.bn2_fc(self.fc2(x)))
+#        x = F.relu(self.bn2_fc(self.fc2(x)))
+        x = self.bn2_fc(self.fc2(x))
         return x, x_feat
 
 
@@ -48,7 +49,8 @@ class Predictor(nn.Module):
         # if reverse:
         #     x = grad_reverse(x, self.lambd)
         # x = F.relu(self.bn2_fc(self.fc2(x)))
-        x = self.fc3(x)
+#        x = self.fc3(x)
+        x = self.fc3(F.relu(x))
         return x
 
 
