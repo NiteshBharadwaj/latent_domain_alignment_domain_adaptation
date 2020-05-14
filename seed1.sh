@@ -9,7 +9,8 @@
 
 
 # python3 main.py --target 'da' --max_epoch 2000 --dl_type 'source_target_only' --data 'office' --num_domain 4 --class_disc 'no' --record_folder 'record_office/da_st' --kl_wt 1.0 --seed 1
-python3 main.py --target 'da' --max_epoch 2000 --dl_type 'soft_cluster' --data 'office' --num_domain 4 --class_disc 'no' --record_folder 'record_office_new/da_4_1.0' --kl_wt 1.0 --seed 1
+# python3 main.py --target 'da' --max_epoch 2000 --dl_type 'source_target_only' --data 'office' --num_domain 4 --class_disc 'no' --record_folder 'record_office_new/da_st.0' --kl_wt 1.0 --seed 1 --eval_only 'yes'
+python3 main.py --target 'dwa' --max_epoch 2000 --dl_type 'soft_cluster' --data 'office' --num_domain 3 --class_disc 'no' --record_folder 'record_office_new/dwa_3.0' --kl_wt 1.0 --seed 1 --eval_only 'no'
 # python3 main.py --target 'da' --max_epoch 2000 --dl_type 'soft_cluster' --data 'office' --num_domain 8 --class_disc 'no' --record_folder 'record_office_new/da_8_1.0' --kl_wt 1.0 --seed 1
 
 

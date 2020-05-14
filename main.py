@@ -23,7 +23,7 @@ from plot_tsne import plot_tsne1,plot_tsne2
 parser = argparse.ArgumentParser(description='PyTorch MSDA Implementation')
 parser.add_argument('--all_use', type=str, default='no', metavar='N',
                     help='use all training data? in usps adaptation')
-parser.add_argument('--to_detach', type=str, default='no', metavar='N',
+parser.add_argument('--to_detach', type=str, default='yes', metavar='N',
                     help='classifier_discrepancy? yes/no')
 parser.add_argument('--class_disc', type=str, default='yes', metavar='N',
                     help='classifier_discrepancy? yes/no')

@@ -296,7 +296,7 @@ class Solver(object):
         output_s_c2, output_t_c2 = self.C2_all_domain_soft(feat_s, feat_t)
         
         class_entropy = -self.get_class_entropy(domain_prob, label_s, output_s_c1.size()[1])
-        kl_loss = 0.005*class_entropy
+        kl_loss = 0.05*class_entropy
         
         if self.to_detach:
             loss_msda = msda.msda_regulizer_soft(feat_s, feat_t, 5, domain_prob.detach()) * self.msda_wt
@@ -312,7 +312,7 @@ class Solver(object):
             self.softmax_loss_all_domain_soft(output_s_c2, label_s)
         if (math.isnan(loss_s_c2.data.item())):
             raise Exception(' c2 loss is nan')
-        return 1.5*loss_s_c1, 1.5*loss_s_c2, loss_msda, entropy_loss, kl_loss, domain_prob
+        return loss_s_c1, loss_s_c2, loss_msda, entropy_loss, kl_loss, domain_prob
 
 
 # Takes input tensor of shape (N x num_domains) and computes the entropy loss sum(p * logp)
