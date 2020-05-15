@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 from torch.autograd import Variable
+import torchvision
 
 def train_MSDA_soft(solver, epoch, classifier_disc=True, record_file=None):
     solver.G.train()
@@ -31,8 +32,11 @@ def train_MSDA_soft(solver, epoch, classifier_disc=True, record_file=None):
 #            loss = entropy_loss + kl_loss
 #        else:
 #            loss = loss_s_c1 + loss_msda + loss_s_c2 + entropy_loss + kl_loss
-        loss = loss_s_c1 + loss_msda + loss_s_c2 + entropy_loss + kl_loss
-        
+        loss = loss_s_c1 + loss_s_c2 + loss_msda + entropy_loss + kl_loss
+
+        #torchvision.utils.save_image(img_s, "source_images.png")
+        #torchvision.utils.save_image(img_s_cl, "classwise_images.png")
+
         loss.backward()
         clip_value = 1.0
 
@@ -46,13 +50,8 @@ def train_MSDA_soft(solver, epoch, classifier_disc=True, record_file=None):
 #            print("LR opt_dp", param_group['lr'])
 
         torch.nn.utils.clip_grad_norm(solver.G.parameters(), clip_value) 
-        torch.nn.utils.clip_grad_norm(solver.C1.parameters(), clip_value)
-        if classifier_disc:
-            torch.nn.utils.clip_grad_norm(solver.C2.parameters(), clip_value)
         torch.nn.utils.clip_grad_norm(solver.DP.parameters(), clip_value)
         solver.opt_g.step()
-        solver.opt_c1.step()
-        solver.opt_c2.step()
         solver.opt_dp.step()
         loss_dis = loss * 0  # For printing purpose, it's reassigned if classifier_disc=True
         if classifier_disc:
@@ -84,13 +83,25 @@ def train_MSDA_soft(solver, epoch, classifier_disc=True, record_file=None):
                 solver.opt_g.step()
                 solver.reset_grad()
 
+        #for i in range(img_s.size(0)):
+        #   torchvision.utils.save_image(img_s[i, :, :, :], 'source_imgs{}.png'.format(i))
+        #for i in range(img_s_cl.size(0)):
+        #   torchvision.utils.save_image(img_s_cl[i, :, :, :], 'classwise_imgs{}.png'.format(i))
+        if epoch%3==0 and batch_idx%100==0:
+            #print(domain_prob)
+            #torchvision.utils.save_image(img_s[:32,:,:,:], "clus/source_images_{}_{}.png".format(epoch,batch_idx), normalize=True)
+            #torchvision.utils.save_image(img_s_cl[:32,:,:,:], "clus/classwise_images_{}_{}.png".format(epoch,batch_idx), normalize=True)
+            max_idxs = domain_prob.argmax(1)
+            if (max_idxs==0).any():
+                torchvision.utils.save_image(img_s[max_idxs==0,:,:,:], "clus/source_images_cl0_{}_{}.png".format(epoch,batch_idx), normalize=True)
+            else:
+                print("No images in Cluster 0 _{}_{}".format(epoch,batch_idx))
+            if (max_idxs==1).any():
+                torchvision.utils.save_image(img_s[max_idxs==1,:,:,:], "clus/source_images_cl1_{}_{}.png".format(epoch, batch_idx), normalize=True)
+            else:
+                print("No images in Cluster 1 _{}_{}".format(epoch,batch_idx))
         if batch_idx % solver.interval == 0:
             print \
                 ('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss1: {:.6f}\t Loss2: {:.6f}\t Loss_mmd: {:.6f}\t Loss_entropy: {:.6f}\t kl_loss: {:.6f}'.format(
                 epoch, batch_idx, 100, 100. * batch_idx / 70000, loss_s_c1.data.item(), loss_s_c2.data.item(), loss_msda.data.item(), entropy_loss.data.item(), kl_loss.data.item()))
-            if record_file:
-                record = open(record_file, 'a')
-                record.write('%s %s %s %s %s %s\n' %
-                (0, loss_s_c1.data.item(), loss_s_c2.data.item(), loss_msda.data.item(), entropy_loss.data.item(), kl_loss.data.item()))
-                record.close()
     return batch_idx_g

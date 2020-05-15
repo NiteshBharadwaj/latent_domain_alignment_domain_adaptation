@@ -68,7 +68,7 @@ def moment_soft(output_s, domain_prob, output_t):
     for i in range(output_prob.shape[1]):
         for j in range(i+1,output_prob.shape[1]):
             loss += output_prob_sum[0,i]*output_prob_sum[0,j]*euclidean(output_prob[:,i], output_prob[:,j])/output_s.shape[0]/output_s.shape[0]
-        loss += output_prob_sum[0,i]*euclidean(output_prob[:,i], output_t)/output_s.shape[0]
+        #loss += output_prob_sum[0,i]*euclidean(output_prob[:,i], output_t)/output_s.shape[0]
     return loss
 
 

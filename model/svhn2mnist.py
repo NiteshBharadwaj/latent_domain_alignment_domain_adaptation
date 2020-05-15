@@ -1,7 +1,69 @@
 import torch.nn as nn
 import torch.nn.functional as F
 from grad_reverse import grad_reverse
+import torchvision.models as models
 
+# -------------------------------------------------------- ResNet18 -----------------------------------------------------
+
+class Feature_ResNet18(nn.Module):
+    def __init__(self):
+        super(Feature_ResNet18, self).__init__()
+        self.model = models.resnet18(pretrained=True)
+        for param in self.model.parameters():
+            param.requires_grad = False
+
+        self.fc1 = nn.Linear(128, 128)
+        self.bn_fc1 = nn.BatchNorm1d(128)
+        self.fc2 = nn.Linear(128, 64)
+        self.bn_fc2 = nn.BatchNorm1d(64, affine=False)
+
+
+    def forward(self, x, reverse=False):
+        x = self.model.conv1(x)
+        x = self.model.bn1(x)
+        x = self.model.relu(x)
+        x = self.model.maxpool(x)
+
+        x = self.model.layer1(x)
+        x = self.model.layer2(x)
+
+        x_feat = x
+
+#        x = self.model.layer3(x)
+#        x = self.model.layer4(x)
+
+        x = self.model.avgpool(x)
+        x = x.view(x.size(0), -1)
+
+        x = F.dropout(F.relu(self.bn_fc1(self.fc1(x))), training=self.training)
+        x = self.bn_fc2(self.fc2(x))
+
+        return x, x_feat
+
+class Predictor_ResNet18(nn.Module):
+    def __init__(self, prob=0.5):
+        super(Predictor_ResNet18, self).__init__()
+        self.fc3 = nn.Linear(64, 10)
+
+    def forward(self, x, reverse=False):
+        x = self.fc3(F.relu(x))
+        return x
+
+class DomainPredictor_ResNet18(nn.Module):
+    def __init__(self, num_domains, prob=0.5):
+        super(DomainPredictor_ResNet18, self).__init__()
+        self.avgpool = nn.AvgPool2d(4)
+        self.fc4 = nn.Linear(128, num_domains)
+
+    def forward(self, x, reverse=False):
+        x = self.avgpool(x)
+        x = x.view(x.shape[0],-1)
+        output = self.fc4(x)
+
+        return output, x
+
+
+# -------------------------------------------------NoobNet-------------------------------------------------------
 
 class Feature(nn.Module):
     def __init__(self):
@@ -29,7 +91,6 @@ class Feature(nn.Module):
 #        x = F.relu(self.bn2_fc(self.fc2(x)))
         x = self.bn2_fc(self.fc2(x))
         return x, x_feat
-
 
 class Predictor(nn.Module):
     def __init__(self, prob=0.5):
