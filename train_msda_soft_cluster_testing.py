@@ -3,7 +3,19 @@ import torch.nn as nn
 from torch.autograd import Variable
 import torchvision
 
+cluster_batch = None
+svhn_batch=None
+mnist_batch=None
+usps_batch =None
+syn_batch=None
+
+
 def train_MSDA_soft(solver, epoch, classifier_disc=True, record_file=None):
+    global cluster_batch
+    global svhn_batch
+    global mnist_batch
+    global usps_batch
+    global syn_batch
     solver.G.train()
     solver.C1.train()
     solver.C2.train()
@@ -16,6 +28,13 @@ def train_MSDA_soft(solver, epoch, classifier_disc=True, record_file=None):
         batch_idx_g = batch_idx
         img_t = Variable(data['T'].cuda())
         img_s = Variable(data['S'].cuda())
+        if (cluster_batch is None):
+            cluster_batch = img_s
+            svhn_batch = Variable(next(iter(solver.dataset_svhn))['T'].cuda())
+            usps_batch = Variable(next(iter(solver.dataset_usps))['T'].cuda())
+            syn_batch = Variable(next(iter(solver.dataset_syn))['T'].cuda())
+            mnist_batch = Variable(next(iter(solver.dataset_mnist))['T'].cuda())
+
         label_s = Variable(data['S_label'].long().cuda())
         if img_s.size()[0] < solver.batch_size or img_t.size()[0] < solver.batch_size:
             break
@@ -87,19 +106,48 @@ def train_MSDA_soft(solver, epoch, classifier_disc=True, record_file=None):
         #   torchvision.utils.save_image(img_s[i, :, :, :], 'source_imgs{}.png'.format(i))
         #for i in range(img_s_cl.size(0)):
         #   torchvision.utils.save_image(img_s_cl[i, :, :, :], 'classwise_imgs{}.png'.format(i))
-        if epoch%3==0 and batch_idx%100==0:
-            #print(domain_prob)
+        if epoch%3==0 and batch_idx%10==0:
+            solver.G.eval()
+            solver.C1.eval()
+            solver.C2.eval()
+            solver.DP.eval()
+            _, _, _, _, _, domain_prob = solver.loss_soft_all_domain(cluster_batch, img_t, label_s, epoch, img_s_cl)
+            
+            if batch_idx==0:
+                print(domain_prob)
             #torchvision.utils.save_image(img_s[:32,:,:,:], "clus/source_images_{}_{}.png".format(epoch,batch_idx), normalize=True)
             #torchvision.utils.save_image(img_s_cl[:32,:,:,:], "clus/classwise_images_{}_{}.png".format(epoch,batch_idx), normalize=True)
             max_idxs = domain_prob.argmax(1)
             if (max_idxs==0).any():
-                torchvision.utils.save_image(img_s[max_idxs==0,:,:,:], "clus/source_images_cl0_{}_{}.png".format(epoch,batch_idx), normalize=True)
+                torchvision.utils.save_image(cluster_batch[max_idxs==0,:,:,:], "clus/source_images_cl0_{}_{}.png".format(epoch,batch_idx), normalize=True)
             else:
                 print("No images in Cluster 0 _{}_{}".format(epoch,batch_idx))
             if (max_idxs==1).any():
-                torchvision.utils.save_image(img_s[max_idxs==1,:,:,:], "clus/source_images_cl1_{}_{}.png".format(epoch, batch_idx), normalize=True)
+                torchvision.utils.save_image(cluster_batch[max_idxs==1,:,:,:], "clus/source_images_cl1_{}_{}.png".format(epoch, batch_idx), normalize=True)
             else:
                 print("No images in Cluster 1 _{}_{}".format(epoch,batch_idx))
+            if (max_idxs==2).any():
+                torchvision.utils.save_image(cluster_batch[max_idxs==2,:,:,:], "clus/source_images_cl2_{}_{}.png".format(epoch, batch_idx), normalize=True)
+            else:
+                print("No images in Cluster 2 _{}_{}".format(epoch,batch_idx))
+            if (max_idxs==3).any():
+                torchvision.utils.save_image(cluster_batch[max_idxs==3,:,:,:], "clus/source_images_cl3_{}_{}.png".format(epoch, batch_idx), normalize=True)
+            else:
+                print("No images in Cluster 3 _{}_{}".format(epoch,batch_idx))
+            if batch_idx==0:
+                torchvision.utils.save_image(mnist_batch, "clus/mnist_images_{}_{}.png".format(epoch,batch_idx), normalize=True)
+                _, _, _, _, _, domain_prob_svhn = solver.loss_soft_all_domain(svhn_batch, img_t, label_s, epoch, img_s_cl)
+                print('SVHN Probs',domain_prob_svhn.mean(0))
+                _, _, _, _, _, domain_prob_usps = solver.loss_soft_all_domain(usps_batch, img_t, label_s, epoch, img_s_cl)
+                print('USPS Probs',domain_prob_usps.mean(0))
+                _, _, _, _, _, domain_prob_syn = solver.loss_soft_all_domain(syn_batch, img_t, label_s, epoch, img_s_cl)
+                print('SYN Probs',domain_prob_syn.mean(0))
+                _, _, _, _, _, domain_prob_mnist = solver.loss_soft_all_domain(mnist_batch, img_t, label_s, epoch, img_s_cl)
+                print('MNIST Probs',domain_prob_mnist.mean(0))
+            solver.G.train()
+            solver.C1.train()
+            solver.C2.train()
+            solver.DP.train()
         if batch_idx % solver.interval == 0:
             print \
                 ('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss1: {:.6f}\t Loss2: {:.6f}\t Loss_mmd: {:.6f}\t Loss_entropy: {:.6f}\t kl_loss: {:.6f}'.format(

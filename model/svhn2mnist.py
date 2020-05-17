@@ -78,13 +78,14 @@ class Feature(nn.Module):
         self.bn1_fc = nn.BatchNorm1d(3072)
         self.fc2 = nn.Linear(3072, 2048)
         self.bn2_fc = nn.BatchNorm1d(2048, affine=False)
+        self.lrelu = nn.ReLU()
 
     def forward(self, x,reverse=False):
-        x = F.max_pool2d(F.relu(self.bn1(self.conv1(x))), stride=2, kernel_size=3, padding=1)
-        x = F.max_pool2d(F.relu(self.bn2(self.conv2(x))), stride=2, kernel_size=3, padding=1)
-        x = F.relu(self.bn3(self.conv3(x)))
+        x = F.max_pool2d(self.lrelu(self.bn1(self.conv1(x))), stride=2, kernel_size=3, padding=1)
+        x = F.max_pool2d(self.lrelu(self.bn2(self.conv2(x))), stride=2, kernel_size=3, padding=1)
+        x = self.lrelu(self.bn3(self.conv3(x)))
         x_feat = x.view(x.size(0), 8192)
-        x = F.relu(self.bn1_fc(self.fc1(x_feat)))
+        x = self.lrelu(self.bn1_fc(self.fc1(x_feat)))
         x = F.dropout(x, training=self.training)
         if reverse:
             x = grad_reverse(x, self.lambd)
@@ -118,6 +119,7 @@ class Predictor(nn.Module):
 class DomainPredictor(nn.Module):
     def __init__(self, num_domains, prob=0.5):
         super(DomainPredictor, self).__init__()
+        self.feat = Feature()
         self.fc1 = nn.Linear(8192, 3072)
         self.bn1_fc = nn.BatchNorm1d(3072)
         self.fc2 = nn.Linear(3072, 2048)
@@ -126,15 +128,17 @@ class DomainPredictor(nn.Module):
         self.bn_fc3 = nn.BatchNorm1d(10)
         self.prob = prob
         self.num_domains = num_domains
+        self.lrelu = nn.ReLU()
 
     def set_lambda(self, lambd):
         self.lambd = lambd
 
     def forward(self, x_feat, reverse=False):
-        x = F.relu(self.bn1_fc(self.fc1(x_feat)))
+        _,x_feat = self.feat(x_feat)
+        x = self.lrelu(self.bn1_fc(self.fc1(x_feat)))
         x = F.dropout(x, training=self.training)
         if reverse:
             x = grad_reverse(x, self.lambd)
-        x = F.relu(self.bn2_fc(self.fc2(x)))
+        x = self.lrelu(self.bn2_fc(self.fc2(x)))
         output = self.fc3(x)
         return output,x

@@ -226,17 +226,21 @@ def dataset_combined(target, batch_size, num_clus, directory, seed):
     digit_to_take = 1
     S1 = {}
     S1_test = {}
+    S3 = {}
+    S3_test = {}
+    S4 = {}
+    S4_test = {}
     S2 = {}
     S2_test = {}
 
-    S = [S1,]
-    S_test = [S1_test]
+    S = [S1,S2, S3, S4]
+    S_test = [S1_test,S2_test, S3_test, S4_test]
 
     T = {}
     T_test = {}
     T_val = {}
     #domain_all = ['mnist', 'svhn', 'mnistm']
-    domain_all = ['svhn', 'mnistm']
+    domain_all = ['svhn','mnist', 'mnistm','usps','syn']
     domain_all.remove(target)
 
     target_train, target_train_label, target_test, target_test_label = return_dataset(target, directory=directory)
