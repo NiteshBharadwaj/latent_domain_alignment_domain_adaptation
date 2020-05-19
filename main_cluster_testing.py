@@ -23,10 +23,12 @@ from train_source_only import train_source_only
 parser = argparse.ArgumentParser(description='PyTorch MSDA Implementation')
 parser.add_argument('--all_use', type=str, default='no', metavar='N',
                     help='use all training data? in usps adaptation')
-parser.add_argument('--to_detach', type=str, default='no', metavar='N',
+parser.add_argument('--to_detach', type=str, default='yes', metavar='N',
                     help='classifier_discrepancy? yes/no')
-parser.add_argument('--class_disc', type=str, default='yes', metavar='N',
+parser.add_argument('--class_disc', type=str, default='no', metavar='N',
                     help='classifier_discrepancy? yes/no')
+parser.add_argument('--clustering_only', type=int, default=1, metavar='N',
+                    help='only kl/entropy loss? 1/0')
 parser.add_argument('--dl_type', type=str, default='', metavar='N',
                     help='original, hard_cluster, combined, soft_cluster')
 parser.add_argument('--num_domain', type=int, default=4, metavar='N',
@@ -185,17 +187,18 @@ def main():
                     num = train_MSDA_hard(solver,t, classifier_disc, record_file=record_train)
             else:
                 raise Exception('One step solver not defined')
-            solver.sche_g.step()
-            #solver.sche_c1.step()
-            #solver.sche_c2.step()
+            if not solver.args.clustering_only:
+                solver.sche_g.step()
+                solver.sche_c1.step()
+                solver.sche_c2.step()
             solver.sche_dp.step()
             count += num
-            #if t % 1 == 0:
-            #    if args.data=='cars':
-            #        test(solver, t, 'train', record_file=record_test, save_model=args.save_model)
-            #    best = test(solver, t, 'val', record_file=record_val, save_model=args.save_model)
-            #    if best:
-            #        test(solver, t, 'test', record_file=record_test, save_model=args.save_model)
+            if t % 1 == 0:
+                if args.data=='cars':
+                    test(solver, t, 'train', record_file=record_test, save_model=args.save_model)
+                best = test(solver, t, 'val', record_file=record_val, save_model=args.save_model)
+                if best:
+                    test(solver, t, 'test', record_file=record_test, save_model=args.save_model)
                     #view_clusters(solver, clusters_file, probs_csv)
                     #print('clustering images saved in!')
                 

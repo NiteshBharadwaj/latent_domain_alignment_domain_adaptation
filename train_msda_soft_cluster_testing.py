@@ -2,13 +2,22 @@ import torch
 import torch.nn as nn
 from torch.autograd import Variable
 import torchvision
+import os 
 
 cluster_batch = None
 svhn_batch=None
 mnist_batch=None
 usps_batch =None
 syn_batch=None
+classwise_batch = None
 
+def switch_bn(model, on):
+    for m in model.modules():
+        if isinstance(m, nn.BatchNorm2d) or isinstance(m,nn.BatchNorm1d):
+            if on:
+                m.train()
+            else:
+                m.eval()
 
 def train_MSDA_soft(solver, epoch, classifier_disc=True, record_file=None):
     global cluster_batch
@@ -16,6 +25,7 @@ def train_MSDA_soft(solver, epoch, classifier_disc=True, record_file=None):
     global mnist_batch
     global usps_batch
     global syn_batch
+    global classwise_batch
     solver.G.train()
     solver.C1.train()
     solver.C2.train()
@@ -28,7 +38,7 @@ def train_MSDA_soft(solver, epoch, classifier_disc=True, record_file=None):
         batch_idx_g = batch_idx
         img_t = Variable(data['T'].cuda())
         img_s = Variable(data['S'].cuda())
-        if (cluster_batch is None):
+        if (solver.args.clustering_only and cluster_batch is None):
             cluster_batch = img_s
             svhn_batch = Variable(next(iter(solver.dataset_svhn))['T'].cuda())
             usps_batch = Variable(next(iter(solver.dataset_usps))['T'].cuda())
@@ -41,37 +51,41 @@ def train_MSDA_soft(solver, epoch, classifier_disc=True, record_file=None):
 
         classwise_data = next(classwise_dataset_iterator)
         img_s_cl = Variable(classwise_data['S'].cuda())
+        if (solver.args.clustering_only and classwise_batch is None):
+            classwise_batch = img_s_cl
 
+#        switch_bn(solver.DP,True)
         solver.reset_grad()
 
         loss_s_c1, loss_s_c2, loss_msda, entropy_loss, kl_loss, domain_prob = solver.loss_soft_all_domain(img_s, img_t, label_s, epoch, img_s_cl)
         if not classifier_disc:
             loss_s_c2 = loss_s_c1
-#        if epoch > 2:
-#            loss = entropy_loss + kl_loss
-#        else:
-#            loss = loss_s_c1 + loss_msda + loss_s_c2 + entropy_loss + kl_loss
         loss = loss_s_c1 + loss_s_c2 + loss_msda + entropy_loss + kl_loss
-
-        #torchvision.utils.save_image(img_s, "source_images.png")
-        #torchvision.utils.save_image(img_s_cl, "classwise_images.png")
 
         loss.backward()
         clip_value = 1.0
 
-#        for param_group in solver.G.param_groups:
-#            print("LR opt_g", param_group['lr'])
-#        for param_group in solver.C1.param_groups:
-#            print("LR opt_c1", param_group['lr'])
-#        for param_group in solver.C2.param_groups:
-#            print("LR opt_c2", param_group['lr'])
-#        for param_group in solver.DP.param_groups:
-#            print("LR opt_dp", param_group['lr'])
-
-        torch.nn.utils.clip_grad_norm(solver.G.parameters(), clip_value) 
+        torch.nn.utils.clip_grad_norm(solver.G.parameters(), clip_value)
+        torch.nn.utils.clip_grad_norm(solver.C1.parameters(), clip_value)
+        if classifier_disc:
+            torch.nn.utils.clip_grad_norm(solver.C2.parameters(), clip_value)
         torch.nn.utils.clip_grad_norm(solver.DP.parameters(), clip_value)
-        solver.opt_g.step()
+
+        #solver.opt_g.step()
+        if not solver.args.clustering_only:
+            solver.opt_g.step()
+            solver.opt_c1.step()
+            solver.opt_c2.step()
         solver.opt_dp.step()
+
+#        switch_bn(solver.DP,False)
+#        solver.reset_grad()
+#       _, _, _, _, kl_loss, domain_prob = solver.loss_soft_all_domain(img_s, img_t, label_s, epoch, img_s_cl)
+        
+#        clip_value = 1.0
+
+#        torch.nn.utils.clip_grad_norm(solver.DP.parameters(), clip_value)
+#        solver.opt_dp.step()
         loss_dis = loss * 0  # For printing purpose, it's reassigned if classifier_disc=True
         if classifier_disc:
             solver.reset_grad()
@@ -106,36 +120,56 @@ def train_MSDA_soft(solver, epoch, classifier_disc=True, record_file=None):
         #   torchvision.utils.save_image(img_s[i, :, :, :], 'source_imgs{}.png'.format(i))
         #for i in range(img_s_cl.size(0)):
         #   torchvision.utils.save_image(img_s_cl[i, :, :, :], 'classwise_imgs{}.png'.format(i))
-        if epoch%3==0 and batch_idx%10==0:
+        if solver.args.clustering_only and epoch%3==0 and batch_idx%100==0:
             solver.G.eval()
             solver.C1.eval()
             solver.C2.eval()
             solver.DP.eval()
             _, _, _, _, _, domain_prob = solver.loss_soft_all_domain(cluster_batch, img_t, label_s, epoch, img_s_cl)
+            _, _, _, _, _, domain_prob_cw = solver.loss_soft_all_domain(classwise_batch, img_t, label_s, epoch, img_s_cl)
+            print('Classwise Probs',domain_prob_cw.mean(0))
             
+            directory = "clusters_num_domain-{}-batch_size-{}-kl_wt-{}-entropy_wt-{}-lr-{}-seed-{}-target-{}-clustering_only-{}/".format(solver.args.num_domain, solver.args.batch_size, solver.args.kl_wt, solver.args.entropy_wt, solver.args.lr, solver.args.seed, solver.args.target, solver.args.clustering_only)
+            if not os.path.exists(directory):            
+                os.makedirs(directory)
+
             if batch_idx==0:
                 print(domain_prob)
-            #torchvision.utils.save_image(img_s[:32,:,:,:], "clus/source_images_{}_{}.png".format(epoch,batch_idx), normalize=True)
-            #torchvision.utils.save_image(img_s_cl[:32,:,:,:], "clus/classwise_images_{}_{}.png".format(epoch,batch_idx), normalize=True)
+
+            torchvision.utils.save_image(img_s[:32,:,:,:], "{}/source_images_{}_{}.png".format(directory,epoch,batch_idx), normalize=True)
+            torchvision.utils.save_image(img_s_cl[:32,:,:,:], "{}/classwise_images_{}_{}.png".format(directory,epoch,batch_idx), normalize=True)
+
             max_idxs = domain_prob.argmax(1)
-            if (max_idxs==0).any():
-                torchvision.utils.save_image(cluster_batch[max_idxs==0,:,:,:], "clus/source_images_cl0_{}_{}.png".format(epoch,batch_idx), normalize=True)
-            else:
-                print("No images in Cluster 0 _{}_{}".format(epoch,batch_idx))
-            if (max_idxs==1).any():
-                torchvision.utils.save_image(cluster_batch[max_idxs==1,:,:,:], "clus/source_images_cl1_{}_{}.png".format(epoch, batch_idx), normalize=True)
-            else:
-                print("No images in Cluster 1 _{}_{}".format(epoch,batch_idx))
-            if (max_idxs==2).any():
-                torchvision.utils.save_image(cluster_batch[max_idxs==2,:,:,:], "clus/source_images_cl2_{}_{}.png".format(epoch, batch_idx), normalize=True)
-            else:
-                print("No images in Cluster 2 _{}_{}".format(epoch,batch_idx))
-            if (max_idxs==3).any():
-                torchvision.utils.save_image(cluster_batch[max_idxs==3,:,:,:], "clus/source_images_cl3_{}_{}.png".format(epoch, batch_idx), normalize=True)
-            else:
-                print("No images in Cluster 3 _{}_{}".format(epoch,batch_idx))
+            for ii in range(solver.args.num_domain):
+                if (max_idxs==ii).any():
+                    torchvision.utils.save_image(cluster_batch[max_idxs==ii,:,:,:], "{}/source_images_cl{}_{}_{}.png".format(directory,ii,epoch,batch_idx), normalize=True)
+                else:
+                    print("No images in Cluster {} _{}_{}".format(ii,epoch,batch_idx))
+
+
+            #if (max_idxs==0).any():
+            #    torchvision.utils.save_image(cluster_batch[max_idxs==0,:,:,:], "clus/source_images_cl0_{}_{}.png".format(epoch,batch_idx), normalize=True)
+            #else:
+            #    print("No images in Cluster 0 _{}_{}".format(epoch,batch_idx))
+            #if (max_idxs==1).any():
+            #    torchvision.utils.save_image(cluster_batch[max_idxs==1,:,:,:], "clus/source_images_cl1_{}_{}.png".format(epoch, batch_idx), normalize=True)
+            #else:
+            #    print("No images in Cluster 1 _{}_{}".format(epoch,batch_idx))
+            #if (max_idxs==2).any():
+            #    torchvision.utils.save_image(cluster_batch[max_idxs==2,:,:,:], "clus/source_images_cl2_{}_{}.png".format(epoch, batch_idx), normalize=True)
+            #else:
+            #    print("No images in Cluster 2 _{}_{}".format(epoch,batch_idx))
+            #if (max_idxs==3).any():
+            #    torchvision.utils.save_image(cluster_batch[max_idxs==3,:,:,:], "clus/source_images_cl3_{}_{}.png".format(epoch, batch_idx), normalize=True)
+            #else:
+            #    print("No images in Cluster 3 _{}_{}".format(epoch,batch_idx))
+            #if (max_idxs==4).any():
+            #    torchvision.utils.save_image(cluster_batch[max_idxs==4,:,:,:], "clus/source_images_cl4_{}_{}.png".format(epoch, batch_idx), normalize=True)
+            #else:
+            #    print("No images in Cluster 4 _{}_{}".format(epoch,batch_idx))
+            
             if batch_idx==0:
-                torchvision.utils.save_image(mnist_batch, "clus/mnist_images_{}_{}.png".format(epoch,batch_idx), normalize=True)
+                torchvision.utils.save_image(mnist_batch, "{}/mnist_images_{}_{}.png".format(directory,epoch,batch_idx), normalize=True)
                 _, _, _, _, _, domain_prob_svhn = solver.loss_soft_all_domain(svhn_batch, img_t, label_s, epoch, img_s_cl)
                 print('SVHN Probs',domain_prob_svhn.mean(0))
                 _, _, _, _, _, domain_prob_usps = solver.loss_soft_all_domain(usps_batch, img_t, label_s, epoch, img_s_cl)

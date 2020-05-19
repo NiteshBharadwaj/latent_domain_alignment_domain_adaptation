@@ -4,7 +4,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 import mmd
-import msda_cluster_testing as msda
+import msda
 from torch.autograd import Variable
 from model.build_gen_digits import Generator as Generator_digit, Classifier as Classifier_digit, \
     DomainPredictor as DP_Digit
@@ -43,10 +43,11 @@ class Solver(object):
                 self.datasets, self.dataset_test, self.dataset_valid = dataset_hard_cluster(target, self.batch_size,args.num_domain)
             elif args.dl_type == 'soft_cluster':
                 self.datasets, self.dataset_test, self.dataset_valid, self.classwise_dataset = dataset_combined(target, self.batch_size,args.num_domain, args.office_directory, args.seed)
-                _, _, self.dataset_svhn, _ = dataset_combined('svhn', self.batch_size,args.num_domain, args.office_directory, args.seed)
-                _, _, self.dataset_usps, _ = dataset_combined('usps', self.batch_size,args.num_domain, args.office_directory, args.seed)
-                _, _, self.dataset_mnist, _ = dataset_combined('mnist', self.batch_size,args.num_domain, args.office_directory, args.seed)
-                _, _, self.dataset_syn, _ = dataset_combined('syn', self.batch_size,args.num_domain, args.office_directory, args.seed)
+                if self.args.clustering_only:
+                    _, _, self.dataset_svhn, _ = dataset_combined('svhn', self.batch_size,args.num_domain, args.office_directory, args.seed)
+                    _, _, self.dataset_usps, _ = dataset_combined('usps', self.batch_size,args.num_domain, args.office_directory, args.seed)
+                    _, _, self.dataset_mnist, _ = dataset_combined('mnist', self.batch_size,args.num_domain, args.office_directory, args.seed)
+                    _, _, self.dataset_syn, _ = dataset_combined('syn', self.batch_size,args.num_domain, args.office_directory, args.seed)
             elif args.dl_type == 'source_only':
                 self.datasets, self.dataset_test, self.dataset_valid, self.classwise_dataset = dataset_combined(target, self.batch_size,args.num_domain, args.office_directory, args.seed)
             elif args.dl_type == 'source_target_only':
@@ -242,14 +243,14 @@ class Solver(object):
         feat_s_comb, feat_t_comb = self.feat_soft_all_domain(img_s, img_t)
         feat_s, conv_feat_s = feat_s_comb
         feat_t, conv_feat_t = feat_t_comb
-        with torch.no_grad():
-            _, conv_feat_cl = self.G(img_s_cl)
+        #with torch.no_grad():
+        #    _, conv_feat_cl = self.G(img_s_cl)
         if self.to_detach:
-            domain_logits, _ = self.DP(conv_feat_s.detach())
-            cl_s_logits,_ = self.DP(conv_feat_cl.detach())
+            domain_logits, _ = self.DP(img_s)
+            cl_s_logits,_ = self.DP(img_s_cl)
         else:
-            domain_logits, _ = self.DP(conv_feat_s)
-            cl_s_logits,_ = self.DP(conv_feat_cl)
+            domain_logits, _ = self.DP(img_s)
+            cl_s_logits,_ = self.DP(img_s_cl)
         entropy_loss, domain_prob = self.entropy_loss(domain_logits)
 
 
@@ -269,11 +270,11 @@ class Solver(object):
         output_s_c1, output_t_c1 = self.C1_all_domain_soft(feat_s, feat_t)
         output_s_c2, output_t_c2 = self.C2_all_domain_soft(feat_s, feat_t)
         loss_s_c1 = \
-            self.softmax_loss_all_domain_soft(output_s_c1, label_s)*0
+            self.softmax_loss_all_domain_soft(output_s_c1, label_s)
         if (math.isnan(loss_s_c1.data.item())):
             raise Exception(' c1 loss is nan')
         loss_s_c2 = \
-            self.softmax_loss_all_domain_soft(output_s_c2, label_s)*0
+            self.softmax_loss_all_domain_soft(output_s_c2, label_s)
         #print(loss_s_c1, loss_s_c2, loss_msda, entropy_loss, kl_loss, domain_prob)
         #print(self.DP.fc3.weight)
 #        print("loss_s_c1", loss_s_c1, "loss_s_c2", loss_s_c2, "loss_msda", loss_msda, "entropy_loss", entropy_loss, "kl_loss", kl_loss)
