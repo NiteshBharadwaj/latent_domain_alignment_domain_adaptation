@@ -12,7 +12,7 @@ import numpy as np
 from sklearn.decomposition import PCA
 from sklearn.cluster import KMeans
 import torch
-
+from class_wise_dataloader_office import ClasswiseDataLoader
 
 def return_dataset(target, office_directory, is_target, seed_id):
     return read_office_domain(target, office_directory, is_target, seed_id)
@@ -95,5 +95,8 @@ def office_combined(target, batch_size, office_directory, seed_id):
     valid_loader.initialize(S_test, T_valid, batch_size, batch_size, scale=scale, split='Test')
     dataset_valid = valid_loader.load_data()
     
+    class_loader = ClasswiseDataLoader()
+    class_loader.initialize(S,batch_size,scale=scale)
+    dataset_class = class_loader.load_data()
 
-    return dataset, dataset_test, dataset_valid
+    return dataset, dataset_test, dataset_valid, dataset_class

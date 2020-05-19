@@ -70,8 +70,8 @@ class Solver(object):
             elif args.dl_type == 'source_only':
                 self.datasets, self.dataset_test, self.dataset_valid = cars_combined(target, self.batch_size)
             print('load finished!')
-            self.entropy_wt = 0.1
-            self.msda_wt = 0.25
+            self.entropy_wt = args.entropy_wt
+            self.msda_wt = args.msda_wt
             self.to_detach = args.to_detach
             num_classes = 163
             num_domains = args.num_domain
@@ -82,15 +82,15 @@ class Solver(object):
             self.DP = DP_cars(num_domains)
         elif args.data == 'office':
             if args.dl_type == 'soft_cluster':
-                self.datasets, self.dataset_test, self.dataset_valid = office_combined(target, self.batch_size, args.office_directory, args.seed)
+                self.datasets, self.dataset_test, self.dataset_valid, self.classwise_dataset = office_combined(target, self.batch_size, args.office_directory, args.seed)
             elif args.dl_type == 'source_target_only':
-                self.datasets, self.dataset_test, self.dataset_valid = office_combined(target, self.batch_size, args.office_directory, args.seed)
+                self.datasets, self.dataset_test, self.dataset_valid, self.classwise_dataset = office_combined(target, self.batch_size, args.office_directory, args.seed)
             elif args.dl_type == 'source_only':
-                self.datasets, self.dataset_test, self.dataset_valid = office_combined(target, self.batch_size, args.office_directory, args.seed)
+                self.datasets, self.dataset_test, self.dataset_valid, self.classwise_dataset = office_combined(target, self.batch_size, args.office_directory, args.seed)
 
             print('load finished!')
-            self.entropy_wt = 1
-            self.msda_wt = 0.25
+            self.entropy_wt = args.entropy_wt
+            self.msda_wt = args.msda_wt
             self.kl_wt = args.kl_wt
             self.to_detach = args.to_detach
             num_classes = 31
