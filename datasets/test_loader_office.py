@@ -2,7 +2,7 @@ import torch.utils.data
 import torchnet as tnt
 from builtins import object
 import torchvision.transforms as transforms
-from datasets_cars import Dataset
+from datasets_office import Dataset
 import numpy as np
 from PIL import Image, ImageOps
 def worker_init_fn(worker_id):
@@ -126,11 +126,12 @@ class TestDataLoader():
                 [-0.5836, -0.6948,  0.4203],
             ])
         }
-    def initialize(self, source, target, batch_size1, batch_size2, scale=32, split='Train'):
+    def initialize(self, source, target, batch_size1, batch_size2, num_workers_, scale=256, split='Train'):
         start_first = 0
         start_center = (256 - 224 - 1) / 2
         start_last = 256 - 224 - 1
-            
+        
+        scale2 = 224
         if split=='Train':
             transform_source = transforms.Compose([
                 #transforms.Resize(scale),
@@ -159,16 +160,20 @@ class TestDataLoader():
             transform_source = transforms.Compose([
                 #transforms.Resize(scale),
                 #transforms.RandomCrop(scale),
-                ResizeImage(256),
-                PlaceCrop(224, start_center, start_center),
+                transforms.Scale(scale),
+                transforms.CenterCrop(scale2),
+                #ResizeImage(256),
+                #PlaceCrop(224, start_center, start_center),
                 transforms.ToTensor(),
                 transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                  std=[0.229, 0.224, 0.225])
             ])
             transform_target = transforms.Compose([ 
                 #transforms.Resize((scale,scale)),
-                ResizeImage(256),
-                PlaceCrop(224, start_center, start_center),
+                transforms.Scale(scale),
+                transforms.CenterCrop(scale2),
+                #ResizeImage(256),
+                #PlaceCrop(224, start_center, start_center),
                 transforms.ToTensor(),
                 transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                  std=[0.229, 0.224, 0.225])
@@ -180,12 +185,12 @@ class TestDataLoader():
         max_size = 0
         for i in range(len(source)):
             data_sources.append(Dataset(source[i]['imgs'], source[i]['labels'], transform=transform_source))
-            data_loader_s.append(torch.utils.data.DataLoader(data_sources[i], batch_size=batch_size1, shuffle=(split=='Train'), num_workers=0, worker_init_fn=worker_init_fn))
+            data_loader_s.append(torch.utils.data.DataLoader(data_sources[i], batch_size=batch_size1, shuffle=(split=='Train'), num_workers=num_workers_, worker_init_fn=worker_init_fn))
             max_size = max(max_size,len(data_sources[i]))
         self.dataset_s = data_loader_s
 
         dataset_target = Dataset(target['imgs'], target['labels'], transform=transform_target)
-        data_loader_t = torch.utils.data.DataLoader(dataset_target, batch_size=batch_size2, shuffle=(split=='Train'), num_workers=0,worker_init_fn=worker_init_fn)
+        data_loader_t = torch.utils.data.DataLoader(dataset_target, batch_size=batch_size2, shuffle=(split=='Train'), num_workers=num_workers_,worker_init_fn=worker_init_fn)
 
         self.dataset_t = dataset_target
         self.paired_data = Data(data_loader_t,

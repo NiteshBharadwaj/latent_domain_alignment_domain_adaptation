@@ -2,7 +2,7 @@ import torch.utils.data
 import torchnet as tnt
 from builtins import object
 import torchvision.transforms as transforms
-from datasets_cars import Dataset
+from datasets_office import Dataset
 import numpy as np
 from PIL import Image, ImageOps
 def worker_init_fn(worker_id):
@@ -87,7 +87,7 @@ class Lighting(object):
         return img.add(rgb.view(3, 1, 1).expand_as(img))
 
 
-class CombinedData(Dataset):
+class CombinedDataLOL(Dataset):
     def __init__(self, data_loader_S, data_loader_t, max_dataset_size):
         super(Dataset,self).__init__()
         self.data_loader_S = data_loader_S
@@ -137,6 +137,48 @@ class CombinedData(Dataset):
     def __len__(self):
         return self.max_dataset_size*self.num_datasets
 
+class CombinedData(Dataset):
+    def __init__(self, data_loader_s, data_loader_t, max_dataset_size):
+        super(Dataset,self).__init__()
+        self.data_loader_s = data_loader_s
+        self.data_loader_t = data_loader_t
+
+        self.stop_s = False
+        self.stop_t = False
+        self.max_dataset_size = max_dataset_size
+
+        self.data_loader_s_iter = iter(self.data_loader_s)
+        self.data_loader_t_iter = iter(self.data_loader_t)
+        self.iter = 0
+
+    def __getitem__(self, index):
+        S, S_paths,t,t_paths = None, None, None, None
+        try:
+            S, S_paths = next(self.data_loader_s_iter)
+        except StopIteration:
+            if S is None or S_paths is None:
+                self.stop_s = True
+                self.data_loader_s_iter = iter(self.data_loader_s)
+                S, S_paths = next(self.data_loader_s_iter)
+        try:
+            t, t_paths = next(self.data_loader_t_iter)
+        except StopIteration:
+            if t is None or t_paths is None:
+                self.stop_t = True
+                self.data_loader_t_iter = iter(self.data_loader_t)
+                t, t_paths = next(self.data_loader_t_iter)
+
+        if (self.stop_s and self.stop_t) or self.iter > self.max_dataset_size:
+            self.stop_s = False
+            self.stop_t = False
+            raise StopIteration()
+        else:
+            self.iter += 1
+            return {'S': S, 'S_label': S_paths,
+                    'T': t, 'T_label': t_paths}
+
+    def __len__(self):
+        return self.max_dataset_size
 
 class UnalignedDataLoader():
     def __init__(self):
@@ -149,17 +191,19 @@ class UnalignedDataLoader():
                 [-0.5836, -0.6948,  0.4203],
             ])
         }
-    def initialize(self, source, target, batch_size1, batch_size2, scale=32, split='Train'):
+    def initialize(self, source, target, batch_size1, batch_size2, num_workers_, scale=256, split='Train'):
         start_first = 0
         start_center = (256 - 224 - 1) / 2
         start_last = 256 - 224 - 1
-            
+        
+        scale2 = 224
         if split=='Train':
             transform_source = transforms.Compose([
                 #transforms.Resize(scale),
                 #transforms.RandomCrop(scale),
-                ResizeImage(256),
-                transforms.RandomResizedCrop(224),
+                transforms.Scale(scale),
+                #ResizeImage(256),
+                transforms.RandomResizedCrop(scale2),
                 transforms.RandomHorizontalFlip(),
                 #transforms.ColorJitter(0.4,0.2,0.2),
                 transforms.ToTensor(),
@@ -169,8 +213,9 @@ class UnalignedDataLoader():
             ])
             transform_target = transforms.Compose([ 
                 #transforms.Resize((scale,scale)),
-                ResizeImage(256),
-                transforms.RandomResizedCrop(224),
+                #ResizeImage(256),
+                transforms.Scale(scale),
+                transforms.RandomResizedCrop(scale2),
                 transforms.RandomHorizontalFlip(),
                 #transforms.ColorJitter(0.4,0.2,0.2),
                 transforms.ToTensor(),
@@ -182,40 +227,52 @@ class UnalignedDataLoader():
             transform_source = transforms.Compose([
                 #transforms.Resize(scale),
                 #transforms.RandomCrop(scale),
-                ResizeImage(256),
-                PlaceCrop(224, start_center, start_center),
+                transforms.Scale(scale),
+                transforms.CenterCrop(scale2),
+                #ResizeImage(256),
+                #PlaceCrop(224, start_center, start_center),
                 transforms.ToTensor(),
                 transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                  std=[0.229, 0.224, 0.225])
             ])
             transform_target = transforms.Compose([ 
                 #transforms.Resize((scale,scale)),
-                ResizeImage(256),
-                PlaceCrop(224, start_center, start_center),
+                transforms.Scale(scale),
+                transforms.CenterCrop(scale2),
+                #ResizeImage(256),
+                #PlaceCrop(224, start_center, start_center),
                 transforms.ToTensor(),
                 transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                  std=[0.229, 0.224, 0.225])
             ])
         else:
             raise Exception('Wrong split')
-        data_sources = []
-        data_loader_s = []
-        max_size = 0
+
+        imgs = []
+        labels = []
         for i in range(len(source)):
-            data_sources.append(Dataset(source[i]['imgs'], source[i]['labels'], transform=transform_source))
-            data_loader_s.append(torch.utils.data.DataLoader(data_sources[i], batch_size=batch_size1, shuffle=(split=='Train'), num_workers=3, worker_init_fn=worker_init_fn))
-            max_size = max(max_size,len(data_sources[i]))
-        self.dataset_s = data_loader_s
+            imgs += source[i]['imgs']
+            labels += source[i]['labels']
+
+        dataset_source = Dataset(imgs, labels, transform=transform_source)
+        data_loader_s = torch.utils.data.DataLoader(dataset_source, batch_size=batch_size1, shuffle=True, num_workers=num_workers_, worker_init_fn=worker_init_fn)
+
+        #data_sources = []
+        #data_loader_s = []
+        #max_size = 0
+        #for i in range(len(source)):
+        #    data_sources.append(Dataset(source[i]['imgs'], source[i]['labels'], transform=transform_source))
+        #    data_loader_s.append(torch.utils.data.DataLoader(data_sources[i], batch_size=batch_size1, shuffle=(split=='Train'), num_workers=4, worker_init_fn=worker_init_fn))
+        #    max_size = max(max_size,len(data_sources[i]))
+        #self.dataset_s = data_loader_s
 
         dataset_target = Dataset(target['imgs'], target['labels'], transform=transform_target)
-        data_loader_t = torch.utils.data.DataLoader(dataset_target, batch_size=batch_size2, shuffle=(split=='Train'), num_workers=3,worker_init_fn=worker_init_fn)
+        data_loader_t = torch.utils.data.DataLoader(dataset_target, batch_size=batch_size2, shuffle=True, num_workers=num_workers_, worker_init_fn=worker_init_fn)
 
         self.dataset_t = dataset_target
-        self.paired_data = CombinedData(data_loader_s, data_loader_t,
-                                      float("inf"))
+        self.paired_data = CombinedData(data_loader_s, data_loader_t,float("inf"))
 
-        self.num_datasets = len(source)
-        self.num_samples = min(max(max_size,len(self.dataset_t)), float("inf"))*self.num_datasets
+        self.num_samples = min(max(len(dataset_source),len(self.dataset_t)), float("inf"))*2
 
 
     def name(self):

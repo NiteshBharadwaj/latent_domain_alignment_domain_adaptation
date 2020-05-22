@@ -66,8 +66,8 @@ class DomainPredictor(nn.Module):
         self.bn1 = nn.BatchNorm1d(1024)
         self.fc2 = nn.Linear(1024, 512)
         self.bn2 = nn.BatchNorm1d(512)
-        self.fc3 = nn.Linear(512, 256)
-        self.bn3 = nn.BatchNorm1d(256)
+        self.fc3 = nn.Linear(512, num_domains)
+        self.bn3 = nn.BatchNorm1d(num_domains)
         self.relu = nn.ReLU()
         self.drop = nn.Dropout(0.5)
     

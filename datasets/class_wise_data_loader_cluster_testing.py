@@ -29,7 +29,7 @@ class ClasswiseData(object):
     def __next__(self):
         source = None
         source_paths = None
-        i = 0
+        i = np.random.randint(10)
 
         try:
             source, source_paths = next(self.data_loader_s_iter[i])
@@ -54,16 +54,15 @@ class ClasswiseDataLoader():
 
         dataset_source = []
         dataloader_source = []
-        digit_to_take = 1
 
         self.max_len = 0
-        for i in range(1):
+        for i in range(10):
             img_list = []
             label_list = []
             for j in range(len(source)):
                 imgs = source[j]['imgs']
                 labels = source[j]['labels']
-                mask = labels==digit_to_take
+                mask = labels==i
                 img_list.append(imgs[mask])
                 label_list.append(labels[mask])
             dataset_source.append(Dataset2(img_list, label_list, transform=transform))

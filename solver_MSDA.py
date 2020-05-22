@@ -231,7 +231,7 @@ class Solver(object):
         domain_prob_sum = domain_probs.sum(0)/bs
         mask = domain_prob_sum.ge(0.000001)
         domain_prob_sum = domain_prob_sum*mask + (1-mask.int())*1e-5
-        return -(domain_prob_sum*(domain_prob_sum.log())).sum()
+        return -(domain_prob_sum*(domain_prob_sum.log())).mean()
 
     def loss_soft_all_domain(self, img_s, img_t, label_s, epoch, img_s_cl):
         # Takes source images, target images, source labels and returns classifier loss, domain adaptation loss and entropy loss

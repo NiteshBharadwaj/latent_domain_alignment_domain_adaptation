@@ -12,6 +12,7 @@ from solver_MSDA_cluster_testing import Solver
 import os
 from train_msda_hard import train_MSDA as train_MSDA_hard
 from train_msda_soft_cluster_testing import train_MSDA_soft
+from train_msda_soft_cluster_testing_office import train_MSDA_soft as train_MSDA_soft_office
 from train_msda_single import train_MSDA_single
 from test import test
 from view_clusters import view_clusters
@@ -23,10 +24,12 @@ from train_source_only import train_source_only
 parser = argparse.ArgumentParser(description='PyTorch MSDA Implementation')
 parser.add_argument('--all_use', type=str, default='no', metavar='N',
                     help='use all training data? in usps adaptation')
-parser.add_argument('--to_detach', type=str, default='no', metavar='N',
+parser.add_argument('--to_detach', type=str, default='yes', metavar='N',
                     help='classifier_discrepancy? yes/no')
-parser.add_argument('--class_disc', type=str, default='yes', metavar='N',
+parser.add_argument('--class_disc', type=str, default='no', metavar='N',
                     help='classifier_discrepancy? yes/no')
+parser.add_argument('--clustering_only', type=int, default=1, metavar='N',
+                    help='only kl/entropy loss? 1/0')
 parser.add_argument('--dl_type', type=str, default='', metavar='N',
                     help='original, hard_cluster, combined, soft_cluster')
 parser.add_argument('--num_domain', type=int, default=4, metavar='N',
@@ -59,6 +62,8 @@ parser.add_argument('--no-cuda', action='store_true', default=False,
                     help='disables CUDA training')
 parser.add_argument('--num_k', type=int, default=4, metavar='N',
                     help='hyper paremeter for generator update')
+parser.add_argument('--num_workers', type=int, default=4, metavar='N',
+                    help='dataloader num_workers')
 parser.add_argument('--one_step', action='store_true', default=False,
                     help='one step training with gradient reversal layer')
 parser.add_argument('--optimizer', type=str, default='adam', metavar='N', help='which optimizer')
@@ -174,7 +179,12 @@ def main():
                 # num = solver.train_merge_baseline(t, record_file=record_train)
                 if args.dl_type=='soft_cluster':
                     torch.cuda.empty_cache()
-                    num= train_MSDA_soft(solver,t,classifier_disc,record_file=record_train)
+                    if args.data == 'digits':
+                        num= train_MSDA_soft(solver,t,classifier_disc,record_file=record_train)
+                    elif args.data == 'office':
+                        num= train_MSDA_soft_office(solver,t,classifier_disc,record_file=record_train)
+                    else:
+                        print("WTF Noob")
                 elif args.dl_type=='source_only':
                     torch.cuda.empty_cache()
                     num= train_source_only(solver,t,record_file=record_train)
@@ -185,17 +195,18 @@ def main():
                     num = train_MSDA_hard(solver,t, classifier_disc, record_file=record_train)
             else:
                 raise Exception('One step solver not defined')
-            solver.sche_g.step()
-            #solver.sche_c1.step()
-            #solver.sche_c2.step()
+            if not solver.args.clustering_only:
+                solver.sche_g.step()
+                solver.sche_c1.step()
+                solver.sche_c2.step()
             solver.sche_dp.step()
             count += num
-            #if t % 1 == 0:
-            #    if args.data=='cars':
-            #        test(solver, t, 'train', record_file=record_test, save_model=args.save_model)
-            #    best = test(solver, t, 'val', record_file=record_val, save_model=args.save_model)
-            #    if best:
-            #        test(solver, t, 'test', record_file=record_test, save_model=args.save_model)
+            if t % 1 == 0:
+                if args.data=='cars':
+                    test(solver, t, 'train', record_file=record_test, save_model=args.save_model)
+                best = test(solver, t, 'val', record_file=record_val, save_model=args.save_model)
+                if best:
+                    test(solver, t, 'test', record_file=record_test, save_model=args.save_model)
                     #view_clusters(solver, clusters_file, probs_csv)
                     #print('clustering images saved in!')
                 

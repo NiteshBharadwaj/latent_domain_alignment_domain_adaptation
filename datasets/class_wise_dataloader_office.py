@@ -4,7 +4,7 @@ from builtins import object
 import torchvision.transforms as transforms
 # from datasets_office import Dataset
 from PIL import Image, ImageOps
-from datasets_cars import Dataset
+from datasets_office import Dataset
 
 import numpy as np
 class ClasswiseData(object):
@@ -31,7 +31,7 @@ class ClasswiseData(object):
     def __next__(self):
         source = None
         source_paths = None
-        i = np.random.randint(10)
+        i = np.random.randint(31)
 
         try:
             source, source_paths = next(self.data_loader_s_iter[i])
@@ -55,12 +55,14 @@ class ResizeImage():
       return img.resize((th, tw))
 
 class ClasswiseDataLoader():
-    def initialize(self, source, batch_size, scale=32):
+    def initialize(self, source, batch_size, num_workers_, scale=256):
+        scale2 = 224
         transform = transforms.Compose([
             #transforms.Resize(scale),
             #transforms.RandomCrop(scale),
-            ResizeImage(256),
-            transforms.RandomResizedCrop(224),
+            #ResizeImage(256),
+            transforms.Scale(scale),
+            transforms.RandomResizedCrop(scale2),
             transforms.RandomHorizontalFlip(),
             #transforms.ColorJitter(0.4,0.2,0.2),
             transforms.ToTensor(),
@@ -81,13 +83,13 @@ class ClasswiseDataLoader():
             
                 imgs = source[j]['imgs']
                 labels = source[j]['labels']
-                indices = [i for i, x in enumerate(labels) if x == i]
+                indices = [k for k, x in enumerate(labels) if x == i]
                 allImages += [imgs[index] for index in indices]
                 allLabels += [labels[index] for index in indices]
             dataset_source.append(Dataset(allImages, allLabels, transform=transform))
             self.max_len = max(self.max_len, len(dataset_source))
             dataloader_source.append(
-                torch.utils.data.DataLoader(dataset_source[i], batch_size=batch_size, shuffle=True,num_workers=2))
+                torch.utils.data.DataLoader(dataset_source[i], batch_size=batch_size, shuffle=True,num_workers=num_workers_))
 
         self.dataset_s = dataset_source
 

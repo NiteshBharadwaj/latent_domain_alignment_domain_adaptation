@@ -222,27 +222,22 @@ def dataset_hard_cluster(target, batch_size,num_clus):
 
 
 def dataset_combined(target, batch_size, num_clus, directory, seed):
-    print(directory)
-    S1 = {}
-    S1_test = {}
-    S2 = {}
-    S2_test = {}
-    S3 = {}
-    S3_test = {}
-    S4 = {}
-    S4_test = {}
-
-    S = [S1, S2, S3, S4]
-    S_test = [S1_test, S2_test, S3_test, S4_test]
-    #S = [S1,S2]
-    #S_test = [S1_test,S2_test]
+    S = []
+    S_test = []
     T = {}
     T_test = {}
     T_val = {}
-    domain_all = ['mnistm', 'mnist', 'usps', 'svhn', 'syn']
-    #domain_all = ['mnistm', 'mnist', 'svhn']
-    domain_all.remove(target)
+    domain_map = {'mnistm':'mnistm', 'mnist':'mnist', 'usps':'usps', 'svhn':'svhn', 'syn':'syn'}
+    target = target.split('_')
+    source_codes = target[:-1]
+    target_code = target[-1]
+    target = domain_map[target_code]
+    domain_all = [domain_map[x] for x in domain_map if x in source_codes]
 
+    for i in range(len(domain_all)):
+        S.append({})
+        S_test.append({})
+    
     target_train, target_train_label, target_test, target_test_label = return_dataset(target, directory=directory)
     
     indices_tar = np.arange(0,target_test.shape[0])

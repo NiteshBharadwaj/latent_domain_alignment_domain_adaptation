@@ -18,7 +18,7 @@ def return_dataset(target, office_directory, is_target, seed_id):
     return read_office_domain(target, office_directory, is_target, seed_id)
 
 
-def office_combined(target, batch_size, office_directory, seed_id):
+def office_combined(target, batch_size, office_directory, seed_id, num_workers):
     S1 = {}
     S1_test = {}
     S1_valid = {}
@@ -82,21 +82,23 @@ def office_combined(target, batch_size, office_directory, seed_id):
     scale = 256#TODO
 
     train_loader = CombinedDataLoader()
-    train_loader.initialize(S, T, batch_size, batch_size, scale=scale, split='Train')
+    train_loader.initialize(S, T, batch_size, batch_size, num_workers, scale=scale, split='Train')
     dataset = train_loader.load_data()
     for i in range(len(domain_all)):
         S_test[i]['imgs'] = [S_test[i]['imgs'][0]]
         S_test[i]['labels'] = [S_test[i]['labels'][0]]
+
     test_loader = TestDataLoader()
-    test_loader.initialize(S_test, T_test, batch_size, batch_size, scale=scale, split='Test')
+    test_loader.initialize(S_test, T_test, batch_size, batch_size, num_workers, scale=scale, split='Test')
     dataset_test = test_loader.load_data()
 
+    print('Validation DataLoader of size:', len(T_valid['labels']))
     valid_loader = TestDataLoader()
-    valid_loader.initialize(S_test, T_valid, batch_size, batch_size, scale=scale, split='Test')
+    valid_loader.initialize(S_test, T_valid, batch_size, batch_size, num_workers, scale=scale, split='Test')
     dataset_valid = valid_loader.load_data()
     
     class_loader = ClasswiseDataLoader()
-    class_loader.initialize(S,batch_size,scale=scale)
+    class_loader.initialize(S,batch_size, num_workers, scale=scale)
     dataset_class = class_loader.load_data()
 
     return dataset, dataset_test, dataset_valid, dataset_class
