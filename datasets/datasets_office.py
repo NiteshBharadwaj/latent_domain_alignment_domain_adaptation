@@ -60,12 +60,6 @@ class Dataset(data.Dataset):
             img = img[...,:3]
             img = Image.fromarray(img)
             self.hashmap[index] = img
-            
-        #img = Image.open(img_path)
-        #img = np.array(img)
-        #img = img[...,:3]
-        #img = transform(img) 
-        #img = Image.fromarray(img)
 
         # doing this so that it is consistent with all other datasets
         # to return a PIL Image

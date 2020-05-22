@@ -4,8 +4,9 @@ from builtins import object
 import torchvision.transforms as transforms
 # from datasets_office import Dataset
 from PIL import Image, ImageOps
-from datasets_office import Dataset
-
+from datasets_office_classwise import Dataset
+def worker_init_fn(worker_id):
+    np.random.seed(np.random.get_state()[1][0] + worker_id)
 import numpy as np
 class ClasswiseData(object):
     def __init__(self, data_loader_s, max_dataset_size):
@@ -73,26 +74,25 @@ class ClasswiseDataLoader():
 
         dataset_source = []
         dataloader_source = []
-
+        overall_images = []
+        overall_labels = []
         self.max_len = 0
         for i in range(31):
             allImages = []
             allLabels = []
             for j in range(len(source)):
-                
-            
                 imgs = source[j]['imgs']
                 labels = source[j]['labels']
                 indices = [k for k, x in enumerate(labels) if x == i]
                 allImages += [imgs[index] for index in indices]
                 allLabels += [labels[index] for index in indices]
-            dataset_source.append(Dataset(allImages, allLabels, transform=transform))
-            self.max_len = max(self.max_len, len(dataset_source))
-            dataloader_source.append(
-                torch.utils.data.DataLoader(dataset_source[i], batch_size=batch_size, shuffle=True,num_workers=num_workers_))
-
+            overall_images.append(allImages)
+            overall_labels.append(allLabels)
+        dataset_source.append(Dataset(overall_images, overall_labels, transform=transform))
+        self.max_len = max(self.max_len, len(dataset_source[0]))
+        dataloader_source.append(
+            torch.utils.data.DataLoader(dataset_source, batch_size=batch_size, shuffle=True,num_workers=num_workers_, worker_init_fn=worker_init_fn))
         self.dataset_s = dataset_source
-
         self.paired_data = ClasswiseData(dataloader_source, float("inf"))
 
     def name(self):
