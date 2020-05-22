@@ -88,7 +88,7 @@ class ClasswiseDataLoader():
                 allLabels += [labels[index] for index in indices]
             overall_images.append(allImages)
             overall_labels.append(allLabels)
-        dataset_source.append(Dataset(overall_images, overall_labels, transform=transform))
+        dataset_source.append(Dataset(overall_images, overall_labels, batch_size, transform=transform))
         self.max_len = max(self.max_len, len(dataset_source[0]))
         dataloader_source.append(
             torch.utils.data.DataLoader(dataset_source, batch_size=batch_size, shuffle=True,num_workers=num_workers_, worker_init_fn=worker_init_fn))

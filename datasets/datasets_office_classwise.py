@@ -4,6 +4,8 @@ from PIL import Image
 import numpy as np
 import cv2
 
+class Sampler(d)
+
 class Dataset(data.Dataset):
     # Dataloader for office
     """Args:
@@ -22,24 +24,37 @@ class Dataset(data.Dataset):
         self.data = data
         self.labels = label
         self.n_datas = len(self.data)
-        self.lens = [len(x) for x in self.data]
-        self.rndseqs = []
         self.batch_size = batch_size
-        self.batch_it = [0 for x in self.data]
+        self.act_lens = [len(x) for x in self.data]
+        self.blens = []
+        self.blen_end = [0]
         for i in range(self.n_datas):
-            self.rndseqs.append(np.random.permutation(self.lens[i]))
-        self.hashmap = {}
+            self.blen_end.append(len(self.data[i]) // self.batch_size + self.blen_end[-1])
+            self.blens.append(len(self.data[i]) // self.batch_size)
+            last_batch_size = len(self.data[i]) % self.batch_size
+            if  last_batch_size<=2 and last_batch_size>0:
+                self.blen_end[-1] -=1
+                self.blens[-1] -=1
+        self.blen_end = self.blen_end[1:]
+        self.total_len = self.blen_end[-1]
 
-    def _get_single_item(self, index):
-        img_path, target = self.data[index], self.labels[index]
-        if index in self.hashmap:
-            img = self.hashmap[index]
+        self.batch_it = [0 for x in self.data]
+        self.hashmap = {}
+        self.rndseqs = []
+        for i in range(self.n_datas):
+            self.rndseqs.append(np.random.permutation(self.act_lens[i]))
+            self.hashmap[i] = {}
+
+    def _get_single_item(self, index, class_index):
+        img_path, target = self.data[class_index][index], self.labels[class_index][index]
+        if index in self.hashmap[class_index]:
+            img = self.hashmap[class_index][index]
         else:
             img = Image.open(img_path)
             img = np.array(img)
             img = img[..., :3]
             img = Image.fromarray(img)
-            self.hashmap[index] = img
+            self.hashmap[class_index][index] = img
 
         # doing this so that it is consistent with all other datasets
         # to return a PIL Image
@@ -59,30 +74,31 @@ class Dataset(data.Dataset):
          Returns:
              tuple: (image, target) where target is index of the target class.
          """
-        class_id = np.random.randint(self.n_datas)
-        n_samples = 0
-        start_idx = self.batch_it[class_id]
-        end_idx = max(start_idx + self.batch_size, self.lens[class_id])
-        if end_idx in [start_idx+1, start_idx+2, start_idx+3]:
-            # Need to reset rand seq. Don't tolerate too small batches
-            self.rndseqs[class_id] = np.random.permutation(self.lens[class_id])
-            start_idx = 0
-            end_idx = max(start_idx + self.batch_size, self.lens[class_id])
-
+        class_idx = -1000
+        for i in range(self.n_datas):
+            if index < self.blen_end[i]:
+                class_idx = i
+                break
+        assert class_idx != -1000
+        index = index%self.blens[class_idx]
+        start_idx = index*self.batch_size
+        end_idx = max(start_idx + self.batch_size, self.act_lens[class_idx])
         final_images = np.zeros((self.batch_size,3,256,256))
         final_labels = np.zeros((self.batch_size))
+        n_samples = 0
         for img_idx in range(start_idx,end_idx):
-            rnd_idx =self.rndseqs[class_id][img_idx]
-            final_images[img_idx], final_labels[img_idx] = self._get_single_item(rnd_idx)
+            rnd_idx =self.rndseqs[class_idx][img_idx]
+            final_images[img_idx], final_labels[img_idx] = self._get_single_item(rnd_idx, class_idx)
             n_samples+=1
-            self.batch_it[class_id] +=1
+            self.batch_it[class_idx] +=1
         final_images = final_images[:n_samples]
         final_labels = final_labels[:n_samples]
 
-        if end_idx == self.lens[class_id]:
-            self.rndseqs[class_id] = np.random.permutation(self.lens[class_id])
-            self.batch_it[class_id] = 0
+        self.batch_it[class_idx] += 1
+        if self.batch_it[class_idx] >=self.blens[class_idx]:
+            self.rndseqs[class_idx] = np.random.permutation(self.act_lens[class_idx])
+            self.batch_it[class_idx] = 0
         return final_images, final_labels
 
     def __len__(self):
-        return float('inf')
+        return self.total_len
