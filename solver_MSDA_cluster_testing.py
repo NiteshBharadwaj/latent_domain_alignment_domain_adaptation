@@ -8,8 +8,9 @@ import msda
 from torch.autograd import Variable
 from model.build_gen_digits import Generator as Generator_digit, Classifier as Classifier_digit, \
     DomainPredictor as DP_Digit
-from model.build_gen import Generator as Generator_cars, Classifier as Classifier_cars, DomainPredictor as DP_cars
-from model.build_gen_office import Generator as Generator_office, Classifier as Classifier_office, DomainPredictor as DP_office
+from model.build_gen_cars import Generator as Generator_cars, Classifier as Classifier_cars, DomainPredictor as DP_cars
+from model.build_gen_office import Generator as Generator_office, Classifier as Classifier_office, \
+    DomainPredictor as DP_office
 from datasets.dataset_read_cluster_testing import dataset_read, dataset_hard_cluster, dataset_combined
 from datasets.cars import cars_combined
 from datasets.office import office_combined
@@ -18,6 +19,7 @@ import math
 from scipy.stats import entropy
 from matplotlib import pyplot as plt
 from PIL import Image
+
 
 # Training settings
 class Solver(object):
@@ -40,18 +42,35 @@ class Solver(object):
             if args.dl_type == 'original':
                 self.datasets, self.dataset_test, self.dataset_valid = dataset_read(target, self.batch_size)
             elif args.dl_type == 'hard_cluster':
-                self.datasets, self.dataset_test, self.dataset_valid = dataset_hard_cluster(target, self.batch_size,args.num_domain)
+                self.datasets, self.dataset_test, self.dataset_valid = dataset_hard_cluster(target, self.batch_size,
+                                                                                            args.num_domain)
             elif args.dl_type == 'soft_cluster':
-                self.datasets, self.dataset_test, self.dataset_valid, self.classwise_dataset = dataset_combined(target, self.batch_size,args.num_domain, args.office_directory, args.seed)
+                self.datasets, self.dataset_test, self.dataset_valid, self.classwise_dataset = dataset_combined(target,
+                                                                                                                self.batch_size,
+                                                                                                                args.num_domain,
+                                                                                                                args.office_directory,
+                                                                                                                args.seed)
                 if self.args.clustering_only:
-                    _, _, self.dataset_svhn, _ = dataset_combined('mnist_svhn', self.batch_size,args.num_domain, args.office_directory, args.seed)
-                    _, _, self.dataset_usps, _ = dataset_combined('mnist_usps', self.batch_size,args.num_domain, args.office_directory, args.seed)
-                    _, _, self.dataset_mnist, _ = dataset_combined('mnist_mnist', self.batch_size,args.num_domain, args.office_directory, args.seed)
-                    _, _, self.dataset_syn, _ = dataset_combined('mnist_syn', self.batch_size,args.num_domain, args.office_directory, args.seed)
+                    _, _, self.dataset_svhn, _ = dataset_combined('mnist_svhn', self.batch_size, args.num_domain,
+                                                                  args.office_directory, args.seed)
+                    _, _, self.dataset_usps, _ = dataset_combined('mnist_usps', self.batch_size, args.num_domain,
+                                                                  args.office_directory, args.seed)
+                    _, _, self.dataset_mnist, _ = dataset_combined('mnist_mnist', self.batch_size, args.num_domain,
+                                                                   args.office_directory, args.seed)
+                    _, _, self.dataset_syn, _ = dataset_combined('mnist_syn', self.batch_size, args.num_domain,
+                                                                 args.office_directory, args.seed)
             elif args.dl_type == 'source_only':
-                self.datasets, self.dataset_test, self.dataset_valid, self.classwise_dataset = dataset_combined(target, self.batch_size,args.num_domain, args.office_directory, args.seed)
+                self.datasets, self.dataset_test, self.dataset_valid, self.classwise_dataset = dataset_combined(target,
+                                                                                                                self.batch_size,
+                                                                                                                args.num_domain,
+                                                                                                                args.office_directory,
+                                                                                                                args.seed)
             elif args.dl_type == 'source_target_only':
-                self.datasets, self.dataset_test, self.dataset_valid, self.classwise_dataset = dataset_combined(target, self.batch_size,args.num_domain, args.office_directory, args.seed)
+                self.datasets, self.dataset_test, self.dataset_valid, self.classwise_dataset = dataset_combined(target,
+                                                                                                                self.batch_size,
+                                                                                                                args.num_domain,
+                                                                                                                args.office_directory,
+                                                                                                                args.seed)
             else:
                 raise Exception('Type of experiment undefined')
 
@@ -67,35 +86,73 @@ class Solver(object):
             self.C1 = Classifier_digit()
             self.C2 = Classifier_digit()
             self.DP = DP_Digit(num_domains)
-        elif args.data == 'cars':
-            if args.dl_type == 'soft_cluster':
-                self.datasets, self.dataset_test, self.dataset_valid = cars_combined(target, self.batch_size)
-            elif args.dl_type == 'source_target_only':
-                self.datasets, self.dataset_test, self.dataset_valid = cars_combined(target, self.batch_size)
-            elif args.dl_type == 'source_only':
-                self.datasets, self.dataset_test, self.dataset_valid = cars_combined(target, self.batch_size)
+
+            elif args.data == 'cars':
+
+                if args.dl_type == 'soft_cluster':
+                    self.datasets, self.dataset_test, self.dataset_valid, self.classwise_dataset = cars_combined(target,
+                                                                                                                 self.batch_size,
+                                                                                                                 args.num_domain,
+                                                                                                                 args.cars_directory,
+                                                                                                                 args.seed)
+                    # TODO: Add debug code for clustering visualization
+                    # TODO: Add args.cars_directory
+                    # if self.args.clustering_only:
+                    # for i in range(args.num_clusters):
+                    #    _, _, self.dataset_amazon, _ = cars_combined(self.batch_size, args.cars_directory,
+                    #                                               args.seed, args.num_workers)
+
+
+                elif args.dl_type == 'source_target_only':
+                    self.datasets, self.dataset_test, self.dataset_valid, self.classwise_dataset = cars_combined(target,
+                                                                                                                 self.batch_size,
+                                                                                                                 args.num_domain,
+                                                                                                                 args.cars_directory,
+                                                                                                                 args.seed)
+                elif args.dl_type == 'source_only':
+                    self.datasets, self.dataset_test, self.dataset_valid, self.classwise_dataset = cars_combined(target,
+                                                                                                                 self.batch_size,
+                                                                                                                 args.num_domain,
+                                                                                                                 args.cars_directory,
+                                                                                                                 args.seed)
+
             print('load finished!')
-            self.entropy_wt = 0.1
-            self.msda_wt = 0.25
-            self.to_detach = args.to_detach
             num_classes = 163
             num_domains = args.num_domain
             self.num_domains = num_domains
+            self.entropy_wt = args.entropy_wt  # 0.1
+            self.msda_wt = args.msda_wt  # 0.25
+            self.kl_wt = args.kl_wt
+            self.to_detach = args.to_detach
             self.G = Generator_cars()
             self.C1 = Classifier_cars(num_classes)
             self.C2 = Classifier_cars(num_classes)
             self.DP = DP_cars(num_domains)
+
         elif args.data == 'office':
             if args.dl_type == 'soft_cluster':
-                self.datasets, self.dataset_test, self.dataset_valid, self.classwise_dataset = office_combined(target, self.batch_size, args.office_directory, args.seed, args.num_workers)
+                self.datasets, self.dataset_test, self.dataset_valid, self.classwise_dataset = office_combined(target,
+                                                                                                               self.batch_size,
+                                                                                                               args.office_directory,
+                                                                                                               args.seed,
+                                                                                                               args.num_workers)
                 if self.args.clustering_only:
-                    _, _, self.dataset_amazon, _ = office_combined('dwa', self.batch_size, args.office_directory, args.seed, args.num_workers)
-                    _, _, self.dataset_dslr, _ = office_combined('awd', self.batch_size, args.office_directory, args.seed, args.num_workers)
-                    _, _, self.dataset_webcam, _ = office_combined('adw', self.batch_size, args.office_directory, args.seed, args.num_workers)
+                    _, _, self.dataset_amazon, _ = office_combined('dwa', self.batch_size, args.office_directory,
+                                                                   args.seed, args.num_workers)
+                    _, _, self.dataset_dslr, _ = office_combined('awd', self.batch_size, args.office_directory,
+                                                                 args.seed, args.num_workers)
+                    _, _, self.dataset_webcam, _ = office_combined('adw', self.batch_size, args.office_directory,
+                                                                   args.seed, args.num_workers)
             elif args.dl_type == 'source_target_only':
-                self.datasets, self.dataset_test, self.dataset_valid, self.classwise_dataset = office_combined(target, self.batch_size, args.office_directory, args.seed)
+                self.datasets, self.dataset_test, self.dataset_valid, self.classwise_dataset = office_combined(target,
+                                                                                                               self.batch_size,
+                                                                                                               args.office_directory,
+                                                                                                               args.seed)
             elif args.dl_type == 'source_only':
-                self.datasets, self.dataset_test, self.dataset_valid, self.classwise_dataset = office_combined(target, self.batch_size, args.office_directory, args.seed)
+                self.datasets, self.dataset_test, self.dataset_valid, self.classwise_dataset = office_combined(target,
+                                                                                                               self.batch_size,
+                                                                                                               args.office_directory,
+                                                                                                               args.seed)
 
             print('load finished!')
             self.entropy_wt = args.entropy_wt
@@ -115,7 +172,7 @@ class Solver(object):
         self.set_optimizer(which_opt=optimizer, lr=learning_rate)
         print('ARGS EVAL ONLY : ', args.eval_only)
         if args.eval_only:
-            print('Loading state from: ','%s/%s_model_best.pth' % (self.checkpoint_dir, self.target))
+            print('Loading state from: ', '%s/%s_model_best.pth' % (self.checkpoint_dir, self.target))
             checkpoint = torch.load('%s/%s_model_best.pth' % (self.checkpoint_dir, self.target))
             self.G.load_state_dict(checkpoint['G_state_dict'])
             self.C1.load_state_dict(checkpoint['C1_state_dict'])
@@ -132,10 +189,7 @@ class Solver(object):
         self.C2.cuda()
         self.DP.cuda()
         self.interval = interval
-        if args.data=='cars':
-            milestones = [100]
-        else:
-            milestones = [100]
+        milestones = [100]
         self.sche_g = torch.optim.lr_scheduler.MultiStepLR(self.opt_g, milestones, gamma=0.1)
         self.sche_c1 = torch.optim.lr_scheduler.MultiStepLR(self.opt_c1, milestones, gamma=0.1)
         self.sche_c2 = torch.optim.lr_scheduler.MultiStepLR(self.opt_c2, milestones, gamma=0.1)
@@ -146,18 +200,18 @@ class Solver(object):
 
     def set_optimizer(self, which_opt='momentum', lr=0.001, momentum=0.9):
         if which_opt == 'momentum':
-            self.opt_g = optim.SGD(self.G.parameters(),lr=lr, weight_decay=0.0005, momentum=momentum)
+            self.opt_g = optim.SGD(self.G.parameters(), lr=lr, weight_decay=0.0005, momentum=momentum)
 
             self.opt_c1 = optim.SGD(self.C1.parameters(), lr=lr, weight_decay=0.0005, momentum=momentum)
             self.opt_c2 = optim.SGD(self.C2.parameters(), lr=lr, weight_decay=0.0005, momentum=momentum)
-            self.opt_dp = optim.SGD(self.DP.parameters(), lr=lr/100.0, weight_decay=0.0005, momentum=momentum)
+            self.opt_dp = optim.SGD(self.DP.parameters(), lr=lr / 100.0, weight_decay=0.0005, momentum=momentum)
 
         if which_opt == 'adam':
             self.opt_g = optim.Adam(self.G.parameters(), lr=lr, weight_decay=0.0005)
 
             self.opt_c1 = optim.Adam(self.C1.parameters(), lr=lr, weight_decay=0.0005)
             self.opt_c2 = optim.Adam(self.C2.parameters(), lr=lr, weight_decay=0.0005)
-            self.opt_dp = optim.Adam(self.DP.parameters(), lr=lr/100.0, weight_decay=0.0005)
+            self.opt_dp = optim.Adam(self.DP.parameters(), lr=lr / 100.0, weight_decay=0.0005)
 
     def reset_grad(self):
         self.opt_g.zero_grad()
@@ -213,7 +267,7 @@ class Solver(object):
         return self.G(img_s), self.G(img_t)
 
     def C1_all_domain_soft(self, feat1, feat_t):
-        #Takes source and target features from feature extractor and returns classifier output features
+        # Takes source and target features from feature extractor and returns classifier output features
         return self.C1(feat1), self.C1(feat_t)
 
     def C2_all_domain_soft(self, feat1, feat_t):
@@ -229,44 +283,43 @@ class Solver(object):
         return criterion(output)
 
     def get_kl_loss(self, domain_probs):
-        #IGNORE
+        # IGNORE
         bs, num_domains = domain_probs.size()
-        domain_prob_sum = domain_probs.sum(0)/bs
-        uniform_prob = (torch.ones(num_domains)*(1/num_domains)).cuda()
-        return (domain_prob_sum*(domain_prob_sum.log()-uniform_prob.log())).sum()
+        domain_prob_sum = domain_probs.sum(0) / bs
+        uniform_prob = (torch.ones(num_domains) * (1 / num_domains)).cuda()
+        return (domain_prob_sum * (domain_prob_sum.log() - uniform_prob.log())).sum()
 
     def get_domain_entropy(self, domain_probs):
         bs, num_domains = domain_probs.size()
-        domain_prob_sum = domain_probs.sum(0)/bs
+        domain_prob_sum = domain_probs.sum(0) / bs
         mask = domain_prob_sum.ge(0.000001)
-        domain_prob_sum = domain_prob_sum*mask + (1-mask.int())*1e-5
-        return -(domain_prob_sum*(domain_prob_sum.log())).mean()
+        domain_prob_sum = domain_prob_sum * mask + (1 - mask.int()) * 1e-5
+        return -(domain_prob_sum * (domain_prob_sum.log())).mean()
 
     def loss_soft_all_domain(self, img_s, img_t, label_s, epoch, img_s_cl):
         # Takes source images, target images, source labels and returns classifier loss, domain adaptation loss and entropy loss
         feat_s_comb, feat_t_comb = self.feat_soft_all_domain(img_s, img_t)
         feat_s, conv_feat_s = feat_s_comb
         feat_t, conv_feat_t = feat_t_comb
-        #with torch.no_grad():
+        # with torch.no_grad():
         #    _, conv_feat_cl = self.G(img_s_cl)
         if self.to_detach:
             domain_logits, _ = self.DP(img_s)
-            cl_s_logits,_ = self.DP(img_s_cl)
+            cl_s_logits, _ = self.DP(img_s_cl)
         else:
             domain_logits, _ = self.DP(img_s)
-            cl_s_logits,_ = self.DP(img_s_cl)
+            cl_s_logits, _ = self.DP(img_s_cl)
         entropy_loss, domain_prob = self.entropy_loss(domain_logits)
 
-
-        _,cl_s_prob = self.entropy_loss(cl_s_logits)
+        _, cl_s_prob = self.entropy_loss(cl_s_logits)
         kl_loss = -self.get_domain_entropy(cl_s_prob)
         kl_loss = kl_loss * self.kl_wt
-       
+
         if self.to_detach:
-            loss_msda = msda.msda_regulizer_soft(feat_s, feat_t, 5, domain_prob.detach()) * self.msda_wt 
+            loss_msda = msda.msda_regulizer_soft(feat_s, feat_t, 5, domain_prob.detach()) * self.msda_wt
         else:
             loss_msda = msda.msda_regulizer_soft(feat_s, feat_t, 5, domain_prob) * self.msda_wt
-        if (math.isnan(entropy_loss.data.item())):
+        if math.isnan(entropy_loss.data.item()):
             raise Exception('entropy loss is nan')
         entropy_loss = entropy_loss * self.entropy_wt
 
@@ -274,13 +327,13 @@ class Solver(object):
         output_s_c2, output_t_c2 = self.C2_all_domain_soft(feat_s, feat_t)
         loss_s_c1 = \
             self.softmax_loss_all_domain_soft(output_s_c1, label_s)
-        if (math.isnan(loss_s_c1.data.item())):
+        if math.isnan(loss_s_c1.data.item()):
             raise Exception(' c1 loss is nan')
         loss_s_c2 = \
             self.softmax_loss_all_domain_soft(output_s_c2, label_s)
-        #print(loss_s_c1, loss_s_c2, loss_msda, entropy_loss, kl_loss, domain_prob)
-        #print(self.DP.fc3.weight)
-#        print("loss_s_c1", loss_s_c1, "loss_s_c2", loss_s_c2, "loss_msda", loss_msda, "entropy_loss", entropy_loss, "kl_loss", kl_loss)
+        # print(loss_s_c1, loss_s_c2, loss_msda, entropy_loss, kl_loss, domain_prob)
+        # print(self.DP.fc3.weight)
+        #        print("loss_s_c1", loss_s_c1, "loss_s_c2", loss_s_c2, "loss_msda", loss_msda, "entropy_loss", entropy_loss, "kl_loss", kl_loss)
         return loss_s_c1, loss_s_c2, loss_msda, entropy_loss, kl_loss, domain_prob
 
 
@@ -293,16 +346,3 @@ class HLoss(nn.Module):
         b = F.softmax(x, dim=1) * F.log_softmax(x, dim=1)
         b = -1.0 * b.mean()
         return b, domain_prob + 1e-5
-
-# Takes input tensor of shape (N x num_domains) and computes the entropy loss sum(p * logp)
-#class HLoss(nn.Module):
-#    def __init__(self):
-#        super(HLoss, self).__init__()
-
-#    def forward(self, x):
-#        input_ = F.softmax(x, dim=1)
-#        mask = input_.ge(0.000001)
-#        mask_out = input_*mask + (1-mask.int())*1e-5
-#        entropy = -(torch.sum(mask_out * torch.log(mask_out)))
-#        loss = entropy/ float(input_.size(0))
-#        return loss, mask_out

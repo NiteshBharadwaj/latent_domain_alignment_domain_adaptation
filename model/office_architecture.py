@@ -288,6 +288,3 @@ class DomainPredictor(nn.Module):
 		x = self.relu(self.bn2_fc(self.fc2(x)))
 		output = self.fc3(x)
 		return output, x
-
-
-# ----------------------------------- ------------- ----------------------------------------

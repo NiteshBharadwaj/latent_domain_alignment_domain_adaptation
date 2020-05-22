@@ -6,7 +6,7 @@ import torch.optim as optim
 import mmd
 import msda
 from torch.autograd import Variable
-from model.build_gen import *
+from model.build_gen_cars import *
 from datasets.cars import cars_combined
 import numpy as np
 import math
@@ -23,16 +23,16 @@ class Solver(object):
         self.use_abs_diff = args.use_abs_diff
 
         print('dataset loading')
-        if args.data=='digits':
+        if args.data == 'digits':
             if args.dl_type == 'original':
                 self.datasets, self.dataset_test = dataset_read(target, self.batch_size)
             elif args.dl_type == 'hard_cluster':
-                self.datasets, self.dataset_test = dataset_hard_cluster(target, self.batch_size,args.num_domain)
-            elif args.dl_type=='soft_cluster':
-                self.datasets, self.dataset_test = dataset_combined(target, self.batch_size,args.num_domain)
+                self.datasets, self.dataset_test = dataset_hard_cluster(target, self.batch_size, args.num_domain)
+            elif args.dl_type == 'soft_cluster':
+                self.datasets, self.dataset_test = dataset_combined(target, self.batch_size, args.num_domain)
             else:
                 raise Exception('Type of experiment undefined')
 
-        elif args.data=='cars':
+        elif args.data == 'cars':
             if args.dl_type == 'soft_cluster':
-                self.datasets, self.dataset_test = cars_combined(target,self.batch_size)
+                self.datasets, self.dataset_test = cars_combined(target, self.batch_size)

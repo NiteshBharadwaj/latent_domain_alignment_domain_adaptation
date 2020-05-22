@@ -8,7 +8,7 @@ import msda
 from torch.autograd import Variable
 from model.build_gen_digits import Generator as Generator_digit, Classifier as Classifier_digit, \
     DomainPredictor as DP_Digit
-from model.build_gen import Generator as Generator_cars, Classifier as Classifier_cars, DomainPredictor as DP_cars
+from model.build_gen_cars import Generator as Generator_cars, Classifier as Classifier_cars, DomainPredictor as DP_cars
 from model.build_gen_office import Generator as Generator_office, Classifier as Classifier_office, DomainPredictor as DP_office
 from datasets.dataset_read import dataset_read, dataset_hard_cluster, dataset_combined
 from datasets.cars import cars_combined

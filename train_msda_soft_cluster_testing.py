@@ -5,11 +5,13 @@ import torchvision
 import os 
 
 cluster_batch = None
+classwise_batch = None
+
 svhn_batch=None
 mnist_batch=None
 usps_batch =None
 syn_batch=None
-classwise_batch = None
+
 
 def switch_bn(model, on):
     for m in model.modules():
@@ -18,6 +20,8 @@ def switch_bn(model, on):
                 m.train()
             else:
                 m.eval()
+
+import time
 
 def train_MSDA_soft(solver, epoch, classifier_disc=True, record_file=None):
     global cluster_batch
@@ -33,7 +37,12 @@ def train_MSDA_soft(solver, epoch, classifier_disc=True, record_file=None):
     #torch.cuda.manual_seed(1)
 
     batch_idx_g = 0
+    print('creating classwise iterator', time.time())
     classwise_dataset_iterator = iter(solver.classwise_dataset)
+    print('starting iteration', time.time())
+    tt = time.time()
+    tot_dataloading_time = 0
+    tot_updates_time = 0
     for batch_idx, data in enumerate(solver.datasets):
         batch_idx_g = batch_idx
         img_t = Variable(data['T'].cuda())
@@ -53,6 +62,10 @@ def train_MSDA_soft(solver, epoch, classifier_disc=True, record_file=None):
         img_s_cl = Variable(classwise_data['S'].cuda())
         if (solver.args.clustering_only and classwise_batch is None):
             classwise_batch = img_s_cl
+
+        print('BATCHES DONE!!', time.time()-tt)
+        tot_dataloading_time += time.time()-tt
+        tt = time.time()
 
 #        switch_bn(solver.DP,True)
         solver.reset_grad()
@@ -78,14 +91,18 @@ def train_MSDA_soft(solver, epoch, classifier_disc=True, record_file=None):
             solver.opt_c2.step()
         solver.opt_dp.step()
 
- #       switch_bn(solver.DP,False)
- #       solver.reset_grad()
- #       _, _, _, _, kl_loss, domain_prob = solver.loss_soft_all_domain(img_s, img_t, label_s, epoch, img_s_cl)
-        
- #       clip_value = 1.0
+        print('GRADIENT UPDATES DONE!!!', time.time()-tt)
+        tot_updates_time += time.time()-tt
+        tt = time.time()
 
- #       torch.nn.utils.clip_grad_norm(solver.DP.parameters(), clip_value)
- #       solver.opt_dp.step()
+#        switch_bn(solver.DP,False)
+#        solver.reset_grad()
+#       _, _, _, _, kl_loss, domain_prob = solver.loss_soft_all_domain(img_s, img_t, label_s, epoch, img_s_cl)
+        
+#        clip_value = 1.0
+
+#        torch.nn.utils.clip_grad_norm(solver.DP.parameters(), clip_value)
+#        solver.opt_dp.step()
         loss_dis = loss * 0  # For printing purpose, it's reassigned if classifier_disc=True
         if classifier_disc:
             solver.reset_grad()
@@ -138,6 +155,7 @@ def train_MSDA_soft(solver, epoch, classifier_disc=True, record_file=None):
 
             torchvision.utils.save_image(img_s[:32,:,:,:], "{}/source_images_{}_{}.png".format(directory,epoch,batch_idx), normalize=True)
             torchvision.utils.save_image(img_s_cl[:32,:,:,:], "{}/classwise_images_{}_{}.png".format(directory,epoch,batch_idx), normalize=True)
+
             max_idxs = domain_prob.argmax(1)
             for ii in range(solver.args.num_domain):
                 if (max_idxs==ii).any():
@@ -163,5 +181,6 @@ def train_MSDA_soft(solver, epoch, classifier_disc=True, record_file=None):
             print \
                 ('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss1: {:.6f}\t Loss2: {:.6f}\t Loss_mmd: {:.6f}\t Loss_entropy: {:.6f}\t kl_loss: {:.6f}'.format(
                 epoch, batch_idx, 100, 100. * batch_idx / 70000, loss_s_c1.data.item(), loss_s_c2.data.item(), loss_msda.data.item(), entropy_loss.data.item(), kl_loss.data.item()))
+    print('tot_dataloading_time', tot_dataloading_time, 'tot_updates_time', tot_updates_time)
     return batch_idx_g
 
