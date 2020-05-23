@@ -87,34 +87,34 @@ class Solver(object):
             self.C2 = Classifier_digit()
             self.DP = DP_Digit(num_domains)
 
-            elif args.data == 'cars':
+        elif args.data == 'cars':
 
-                if args.dl_type == 'soft_cluster':
-                    self.datasets, self.dataset_test, self.dataset_valid, self.classwise_dataset = cars_combined(target,
-                                                                                                                 self.batch_size,
-                                                                                                                 args.num_domain,
-                                                                                                                 args.cars_directory,
-                                                                                                                 args.seed)
-                    # TODO: Add debug code for clustering visualization
-                    # TODO: Add args.cars_directory
-                    # if self.args.clustering_only:
-                    # for i in range(args.num_clusters):
-                    #    _, _, self.dataset_amazon, _ = cars_combined(self.batch_size, args.cars_directory,
-                    #                                               args.seed, args.num_workers)
+            if args.dl_type == 'soft_cluster':
+                self.datasets, self.dataset_test, self.dataset_valid, self.classwise_dataset = cars_combined(target,
+                                                                                                             self.batch_size,
+                                                                                                             args.num_domain,
+                                                                                                             args.cars_directory,
+                                                                                                             args.seed)
+                # TODO: Add debug code for clustering visualization
+                # TODO: Add args.cars_directory
+                # if self.args.clustering_only:
+                # for i in range(args.num_clusters):
+                #    _, _, self.dataset_amazon, _ = cars_combined(self.batch_size, args.cars_directory,
+                #                                               args.seed, args.num_workers)
 
 
-                elif args.dl_type == 'source_target_only':
-                    self.datasets, self.dataset_test, self.dataset_valid, self.classwise_dataset = cars_combined(target,
-                                                                                                                 self.batch_size,
-                                                                                                                 args.num_domain,
-                                                                                                                 args.cars_directory,
-                                                                                                                 args.seed)
-                elif args.dl_type == 'source_only':
-                    self.datasets, self.dataset_test, self.dataset_valid, self.classwise_dataset = cars_combined(target,
-                                                                                                                 self.batch_size,
-                                                                                                                 args.num_domain,
-                                                                                                                 args.cars_directory,
-                                                                                                                 args.seed)
+            elif args.dl_type == 'source_target_only':
+                self.datasets, self.dataset_test, self.dataset_valid, self.classwise_dataset = cars_combined(target,
+                                                                                                             self.batch_size,
+                                                                                                             args.num_domain,
+                                                                                                             args.cars_directory,
+                                                                                                             args.seed)
+            elif args.dl_type == 'source_only':
+                self.datasets, self.dataset_test, self.dataset_valid, self.classwise_dataset = cars_combined(target,
+                                                                                                             self.batch_size,
+                                                                                                             args.num_domain,
+                                                                                                             args.cars_directory,
+                                                                                                             args.seed)
 
             print('load finished!')
             num_classes = 163
