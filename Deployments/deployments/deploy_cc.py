@@ -51,7 +51,7 @@ def generate_yaml(type, cmd, name, mem_limit, mem_req, node, ngpus, ssh_key, use
     variables["NAME"] = name
     ssh_cmd = "eval \\\"$(ssh-agent -s)\\\";  ssh-add /data/ssh-keys/ssh-{}-rsa; chmod 600 /data/ssh-keys/ssh-{}-rsa.pub; chmod 600 /data/ssh-keys/ssh-${}-rsa; mkdir /root/.ssh; ssh-keyscan github.com >> /root/.ssh/known_hosts".format(user,user,user)
     variables["PIP_CMD"] = "pip3 install opencv-contrib-python; pip3 install easydict; pip3 install pyyaml; pip3 install hdf5storage;  pip install metayaml; pip install deepdish; pip install -U scikit-learn; pip3 install jupyter; pip3 install --upgrade torch; pip3 install tensorboard; pip3 install opencv-python; pip3 install metayaml; pip3 install tb-nightly;pip3 install torchnet; pip3 install sklearn; pip3 install seaborn"
-    variables["UNZIP_CMD"] = "echo Unzipping; mkdir -p /localdata/CompCars; tar -xf /data/CompCars/data_cropped.tar.gz -C /localdata/CompCars/"
+    variables["UNZIP_CMD"] = "echo Unzipping; mkdir -p /localdata/CompCars; tar -xvf /data/CompCars/data_cropped.tar.gz -C /localdata/CompCars/"
     variables["NGPUS"] = str(ngpus)
     variables["SSH_CMD"] = ssh_cmd
 
@@ -113,7 +113,7 @@ def main():
 
     parser.add_argument('--type',  type=str, nargs=1,
                         help='Type of pod', default=['deeplearning'])
-    parser.add_argument('--user',  type=str, nargs=1, choices=['nitesh', 'tarujg'],
+    parser.add_argument('--user',  type=str, nargs=1, choices=['nitesh', 'taruj'],
                         help='User for ssh')
 
     parser.add_argument('--ngpus',  type=int,

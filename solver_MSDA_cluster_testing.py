@@ -92,9 +92,11 @@ class Solver(object):
             if args.dl_type == 'soft_cluster':
                 self.datasets, self.dataset_test, self.dataset_valid, self.classwise_dataset = cars_combined(target,
                                                                                                              self.batch_size,
-                                                                                                             args.num_domain,
                                                                                                              args.cars_directory,
-                                                                                                             args.seed)
+                                                                                                             args.seed,
+                                                                                                             args.num_workers)
+
+
                 # TODO: Add debug code for clustering visualization
                 # TODO: Add args.cars_directory
                 # if self.args.clustering_only:
