@@ -190,7 +190,7 @@ def train_MSDA_soft(solver, epoch, classifier_disc=True, record_file=None):
                 else:
                     print("No images in Cluster {} _{}_{}".format(ii, epoch, batch_idx))
 
-            if batch_idx == 0:
+            #if batch_idx == 0:
             # TODO: Update based on domain_data1 above
             #                _, _, _, _, _, domain_data1 = solver.loss_soft_all_domain(data1_batch, img_t, label_s, epoch, img_s_cl)
             #                print('Domain1 Probs',domain_data1.mean(0))

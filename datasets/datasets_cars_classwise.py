@@ -4,7 +4,7 @@ from PIL import Image
 import numpy as np
 import cv2
 
-class Sampler(d)
+#class Sampler(d)
 
 class Dataset(data.Dataset):
     # Dataloader for cars
