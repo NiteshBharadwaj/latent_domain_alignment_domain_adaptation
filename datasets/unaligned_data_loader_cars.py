@@ -97,7 +97,6 @@ class CombinedData(Dataset):
 
     def __getitem__(self, index):
         S, S_paths, t, t_paths = None, None, None, None
-        i = index % self.num_datasets
         try:
             S, S_paths = next(self.data_loader_s_iter)
         except StopIteration:
