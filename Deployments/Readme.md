@@ -18,6 +18,9 @@ Whenever you want to run a pod (Contact nitesh if you are unsure of difference b
 ```
 ```
   ./deploy --name temp-pod --ngpus 0 --type simple_pod
+
+  # For creating pod for compcars
+  ./deploy_cc --name compcars --ngpus 1 --type simple_pod_cc
 ```
 
 To check
