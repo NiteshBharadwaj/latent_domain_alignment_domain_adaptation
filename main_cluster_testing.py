@@ -52,6 +52,8 @@ parser.add_argument('--kl_wt', type=float, default=0.0, metavar='LR',
                     help='KL_wt (default: 0)')
 parser.add_argument('--msda_wt', type=float, default=0.00001, metavar='LR',
                     help='msda_wt (default: 0)')
+parser.add_argument('--lr_ratio', type=float, default=1.0, metavar='LR',
+                    help='lr for domain predictor will be divided by this (default: 0)')
 parser.add_argument('--entropy_wt', type=float, default=0.01, metavar='LR',
                     help='entropy_wt (default: 0)')
 parser.add_argument('--lr', type=float, default=0.0001, metavar='LR',

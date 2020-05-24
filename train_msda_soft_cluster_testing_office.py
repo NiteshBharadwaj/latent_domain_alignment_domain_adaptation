@@ -38,31 +38,61 @@ def train_MSDA_soft(solver, epoch, classifier_disc=True, record_file=None):
     #torch.cuda.manual_seed(1)
 
     batch_idx_g = 0
-    print('creating classwise iterator', time.time())
-    classwise_dataset_iterator = iter(solver.classwise_dataset)
-    print('starting iteration', time.time())
     tt = time.time()
+    print('creating classwise iterator', time.time())
+    solver.classwise_dataset.reset_iter()
+    classwise_dataset_iterator = iter(solver.classwise_dataset)
+    main_dataset_iterator = iter(solver.datasets)
+    print('starting iteration', time.time())
+
     tot_dataloading_time = 0
     tot_updates_time = 0
-    for batch_idx, data in enumerate(solver.datasets):
-        batch_idx_g = batch_idx
+    tot_cuda_time = 0
+    tot_classwisedata_time = 0
+    tot_main_data_time = 0
+    while True:
+        try:
+            mt0 = time.time()
+            data = next(main_dataset_iterator)
+            mt = time.time()-mt0
+            #print('BATCH Main DATA', mt)
+            tot_main_data_time+=mt
+        except:
+            print('End of epoch')
+            break
+        batch_idx_g +=1
+        batch_idx = batch_idx_g
+        ct1 = time.time()
         img_t = Variable(data['T'].cuda())
         img_s = Variable(data['S'].cuda())
+        ct2 = time.time()
         if (solver.args.clustering_only and cluster_batch is None):
             cluster_batch = img_s
             
-            amazon_batch = Variable(next(iter(solver.dataset_amazon))['T'].cuda())
-            dslr_batch = Variable(next(iter(solver.dataset_dslr))['T'].cuda())
-            webcam_batch = Variable(next(iter(solver.dataset_webcam))['T'].cuda())
+            #amazon_batch = Variable(next(iter(solver.dataset_amazon))['T'].cuda())
+            #dslr_batch = Variable(next(iter(solver.dataset_dslr))['T'].cuda())
+            #webcam_batch = Variable(next(iter(solver.dataset_webcam))['T'].cuda())
 
-
+        ct3 = time.time()
         label_s = Variable(data['S_label'].long().cuda())
+        ct4 = time.time()
         if img_s.size()[0] < solver.batch_size or img_t.size()[0] < solver.batch_size:
+            print('Breaking because of low batch size')
             break
-
+        
         classwise_data = next(classwise_dataset_iterator)
-        img_s_cl = Variable(classwise_data['S'].cuda())
+        ct5 = time.time()
+        img_s_cl = Variable(classwise_data['S'].squeeze(0).float().cuda())
+        ct6 = time.time()
+
+        ct = (ct2-ct1)+(ct4-ct3)+(ct6-ct5)
+        #print('BATCH CUDA TIME', ct)
+        tot_cuda_time+=ct
+        cl_time = ct5-ct4
+        tot_classwisedata_time +=cl_time
+        #print('CLASSWISE DATA TIME', cl_time)
         while(img_s_cl.size()[0] == 1):
+            print('CLASS WISE is of size 1. Looping')
             classwise_data = next(classwise_dataset_iterator)
             img_s_cl = Variable(classwise_data['S'].cuda())
 
@@ -71,13 +101,12 @@ def train_MSDA_soft(solver, epoch, classifier_disc=True, record_file=None):
         if (solver.args.clustering_only and classwise_batch is None):
             classwise_batch = img_s_cl
 
-        print('BATCHES DONE!!', time.time()-tt)
+        #print('BATCHES DONE!!', time.time()-tt)
         tot_dataloading_time += time.time()-tt
         tt = time.time()
 
 #        switch_bn(solver.DP,True)
         solver.reset_grad()
-
         loss_s_c1, loss_s_c2, loss_msda, entropy_loss, kl_loss, domain_prob = solver.loss_soft_all_domain(img_s, img_t, label_s, epoch, img_s_cl)
         if not classifier_disc:
             loss_s_c2 = loss_s_c1
@@ -99,7 +128,7 @@ def train_MSDA_soft(solver, epoch, classifier_disc=True, record_file=None):
             solver.opt_c2.step()
         solver.opt_dp.step()
 
-        print('GRADIENT UPDATES DONE!!!', time.time()-tt)
+        #print('GRADIENT UPDATES DONE!!!', time.time()-tt)
         tot_updates_time += time.time()-tt
         tt = time.time()
 
@@ -155,14 +184,13 @@ def train_MSDA_soft(solver, epoch, classifier_disc=True, record_file=None):
             classwise_batchsize = classwise_batch.size()[0]
             _, _, _, _, _, domain_prob = solver.loss_soft_all_domain(cluster_batch, img_t, label_s[:cluster_batchsize,], epoch, img_s_cl)
             _, _, _, _, _, domain_prob_cw = solver.loss_soft_all_domain(classwise_batch, img_t, label_s[:classwise_batchsize,], epoch, img_s_cl)
+            print(domain_prob)
             print('Classwise Probs',domain_prob_cw.mean(0))
-            
+            print('Domain Probs', domain_prob.mean(0))
+
             directory = "clusters_data-{}-num_domain-{}-batch_size-{}-kl_wt-{}-entropy_wt-{}-lr-{}-seed-{}-target-{}-clustering_only-{}/".format(solver.args.data, solver.args.num_domain, solver.args.batch_size, solver.args.kl_wt, solver.args.entropy_wt, solver.args.lr, solver.args.seed, solver.args.target, solver.args.clustering_only)
             if not os.path.exists(directory):            
                 os.makedirs(directory)
-
-            if batch_idx==0:
-                print(domain_prob)
 
             torchvision.utils.save_image(img_s[:32,:,:,:], "{}/source_images_{}_{}.png".format(directory,epoch,batch_idx), normalize=True)
             torchvision.utils.save_image(img_s_cl[:32,:,:,:], "{}/classwise_images_{}_{}.png".format(directory,epoch,batch_idx), normalize=True)
@@ -174,7 +202,7 @@ def train_MSDA_soft(solver, epoch, classifier_disc=True, record_file=None):
                 else:
                     print("No images in Cluster {} _{}_{}".format(ii,epoch,batch_idx))
 
-            if batch_idx==0:
+            if 0:#batch_idx==0:
                 _, _, _, _, _, domain_prob_amazon = solver.loss_soft_all_domain(amazon_batch, img_t, label_s, epoch, img_s_cl)
                 print('Amazon Probs',domain_prob_amazon.mean(0))
                 _, _, _, _, _, domain_prob_webcam = solver.loss_soft_all_domain(webcam_batch, img_t, label_s, epoch, img_s_cl)
@@ -190,5 +218,8 @@ def train_MSDA_soft(solver, epoch, classifier_disc=True, record_file=None):
                 ('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss1: {:.6f}\t Loss2: {:.6f}\t Loss_mmd: {:.6f}\t Loss_entropy: {:.6f}\t kl_loss: {:.6f}'.format(
                 epoch, batch_idx, 100, 100. * batch_idx / 70000, loss_s_c1.data.item(), loss_s_c2.data.item(), loss_msda.data.item(), entropy_loss.data.item(), kl_loss.data.item()))
     print('tot_dataloading_time', tot_dataloading_time, 'tot_updates_time', tot_updates_time)
+    print('CUDA Time', tot_cuda_time)
+    print('CLDL Total Time', tot_classwisedata_time)
+    print('MDL Total Time', tot_main_data_time)
     return batch_idx_g
 

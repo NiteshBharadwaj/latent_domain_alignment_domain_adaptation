@@ -75,8 +75,9 @@ class Solver(object):
             elif args.dl_type == 'source_only':
                 self.datasets, self.dataset_test, self.dataset_valid = cars_combined(target, self.batch_size)
             print('load finished!')
-            self.entropy_wt = 0.1
-            self.msda_wt = 0.25
+            self.entropy_wt = args.entropy_wt
+            self.kl_wt = args.kl_wt
+            self.msda_wt = args.msda_wt
             self.to_detach = args.to_detach
             num_classes = 163
             num_domains = args.num_domain
@@ -88,10 +89,10 @@ class Solver(object):
         elif args.data == 'office':
             if args.dl_type == 'soft_cluster':
                 self.datasets, self.dataset_test, self.dataset_valid, self.classwise_dataset = office_combined(target, self.batch_size, args.office_directory, args.seed, args.num_workers)
-                if self.args.clustering_only:
-                    _, _, self.dataset_amazon, _ = office_combined('dwa', self.batch_size, args.office_directory, args.seed, args.num_workers)
-                    _, _, self.dataset_dslr, _ = office_combined('awd', self.batch_size, args.office_directory, args.seed, args.num_workers)
-                    _, _, self.dataset_webcam, _ = office_combined('adw', self.batch_size, args.office_directory, args.seed, args.num_workers)
+                #if self.args.clustering_only:
+                    #_, _, self.dataset_amazon, _ = office_combined('dwa', self.batch_size, args.office_directory, args.seed, args.num_workers)
+                #    _, _, self.dataset_dslr, _ = office_combined('awd', self.batch_size, args.office_directory, args.seed, args.num_workers)
+                #    _, _, self.dataset_webcam, _ = office_combined('adw', self.batch_size, args.office_directory, args.seed, args.num_workers)
             elif args.dl_type == 'source_target_only':
                 self.datasets, self.dataset_test, self.dataset_valid, self.classwise_dataset = office_combined(target, self.batch_size, args.office_directory, args.seed)
             elif args.dl_type == 'source_only':
@@ -150,14 +151,16 @@ class Solver(object):
 
             self.opt_c1 = optim.SGD(self.C1.parameters(), lr=lr, weight_decay=0.0005, momentum=momentum)
             self.opt_c2 = optim.SGD(self.C2.parameters(), lr=lr, weight_decay=0.0005, momentum=momentum)
-            self.opt_dp = optim.SGD(self.DP.parameters(), lr=lr/100.0, weight_decay=0.0005, momentum=momentum)
+            #self.opt_dp = optim.SGD(self.DP.parameters(), lr=lr/100.0, weight_decay=0.0005, momentum=momentum)
+            self.opt_dp = optim.SGD(self.DP.parameters(), lr=lr/self.args.lr_ratio, weight_decay=0.0005, momentum=momentum)
 
         if which_opt == 'adam':
             self.opt_g = optim.Adam(self.G.parameters(), lr=lr, weight_decay=0.0005)
 
             self.opt_c1 = optim.Adam(self.C1.parameters(), lr=lr, weight_decay=0.0005)
             self.opt_c2 = optim.Adam(self.C2.parameters(), lr=lr, weight_decay=0.0005)
-            self.opt_dp = optim.Adam(self.DP.parameters(), lr=lr/100.0, weight_decay=0.0005)
+            #self.opt_dp = optim.Adam(self.DP.parameters(), lr=lr/100.0, weight_decay=0.0005)
+            self.opt_dp = optim.Adam(self.DP.parameters(), lr=lr/self.args.lr_ratio, weight_decay=0.0005)
 
     def reset_grad(self):
         self.opt_g.zero_grad()

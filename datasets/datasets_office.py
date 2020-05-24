@@ -52,14 +52,14 @@ class Dataset(data.Dataset):
          """
 
         img_path, target = self.data[index], self.labels[index]
-        if index in self.hashmap:
-            img = self.hashmap[index]
+        if img_path in self.hashmap:
+            img = self.hashmap[img_path]
         else:
             img = Image.open(img_path)
             img = np.array(img)
             img = img[...,:3]
             img = Image.fromarray(img)
-            self.hashmap[index] = img
+            #self.hashmap[img_path] = img
 
         # doing this so that it is consistent with all other datasets
         # to return a PIL Image

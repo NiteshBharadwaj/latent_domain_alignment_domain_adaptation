@@ -45,11 +45,11 @@ def train_MSDA_soft(solver, epoch, classifier_disc=True, record_file=None):
 #        for param_group in solver.DP.param_groups:
 #            print("LR opt_dp", param_group['lr'])
 
-        torch.nn.utils.clip_grad_norm(solver.G.parameters(), clip_value) 
-        torch.nn.utils.clip_grad_norm(solver.C1.parameters(), clip_value)
-        if classifier_disc:
-            torch.nn.utils.clip_grad_norm(solver.C2.parameters(), clip_value)
-        torch.nn.utils.clip_grad_norm(solver.DP.parameters(), clip_value)
+        #torch.nn.utils.clip_grad_norm(solver.G.parameters(), clip_value) 
+        #torch.nn.utils.clip_grad_norm(solver.C1.parameters(), clip_value)
+        #if classifier_disc:
+        #    torch.nn.utils.clip_grad_norm(solver.C2.parameters(), clip_value)
+        #torch.nn.utils.clip_grad_norm(solver.DP.parameters(), clip_value)
         solver.opt_g.step()
         solver.opt_c1.step()
         solver.opt_c2.step()
@@ -63,13 +63,13 @@ def train_MSDA_soft(solver, epoch, classifier_disc=True, record_file=None):
             output_t1 = solver.C1(feat_t)
             output_t2 = solver.C2(feat_t)
 
-            loss_s = loss_s_c1 + loss_msda + loss_s_c2 + entropy_loss + kl_loss
+            loss_s = loss_s_c1 + loss_msda + loss_s_c2
             loss_dis = solver.discrepancy(output_t1, output_t2)
             loss = loss_s - loss_dis
             loss.backward()
 
-            torch.nn.utils.clip_grad_norm(solver.C1.parameters(), clip_value)
-            torch.nn.utils.clip_grad_norm(solver.C2.parameters(), clip_value)
+            #torch.nn.utils.clip_grad_norm(solver.C1.parameters(), clip_value)
+            #torch.nn.utils.clip_grad_norm(solver.C2.parameters(), clip_value)
             solver.opt_c1.step()
             solver.opt_c2.step()
             solver.reset_grad()
@@ -80,7 +80,7 @@ def train_MSDA_soft(solver, epoch, classifier_disc=True, record_file=None):
                 output_t2 = solver.C2(feat_t)
                 loss_dis = solver.discrepancy(output_t1, output_t2)
                 loss_dis.backward()
-                torch.nn.utils.clip_grad_norm(solver.G.parameters(), clip_value)
+                #torch.nn.utils.clip_grad_norm(solver.G.parameters(), clip_value)
                 solver.opt_g.step()
                 solver.reset_grad()
 

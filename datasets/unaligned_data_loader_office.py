@@ -247,15 +247,19 @@ class UnalignedDataLoader():
             ])
         else:
             raise Exception('Wrong split')
-
+        target_imgs = []
+        target_labels = []
         imgs = []
         labels = []
-        for i in range(len(source)):
-            imgs += source[i]['imgs']
-            labels += source[i]['labels']
+        for j in range(10):
+            for i in range(len(source)):
+                imgs += source[i]['imgs']
+                labels += source[i]['labels']
+            target_imgs +=target['imgs']
+            target_labels += target['labels']
 
         dataset_source = Dataset(imgs, labels, transform=transform_source)
-        data_loader_s = torch.utils.data.DataLoader(dataset_source, batch_size=batch_size1, shuffle=True, num_workers=num_workers_, worker_init_fn=worker_init_fn)
+        data_loader_s = torch.utils.data.DataLoader(dataset_source, batch_size=batch_size1, shuffle=True, num_workers=num_workers_, worker_init_fn=worker_init_fn, pin_memory=True)
 
         #data_sources = []
         #data_loader_s = []
@@ -266,8 +270,8 @@ class UnalignedDataLoader():
         #    max_size = max(max_size,len(data_sources[i]))
         #self.dataset_s = data_loader_s
 
-        dataset_target = Dataset(target['imgs'], target['labels'], transform=transform_target)
-        data_loader_t = torch.utils.data.DataLoader(dataset_target, batch_size=batch_size2, shuffle=True, num_workers=num_workers_, worker_init_fn=worker_init_fn)
+        dataset_target = Dataset(target_imgs, target_labels, transform=transform_target)
+        data_loader_t = torch.utils.data.DataLoader(dataset_target, batch_size=batch_size2, shuffle=True, num_workers=num_workers_, worker_init_fn=worker_init_fn, pin_memory=True)
 
         self.dataset_t = dataset_target
         self.paired_data = CombinedData(data_loader_s, data_loader_t,float("inf"))

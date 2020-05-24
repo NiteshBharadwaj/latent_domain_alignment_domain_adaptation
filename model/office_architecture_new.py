@@ -22,7 +22,7 @@ class Feature(nn.Module):
         self.fc2 = nn.Linear(1024, 512)
         self.bn2 = nn.BatchNorm1d(512)
         self.fc3 = nn.Linear(512, 256)
-        self.bn3 = nn.BatchNorm1d(256)
+        self.bn3 = nn.BatchNorm1d(256, affine=False)
     
     
     def forward(self, x, reverse=False):
@@ -73,6 +73,7 @@ class DomainPredictor(nn.Module):
     
     def forward(self, x_feat, reverse = False):
         _,x_feat = self.feature(x_feat)
+        x_feat = self.relu(x_feat)
         x = self.drop(self.relu(self.bn1(self.fc1(x_feat))))
         x = self.drop(self.relu(self.bn2(self.fc2(x))))
         output = self.fc3(x)

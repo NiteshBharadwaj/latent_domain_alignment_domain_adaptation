@@ -32,19 +32,20 @@ class ClasswiseData(object):
     def __next__(self):
         source = None
         source_paths = None
-        i = np.random.randint(31)
 
         try:
-            source, source_paths = next(self.data_loader_s_iter[i])
+            source, source_paths = next(self.data_loader_s_iter[0])
         except StopIteration:
             if source is None or source_paths is None:
-                self.stop_source[i] = True
-                self.data_loader_s_iter[i] = iter(self.data_loader_s[i])
-                source, source_paths = next(self.data_loader_s_iter[i])
+                self.stop_source[0] = True
+                self.data_loader_s_iter[0] = iter(self.data_loader_s[0])
+                source, source_paths = next(self.data_loader_s_iter[0])
 
         self.iter += 1
         return {'S': source, 'S_label': source_paths,
                 'T': source, 'T_label': source_paths}
+    def reset_iter(self):
+        self.data_loader_s[0].dataset.reset_iter()
 class ResizeImage():
     def __init__(self, size):
       if isinstance(size, int):
@@ -80,18 +81,19 @@ class ClasswiseDataLoader():
         for i in range(31):
             allImages = []
             allLabels = []
-            for j in range(len(source)):
-                imgs = source[j]['imgs']
-                labels = source[j]['labels']
-                indices = [k for k, x in enumerate(labels) if x == i]
-                allImages += [imgs[index] for index in indices]
-                allLabels += [labels[index] for index in indices]
+            for k in range(10):
+                for j in range(len(source)):
+                    imgs = source[j]['imgs']
+                    labels = source[j]['labels']
+                    indices = [k for k, x in enumerate(labels) if x == i]
+                    allImages += [imgs[index] for index in indices]
+                    allLabels += [labels[index] for index in indices]
             overall_images.append(allImages)
             overall_labels.append(allLabels)
         dataset_source.append(Dataset(overall_images, overall_labels, batch_size, transform=transform))
         self.max_len = max(self.max_len, len(dataset_source[0]))
         dataloader_source.append(
-            torch.utils.data.DataLoader(dataset_source, batch_size=batch_size, shuffle=True,num_workers=num_workers_, worker_init_fn=worker_init_fn))
+            torch.utils.data.DataLoader(dataset_source[0], batch_size=1, shuffle=True,num_workers=num_workers_, worker_init_fn=worker_init_fn, pin_memory=True))
         self.dataset_s = dataset_source
         self.paired_data = ClasswiseData(dataloader_source, float("inf"))
 

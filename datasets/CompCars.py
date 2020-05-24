@@ -61,6 +61,9 @@ def read_comp_cars(target):
         labels_train = [int(x.split('/')[0]) for x in rel_paths_train]
         
         label_map = rev_(np.unique(np.array(read_labels(img_dir)))) 
+
+        import pdb
+        pdb.set_trace()
         
         labels_train = [label_map[i] for i in labels_train]
         print("Num Train classes {}, {}, {}, {}".format(target, len(np.unique(np.array(labels_train))), min(labels_train), max(labels_train)))
