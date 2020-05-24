@@ -97,7 +97,6 @@ class CombinedData(Dataset):
 
     def __getitem__(self, index):
         S, S_paths, t, t_paths = None, None, None, None
-        i = index % self.num_datasets
         try:
             S, S_paths = next(self.data_loader_s_iter)
         except StopIteration:
@@ -139,7 +138,7 @@ class UnalignedDataLoader():
             ])
         }
 
-    def initialize(self, source, target, batch_size1, batch_size2, scale=32, split='Train'):
+    def initialize(self, source, target, batch_size1, batch_size2, num_workers, scale=32, split='Train'):
         if split == 'Train':
             transform_source = transforms.Compose([
                 # transforms.Resize(scale),
@@ -149,7 +148,7 @@ class UnalignedDataLoader():
                 transforms.RandomHorizontalFlip(),
                 transforms.ColorJitter(0.4, 0.4, 0.4),
                 transforms.ToTensor(),
-                Lighting(0.1, self.__imagenet_pca['eigval'], self.__imagenet_pca['eigvec']),
+                #Lighting(0.1, self.__imagenet_pca['eigval'], self.__imagenet_pca['eigvec']),
                 transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                      std=[0.229, 0.224, 0.225])
             ])
@@ -160,7 +159,7 @@ class UnalignedDataLoader():
                 transforms.RandomHorizontalFlip(),
                 transforms.ColorJitter(0.4, 0.4, 0.4),
                 transforms.ToTensor(),
-                Lighting(0.1, self.__imagenet_pca['eigval'], self.__imagenet_pca['eigvec']),
+                #Lighting(0.1, self.__imagenet_pca['eigval'], self.__imagenet_pca['eigvec']),
                 transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                      std=[0.229, 0.224, 0.225])
             ])
@@ -186,17 +185,17 @@ class UnalignedDataLoader():
         for i in range(len(source)):
             data_sources.append(Dataset(source[i]['imgs'], source[i]['labels'], transform=transform_source))
             data_loader_s.append(
-                torch.utils.data.DataLoader(data_sources[i], batch_size=batch_size1, shuffle=True, num_workers=4,
+                torch.utils.data.DataLoader(data_sources[i], batch_size=batch_size1, shuffle=True, num_workers=num_workers,
                                             pin_memory=True))
             max_size = max(max_size, len(data_sources[i]))
         self.dataset_s = data_loader_s
 
         dataset_target = Dataset(target['imgs'], target['labels'], transform=transform_target)
-        data_loader_t = torch.utils.data.DataLoader(dataset_target, batch_size=batch_size2, shuffle=True, num_workers=4,
+        data_loader_t = torch.utils.data.DataLoader(dataset_target, batch_size=batch_size2, shuffle=True, num_workers=num_workers,
                                                     pin_memory=True)
 
         self.dataset_t = dataset_target
-        self.paired_data = CombinedData(data_loader_s, data_loader_t,
+        self.paired_data = CombinedData(data_loader_s[0], data_loader_t,
                                         float("inf"))
 
         self.num_datasets = len(source)

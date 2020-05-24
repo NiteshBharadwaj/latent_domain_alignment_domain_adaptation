@@ -192,13 +192,13 @@ class TestDataLoader():
             data_sources.append(Dataset(source[i]['imgs'], source[i]['labels'], transform=transform_source))
             data_loader_s.append(
                 torch.utils.data.DataLoader(data_sources[i], batch_size=batch_size1, shuffle=(split == 'Train'),
-                                            num_workers=num_workers_, worker_init_fn=worker_init_fn))
+                                            num_workers=num_workers_, worker_init_fn=worker_init_fn, pin_memory=True))
             max_size = max(max_size, len(data_sources[i]))
         self.dataset_s = data_loader_s
 
         dataset_target = Dataset(target['imgs'], target['labels'], transform=transform_target)
         data_loader_t = torch.utils.data.DataLoader(dataset_target, batch_size=batch_size2, shuffle=(split == 'Train'),
-                                                    num_workers=num_workers_, worker_init_fn=worker_init_fn)
+                                                    num_workers=num_workers_, worker_init_fn=worker_init_fn, pin_memory=True)
 
         self.dataset_t = dataset_target
         self.paired_data = Data(data_loader_t,

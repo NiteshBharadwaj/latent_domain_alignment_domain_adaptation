@@ -108,9 +108,9 @@ class Solver(object):
             elif args.dl_type == 'source_target_only':
                 self.datasets, self.dataset_test, self.dataset_valid, self.classwise_dataset = cars_combined(target,
                                                                                                              self.batch_size,
-                                                                                                             args.num_domain,
                                                                                                              args.cars_directory,
-                                                                                                             args.seed)
+                                                                                                             args.seed,
+                                                                                                             args.num_workers)
             elif args.dl_type == 'source_only':
                 self.datasets, self.dataset_test, self.dataset_valid, self.classwise_dataset = cars_combined(target,
                                                                                                              self.batch_size,
@@ -119,7 +119,8 @@ class Solver(object):
                                                                                                              args.seed)
 
             print('load finished!')
-            num_classes = 163
+            num_classes = 75
+            aux_classes = 6
             num_domains = args.num_domain
             self.num_domains = num_domains
             self.entropy_wt = args.entropy_wt  # 0.1
@@ -129,7 +130,7 @@ class Solver(object):
             self.G = Generator_cars()
             self.C1 = Classifier_cars(num_classes)
             self.C2 = Classifier_cars(num_classes)
-            self.DP = DP_cars(num_domains)
+            self.DP = DP_cars(num_domains, aux_classes)
 
         elif args.data == 'office':
             if args.dl_type == 'soft_cluster':
@@ -206,14 +207,14 @@ class Solver(object):
 
             self.opt_c1 = optim.SGD(self.C1.parameters(), lr=lr, weight_decay=0.0005, momentum=momentum)
             self.opt_c2 = optim.SGD(self.C2.parameters(), lr=lr, weight_decay=0.0005, momentum=momentum)
-            self.opt_dp = optim.SGD(self.DP.parameters(), lr=lr / 100.0, weight_decay=0.0005, momentum=momentum)
+            self.opt_dp = optim.SGD(self.DP.parameters(), lr=lr / self.args.lr_ratio, weight_decay=0.0005, momentum=momentum)
 
         if which_opt == 'adam':
             self.opt_g = optim.Adam(self.G.parameters(), lr=lr, weight_decay=0.0005)
 
             self.opt_c1 = optim.Adam(self.C1.parameters(), lr=lr, weight_decay=0.0005)
             self.opt_c2 = optim.Adam(self.C2.parameters(), lr=lr, weight_decay=0.0005)
-            self.opt_dp = optim.Adam(self.DP.parameters(), lr=lr / 100.0, weight_decay=0.0005)
+            self.opt_dp = optim.Adam(self.DP.parameters(), lr=lr / self.args.lr_ratio, weight_decay=0.0005)
 
     def reset_grad(self):
         self.opt_g.zero_grad()
@@ -306,16 +307,20 @@ class Solver(object):
         # with torch.no_grad():
         #    _, conv_feat_cl = self.G(img_s_cl)
         if self.to_detach:
-            domain_logits, _ = self.DP(img_s)
+            domain_logits, aux_logits = self.DP(img_s)
             cl_s_logits, _ = self.DP(img_s_cl)
         else:
-            domain_logits, _ = self.DP(img_s)
+            domain_logits, aux_logits = self.DP(img_s)
             cl_s_logits, _ = self.DP(img_s_cl)
         entropy_loss, domain_prob = self.entropy_loss(domain_logits)
 
         _, cl_s_prob = self.entropy_loss(cl_s_logits)
         kl_loss = -self.get_domain_entropy(cl_s_prob)
         kl_loss = kl_loss * self.kl_wt
+
+        aux_loss = torch.zeros(1).cuda()
+        if self.args.data=='cars' and self.args.aux_loss:
+            aux_loss = self.softmax_loss_all_domain_soft(aux_logits, label_s[:,self.args.aux_loss])*self.args.aux_wt
 
         if self.to_detach:
             loss_msda = msda.msda_regulizer_soft(feat_s, feat_t, 5, domain_prob.detach()) * self.msda_wt
@@ -327,16 +332,18 @@ class Solver(object):
 
         output_s_c1, output_t_c1 = self.C1_all_domain_soft(feat_s, feat_t)
         output_s_c2, output_t_c2 = self.C2_all_domain_soft(feat_s, feat_t)
-        loss_s_c1 = \
-            self.softmax_loss_all_domain_soft(output_s_c1, label_s)
+        if self.args.data=='cars':
+             loss_s_c1 = self.softmax_loss_all_domain_soft(output_s_c1, label_s[:,0])
+             loss_s_c2 = self.softmax_loss_all_domain_soft(output_s_c2, label_s[:,0])
+        else:
+             loss_s_c1 = self.softmax_loss_all_domain_soft(output_s_c1, label_s)
+             loss_s_c2 = self.softmax_loss_all_domain_soft(output_s_c2, label_s)
         if math.isnan(loss_s_c1.data.item()):
             raise Exception(' c1 loss is nan')
-        loss_s_c2 = \
-            self.softmax_loss_all_domain_soft(output_s_c2, label_s)
         # print(loss_s_c1, loss_s_c2, loss_msda, entropy_loss, kl_loss, domain_prob)
         # print(self.DP.fc3.weight)
         #        print("loss_s_c1", loss_s_c1, "loss_s_c2", loss_s_c2, "loss_msda", loss_msda, "entropy_loss", entropy_loss, "kl_loss", kl_loss)
-        return loss_s_c1, loss_s_c2, loss_msda, entropy_loss, kl_loss, domain_prob
+        return loss_s_c1, loss_s_c2, loss_msda, entropy_loss, kl_loss, aux_loss, domain_prob
 
 
 class HLoss(nn.Module):

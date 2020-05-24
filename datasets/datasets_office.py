@@ -4,21 +4,25 @@ from PIL import Image
 import numpy as np
 import cv2
 
+
 def resize2SquareKeepingAspectRation(img, size, interpolation):
     h, w = img.shape[:2]
     c = None if len(img.shape) < 3 else img.shape[2]
     if h == w: return cv2.resize(img, (size, size), interpolation)
-    if h > w: dif = h
-    else:     dif = w
-    x_pos = int((dif - w)/2.)
-    y_pos = int((dif - h)/2.)
+    if h > w:
+        dif = h
+    else:
+        dif = w
+    x_pos = int((dif - w) / 2.)
+    y_pos = int((dif - h) / 2.)
     if c is None:
         mask = np.zeros((dif, dif), dtype=img.dtype)
-        mask[y_pos:y_pos+h, x_pos:x_pos+w] = img[:h, :w]
+        mask[y_pos:y_pos + h, x_pos:x_pos + w] = img[:h, :w]
     else:
         mask = np.zeros((dif, dif, c), dtype=img.dtype)
-        mask[y_pos:y_pos+h, x_pos:x_pos+w, :] = img[:h, :w, :]
+        mask[y_pos:y_pos + h, x_pos:x_pos + w, :] = img[:h, :w, :]
     return cv2.resize(mask, (size, size), interpolation)
+
 
 def transform(img):
     return resize2SquareKeepingAspectRation(img, 256, cv2.INTER_LINEAR)
@@ -35,8 +39,9 @@ class Dataset(data.Dataset):
             puts it in root directory. If dataset is already downloaded, it is not
             downloaded again.
     """
+
     def __init__(self, data, label,
-                 transform=None,target_transform=None):
+                 transform=None, target_transform=None):
         self.transform = transform
         self.target_transform = target_transform
         self.data = data
@@ -57,7 +62,7 @@ class Dataset(data.Dataset):
         else:
             img = Image.open(img_path)
             img = np.array(img)
-            img = img[...,:3]
+            img = img[..., :3]
             img = Image.fromarray(img)
             self.hashmap[index] = img
 
@@ -69,6 +74,7 @@ class Dataset(data.Dataset):
         if self.transform is not None:
             img = self.transform(img)
             # return img, target
-        return img, target*1.0
+        return img, target * 1.0
+
     def __len__(self):
         return len(self.data)

@@ -53,6 +53,12 @@ parser.add_argument('--checkpoint_dir', type=str, default='checkpoint', metavar=
 #                     help='evaluation only option')
 parser.add_argument('--eval_only', type=str, default='no', metavar='N',
                     help='Evaluate only? yes/no')
+parser.add_argument('--lr_ratio', type=float, default=1.0, metavar='LR',
+                    help='lr_ratio (default: 0)')
+parser.add_argument('--aux_wt', type=float, default=1.0, metavar='LR',
+                    help='aux_wt (default: 0)')
+parser.add_argument('--aux_loss', type=int, default=0, metavar='LR',
+                    help='aux_loss = 1 => Intensity else 2 pose (default: 0)')
 parser.add_argument('--kl_wt', type=float, default=0.0, metavar='LR',
                     help='KL_wt (default: 0)')
 parser.add_argument('--msda_wt', type=float, default=0.00001, metavar='LR',

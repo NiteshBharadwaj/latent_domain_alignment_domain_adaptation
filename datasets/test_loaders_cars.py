@@ -2,7 +2,7 @@ import torch.utils.data
 import torchnet as tnt
 from builtins import object
 import torchvision.transforms as transforms
-from datasets_office import Dataset
+from datasets_cars import Dataset
 import numpy as np
 from PIL import Image, ImageOps
 

@@ -50,10 +50,16 @@ def test(solver, epoch, split, record_file=None, save_model=False):
 
             output1 = solver.C1(feat)
 
-            test_loss += nn.CrossEntropyLoss()(output1, label).data.item()
+            if solver.args.data == 'cars':
+                test_loss += nn.CrossEntropyLoss()(output1, label[:,0]).data.item()
+            else:
+                test_loss += nn.CrossEntropyLoss()(output1, label).data.item()
             pred1 = output1.data.max(1)[1]
             k = label.data.size()[0]
-            correct1 += pred1.eq(label.data).cpu().sum()
+            if solver.args.data == 'cars':
+                correct1 += pred1.eq(label[:,0].data).cpu().sum()
+            else:
+                correct1 += pred1.eq(label.data).cpu().sum()
             size += k
     # np.savez('result_plot_sv_t', feature_all, label_all )
     test_loss = test_loss / (size + 1e-6)

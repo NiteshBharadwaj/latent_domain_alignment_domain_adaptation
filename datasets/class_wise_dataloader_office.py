@@ -5,9 +5,15 @@ import torchvision.transforms as transforms
 # from datasets_office import Dataset
 from PIL import Image, ImageOps
 from datasets_office_classwise import Dataset
+
+
 def worker_init_fn(worker_id):
     np.random.seed(np.random.get_state()[1][0] + worker_id)
+
+
 import numpy as np
+
+
 class ClasswiseData(object):
     def __init__(self, data_loader_s, max_dataset_size):
         self.data_loader_s = data_loader_s
@@ -45,31 +51,35 @@ class ClasswiseData(object):
         self.iter += 1
         return {'S': source, 'S_label': source_paths,
                 'T': source, 'T_label': source_paths}
+
+
 class ResizeImage():
     def __init__(self, size):
-      if isinstance(size, int):
-        self.size = (int(size), int(size))
-      else:
-        self.size = size
+        if isinstance(size, int):
+            self.size = (int(size), int(size))
+        else:
+            self.size = size
+
     def __call__(self, img):
-      th, tw = self.size
-      return img.resize((th, tw))
+        th, tw = self.size
+        return img.resize((th, tw))
+
 
 class ClasswiseDataLoader():
     def initialize(self, source, batch_size, num_workers_, scale=256):
         scale2 = 224
         transform = transforms.Compose([
-            #transforms.Resize(scale),
-            #transforms.RandomCrop(scale),
-            #ResizeImage(256),
+            # transforms.Resize(scale),
+            # transforms.RandomCrop(scale),
+            # ResizeImage(256),
             transforms.Scale(scale),
             transforms.RandomResizedCrop(scale2),
             transforms.RandomHorizontalFlip(),
-            #transforms.ColorJitter(0.4,0.2,0.2),
+            # transforms.ColorJitter(0.4,0.2,0.2),
             transforms.ToTensor(),
-            #Lighting(0.1, self.__imagenet_pca['eigval'],self.__imagenet_pca['eigvec']),
+            # Lighting(0.1, self.__imagenet_pca['eigval'],self.__imagenet_pca['eigvec']),
             transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                             std=[0.229, 0.224, 0.225])
+                                 std=[0.229, 0.224, 0.225])
         ])
 
         dataset_source = []
@@ -91,7 +101,8 @@ class ClasswiseDataLoader():
         dataset_source.append(Dataset(overall_images, overall_labels, batch_size, transform=transform))
         self.max_len = max(self.max_len, len(dataset_source[0]))
         dataloader_source.append(
-            torch.utils.data.DataLoader(dataset_source, batch_size=batch_size, shuffle=True,num_workers=num_workers_, worker_init_fn=worker_init_fn))
+            torch.utils.data.DataLoader(dataset_source, batch_size=batch_size, shuffle=True, num_workers=num_workers_,
+                                        worker_init_fn=worker_init_fn))
         self.dataset_s = dataset_source
         self.paired_data = ClasswiseData(dataloader_source, float("inf"))
 
