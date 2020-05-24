@@ -16,12 +16,14 @@ def loss_single_domain(solver, img_s, img_t, label_s):
 
     if (math.isnan(loss_msda.data.item())):
         raise Exception('msda loss is nan')
-    loss_s_c1 = \
-        solver.softmax_loss_all_domain_soft(output_s_c1, label_s)
+    if solver.args.data == 'cars':
+        loss_s_c1 = solver.softmax_loss_all_domain_soft(output_s_c1, label_s[:,0])
+        loss_s_c2 = solver.softmax_loss_all_domain_soft(output_s_c2, label_s[:,0])
+    else:
+        loss_s_c1 = solver.softmax_loss_all_domain_soft(output_s_c1, label_s)
+        loss_s_c2 = solver.softmax_loss_all_domain_soft(output_s_c2, label_s)
     if (math.isnan(loss_s_c1.data.item())):
         raise Exception(' c1 loss is nan')
-    loss_s_c2 = \
-        solver.softmax_loss_all_domain_soft(output_s_c2, label_s)
     if (math.isnan(loss_s_c2.data.item())):
         raise Exception(' c2 loss is nan')
     return loss_s_c1, loss_s_c2, loss_msda
