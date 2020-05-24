@@ -59,12 +59,18 @@ def msda_regulizer(source_output, target_output, beta_moment):
 
 
 def moment_soft(output_s, domain_prob, output_t):
+#     print('step 1 : ', output_s.size())
     output_s = output_s.reshape(output_s.shape[0], output_s.shape[1],1)
+#     print('step 2 : ', output_s.size())
     domain_prob = domain_prob.reshape(domain_prob.shape[0], 1, domain_prob.shape[1])
+#     print('step 3 : ', domain_prob.size())
     output_prob = torch.matmul(output_s, domain_prob)
+#     print('step 4 : ', output_prob.size())
     output_prob_sum = domain_prob.sum(0)
+#     print('step 5 : ', output_prob_sum.size())
     output_prob = output_prob.sum(0)/output_prob_sum.reshape(1, domain_prob.shape[2])
     loss = 0
+#     print(output_prob.size())
     for i in range(output_prob.shape[1]):
         for j in range(i+1,output_prob.shape[1]):
             loss += output_prob_sum[0,i]*output_prob_sum[0,j]*euclidean(output_prob[:,i], output_prob[:,j])/output_s.shape[0]/output_s.shape[0]

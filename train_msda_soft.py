@@ -21,6 +21,7 @@ def train_MSDA_soft(solver, epoch, classifier_disc=True, record_file=None):
 
         classwise_data = next(classwise_dataset_iterator)
         img_s_cl = Variable(classwise_data['S'].cuda())
+        print('size image : ', img_s_cl.size())
 
         solver.reset_grad()
 
@@ -31,9 +32,11 @@ def train_MSDA_soft(solver, epoch, classifier_disc=True, record_file=None):
 #            loss = entropy_loss + kl_loss
 #        else:
 #            loss = loss_s_c1 + loss_msda + loss_s_c2 + entropy_loss + kl_loss
+        #print('here0')
         loss = loss_s_c1 + loss_msda + loss_s_c2 + entropy_loss + kl_loss
-        
+        #print('here1')
         loss.backward()
+        #print('here2')
         clip_value = 1.0
 
 #        for param_group in solver.G.param_groups:

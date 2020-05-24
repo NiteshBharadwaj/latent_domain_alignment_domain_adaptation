@@ -305,8 +305,12 @@ class Solver(object):
         output_s_c1, output_t_c1 = self.C1_all_domain_soft(feat_s, feat_t)
         output_s_c2, output_t_c2 = self.C2_all_domain_soft(feat_s, feat_t)
         if self.to_detach:
+            #print('googo')
+            #print(feat_s.size())
+            #print(feat_t.size())
             loss_msda = msda.msda_regulizer_soft(feat_s, feat_t, 5, domain_prob.detach()) * self.msda_wt 
         else:
+            #print('googo1')
             loss_msda = msda.msda_regulizer_soft(feat_s, feat_t, 5, domain_prob) * self.msda_wt
         if (math.isnan(loss_msda.data.item())):
             raise Exception('msda loss is nan')

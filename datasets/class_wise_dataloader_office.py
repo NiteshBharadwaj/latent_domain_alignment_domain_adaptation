@@ -31,7 +31,7 @@ class ClasswiseData(object):
     def __next__(self):
         source = None
         source_paths = None
-        i = np.random.randint(10)
+        i = np.random.randint(31)
 
         try:
             source, source_paths = next(self.data_loader_s_iter[i])
@@ -42,6 +42,7 @@ class ClasswiseData(object):
                 source, source_paths = next(self.data_loader_s_iter[i])
 
         self.iter += 1
+        #print(source.size())
         return {'S': source, 'S_label': source_paths,
                 'T': source, 'T_label': source_paths}
 class ResizeImage():
@@ -80,12 +81,18 @@ class ClasswiseDataLoader():
                 
             
                 imgs = source[j]['imgs']
+                #print(len(imgs))
                 labels = source[j]['labels']
-                indices = [i for i, x in enumerate(labels) if x == i]
+#                 print(labels)
+#                 print(i)
+                indices = [k for k, x in enumerate(labels) if x == i]
+#                 print(indices)
                 allImages += [imgs[index] for index in indices]
                 allLabels += [labels[index] for index in indices]
+            #print('images in class : ', len(allImages))
             dataset_source.append(Dataset(allImages, allLabels, transform=transform))
             self.max_len = max(self.max_len, len(dataset_source))
+            #print(batch_size)
             dataloader_source.append(
                 torch.utils.data.DataLoader(dataset_source[i], batch_size=batch_size, shuffle=True,num_workers=2))
 
