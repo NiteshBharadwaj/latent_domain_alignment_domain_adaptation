@@ -251,7 +251,7 @@ class UnalignedDataLoader():
         target_labels = []
         imgs = []
         labels = []
-        for j in range(10):
+        for j in range(5):
             for i in range(len(source)):
                 imgs += source[i]['imgs']
                 labels += source[i]['labels']

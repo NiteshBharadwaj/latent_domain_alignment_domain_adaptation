@@ -81,7 +81,7 @@ class ClasswiseDataLoader():
         for i in range(31):
             allImages = []
             allLabels = []
-            for k in range(10):
+            for k in range(5):
                 for j in range(len(source)):
                     imgs = source[j]['imgs']
                     labels = source[j]['labels']

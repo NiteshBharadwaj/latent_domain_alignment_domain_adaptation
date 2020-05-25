@@ -6,7 +6,7 @@ import sys
 import csv
 import os
 
-def view_clusters(solver,clusters_file,probs_csv):
+def view_clusters(solver,clusters_file,probs_csv,epoch):
     if(solver.dl_type != 'soft_cluster'):
         print('no clusters for dl type : ', solver.dl_type)
         return
@@ -30,6 +30,8 @@ def view_clusters(solver,clusters_file,probs_csv):
     
     
     for batch_idx, data in enumerate(solver.datasets):
+        if(batch_idx > 14):
+            break
         batch_idx_g = batch_idx
         img_t = data['T'].cuda()
         img_s = data['S'].cuda()
@@ -42,8 +44,8 @@ def view_clusters(solver,clusters_file,probs_csv):
         #solver.reset_grad()
 
         loss_s_c1, loss_s_c2, loss_msda, entropy_loss, kl_loss, domain_prob = solver.loss_soft_all_domain(img_s, img_t, label_s, 0, img_s)
-        import pdb
-        pdb.set_trace()
+#         import pdb
+#         pdb.set_trace()
 #         print(domain_prob.size())
 #         print(domain_prob[0])
         domains_max = domain_prob.data.max(1)
@@ -75,7 +77,7 @@ def view_clusters(solver,clusters_file,probs_csv):
                     arrayOfClusterstorch[i] = torch.cat((arrayOfClusterstorch[i], img_s_i), 0)
                     arrayOfClustersprobs[i] = torch.cat((arrayOfClustersprobs[i], cur_probs), 0)
                     
-    topk = 50
+    topk = 100
     arrayOfProbs = []
     for i in range(solver.num_domains):
         arrayOfProbs.append([])
@@ -95,10 +97,10 @@ def view_clusters(solver,clusters_file,probs_csv):
             arrayOfProbs.append(maxProbs)
             #print(arrayOfClusterstorch[i].size())
             topImages = arrayOfClusterstorch[i][maxProbIndices.copy(),:,:,:]
-            torchvision.utils.save_image(arrayOfClusterstorch[i], clusters_file[i],nrow=7)
-            torchvision.utils.save_image(topImages, clusters_file[i][:-4] + '_probs_descending.png',nrow=7)
+            #torchvision.utils.save_image(arrayOfClusterstorch[i], clusters_file[i],nrow=7)
+            torchvision.utils.save_image(topImages, clusters_file[i][:-4] + '_probs_descending_'+str(epoch)+'.png',nrow=7)
             print('images in this cluster : ', arrayOfClusterstorch[i].size()[0])
-            print('bestProbs in this cluster : ', maxProbs[:min(topk,2)])
+            print('bestProbs in this cluster : ', maxProbs[:min(topk,5)])
     try:
         os.remove(probs_csv)
     except:

@@ -22,7 +22,7 @@ from PIL import Image
 # Training settings
 class Solver(object):
     def __init__(self, args, batch_size=64,
-                 target='mnist', learning_rate=0.0002, interval=100, optimizer='adam'
+                 target='mnist', learning_rate=0.002, interval=8, optimizer='adam'
                  , checkpoint_dir=None, save_epoch=10):
         self.batch_size = batch_size
         self.target = target
@@ -94,9 +94,9 @@ class Solver(object):
                 #    _, _, self.dataset_dslr, _ = office_combined('awd', self.batch_size, args.office_directory, args.seed, args.num_workers)
                 #    _, _, self.dataset_webcam, _ = office_combined('adw', self.batch_size, args.office_directory, args.seed, args.num_workers)
             elif args.dl_type == 'source_target_only':
-                self.datasets, self.dataset_test, self.dataset_valid, self.classwise_dataset = office_combined(target, self.batch_size, args.office_directory, args.seed)
+                self.datasets, self.dataset_test, self.dataset_valid, self.classwise_dataset = office_combined(target, self.batch_size, args.office_directory, args.seed, args.num_workers)
             elif args.dl_type == 'source_only':
-                self.datasets, self.dataset_test, self.dataset_valid, self.classwise_dataset = office_combined(target, self.batch_size, args.office_directory, args.seed)
+                self.datasets, self.dataset_test, self.dataset_valid, self.classwise_dataset = office_combined(target, self.batch_size, args.office_directory, args.seed, args.num_workers)
 
             print('load finished!')
             self.entropy_wt = args.entropy_wt

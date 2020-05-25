@@ -176,6 +176,7 @@ def main():
                     save_epoch=args.save_epoch)
         count = 0
         for t in range(args.max_epoch):
+            print('training now')
             print(t)
             if not args.one_step:
                 # num = solver.train_merge_baseline(t, record_file=record_train)
@@ -203,13 +204,15 @@ def main():
                 solver.sche_c2.step()
             solver.sche_dp.step()
             count += num
-            if t % 1 == 0:
+            if t % 5 == 0:
+                print('testing now')
                 if args.data=='cars':
                     test(solver, t, 'train', record_file=record_test, save_model=args.save_model)
                 best = test(solver, t, 'val', record_file=record_val, save_model=args.save_model)
                 if best:
+                    print('best epoch : ', t)
                     test(solver, t, 'test', record_file=record_test, save_model=args.save_model)
-                    #view_clusters(solver, clusters_file, probs_csv)
+                view_clusters(solver, clusters_file, probs_csv, t)
                     #print('clustering images saved in!')
                 
         #generate_plots(solver, 0, 'test', plot_before_source, plot_before_target, plot_after_source, plot_after_target, False)

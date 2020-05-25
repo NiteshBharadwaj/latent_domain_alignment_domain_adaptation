@@ -49,6 +49,7 @@ def train_MSDA_single(solver, epoch, classifier_disc=True, record_file=None):
         if not classifier_disc:
             loss_s_c2 = loss_s_c1
         loss = loss_s_c1 + loss_msda + loss_s_c2
+        #loss = loss_s_c1
 
         loss.backward()
 
