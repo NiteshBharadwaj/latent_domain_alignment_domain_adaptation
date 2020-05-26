@@ -229,7 +229,7 @@ def train_MSDA_soft(solver, epoch, classifier_disc=True, record_file=None):
 #             solver.C1.train()
 #             solver.C2.train()
 #             solver.DP.train()
-        print(batch_idx)
+        #print(batch_idx)
         if batch_idx % 3 == 0:
             print \
                 ('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss1: {:.6f}\t Loss2: {:.6f}\t Loss_mmd: {:.6f}\t Loss_entropy: {:.6f}\t kl_loss: {:.6f}\t Combined Entropy: {:.6f}'.format(
