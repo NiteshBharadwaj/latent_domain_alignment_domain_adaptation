@@ -204,7 +204,7 @@ def main():
                 solver.sche_c2.step()
             solver.sche_dp.step()
             count += num
-            if t % 5 == 0:
+            if t % 1 == 0:
                 print('testing now')
                 if args.data=='cars':
                     test(solver, t, 'train', record_file=record_test, save_model=args.save_model)
