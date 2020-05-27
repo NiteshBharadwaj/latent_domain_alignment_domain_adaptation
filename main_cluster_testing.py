@@ -17,6 +17,7 @@ from train_msda_single import train_MSDA_single
 from test import test
 from view_clusters import view_clusters
 from train_source_only import train_source_only
+from matplotlib import pyplot as plt
 #from plot_tsne import plot_tsne1,plot_tsne2
 
 
@@ -80,6 +81,7 @@ parser.add_argument('--seed', type=int, default=1, metavar='S',
 parser.add_argument('--source', type=str, default='svhn', metavar='N',
                     help='source dataset')
 parser.add_argument('--target', type=str, default='mnist', metavar='N', help='target dataset')
+parser.add_argument('--network', type=str, default='', metavar='N', help='network')
 parser.add_argument('--use_abs_diff', action='store_true', default=False,
                     help='use absolute difference value as a measurement')
 
@@ -91,7 +93,16 @@ if args.cuda:
     torch.cuda.manual_seed(args.seed)
 print(args)
 
-
+def plot_data(graph_data, loss_plot):
+    fig, ax = plt.subplots(len(graph_data), sharex=True)
+    i = 0
+    for k in graph_data:
+        #print(len(graph_data[k]))
+        ax[i].plot(graph_data[k])
+        ax[i].yaxis.tick_right()
+        ax[i].set_ylabel(k[:3])
+        i += 1
+    plt.savefig(loss_plot, dpi=200)
 
 def main():
 
@@ -128,6 +139,7 @@ def main():
     plot_domain2 = '%s/%s_%s_latent_domain_plot_last.png' % (args.record_folder, args.target, record_num)
     plot_domain3 = '%s/%s_%s_latent_domain_plots.png' % (args.record_folder, args.target, record_num)
     plot_domains = [plot_domain1, plot_domain2, plot_domain3]
+    loss_plot = '%s/%s_%s_loss_plots.png' % (args.record_folder, args.target, record_num)
     clusters_file = []
     for i in range(args.num_domain):
         clusters_file.append('%s/cluster_%s.png' % (args.record_folder, str(i)))
@@ -175,8 +187,11 @@ def main():
                     checkpoint_dir=args.checkpoint_dir,
                     save_epoch=args.save_epoch)
         count = 0
+        graph_data = {}
+        keys = ['entropy','kl','c1','c2','h','total','msda']
+        for k in keys:
+            graph_data[k] = []
         for t in range(args.max_epoch):
-            print('training now')
             print(t)
             if not args.one_step:
                 # num = solver.train_merge_baseline(t, record_file=record_train)
@@ -185,7 +200,7 @@ def main():
                     if args.data == 'digits':
                         num= train_MSDA_soft(solver,t,classifier_disc,record_file=record_train)
                     elif args.data == 'office':
-                        num= train_MSDA_soft_office(solver,t,classifier_disc,record_file=record_train)
+                        num, graph_data = train_MSDA_soft_office(solver,t,graph_data,classifier_disc,record_file=record_train)
                     else:
                         print("WTF Noob")
                 elif args.dl_type=='source_only':
@@ -193,7 +208,7 @@ def main():
                     num= train_source_only(solver,t,record_file=record_train)
                 elif args.dl_type=='source_target_only':
                     torch.cuda.empty_cache()
-                    num= train_MSDA_single(solver,t,classifier_disc,record_file=record_train)
+                    num = train_MSDA_single(solver,t,classifier_disc,record_file=record_train)
                 else:
                     num = train_MSDA_hard(solver,t, classifier_disc, record_file=record_train)
             else:
@@ -205,7 +220,9 @@ def main():
             solver.sche_dp.step()
             count += num
             if t % 1 == 0:
-                print('testing now')
+                #print('testing now')
+                if(args.dl_type=='soft_cluster'):
+                    plot_data(graph_data, loss_plot)
                 if args.data=='cars':
                     test(solver, t, 'train', record_file=record_test, save_model=args.save_model)
                 best = test(solver, t, 'val', record_file=record_val, save_model=args.save_model)

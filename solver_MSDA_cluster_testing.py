@@ -9,7 +9,6 @@ from torch.autograd import Variable
 from model.build_gen_digits import Generator as Generator_digit, Classifier as Classifier_digit, \
     DomainPredictor as DP_Digit
 from model.build_gen import Generator as Generator_cars, Classifier as Classifier_cars, DomainPredictor as DP_cars
-from model.build_gen_office import Generator as Generator_office, Classifier as Classifier_office, DomainPredictor as DP_office
 from datasets.dataset_read_cluster_testing import dataset_read, dataset_hard_cluster, dataset_combined
 from datasets.cars import cars_combined
 from datasets.office import office_combined
@@ -106,6 +105,14 @@ class Solver(object):
             num_classes = 31
             num_domains = args.num_domain
             self.num_domains = num_domains
+            from model.build_gen_office import Generator as Generator_office, Classifier as Classifier_office, DomainPredictor as DP_office
+            if(args.network == 'alex'):
+                from model.build_gen_office import GeneratorAlex as Generator_office, ClassifierAlex as Classifier_office, DomainPredictorAlex as DP_office
+                
+            
+            
+            
+            
             self.G = Generator_office()
             self.C1 = Classifier_office(num_classes)
             self.C2 = Classifier_office(num_classes)
@@ -244,6 +251,14 @@ class Solver(object):
         mask = domain_prob_sum.ge(0.000001)
         domain_prob_sum = domain_prob_sum*mask + (1-mask.int())*1e-5
         return -(domain_prob_sum*(domain_prob_sum.log())).mean()
+    
+    def source_only_loss(self, img_s, label_s, epoch):
+        feat_s_comb = self.G(img_s)
+        feat_s, conv_feat_s = feat_s_comb
+        output_s_c1 = self.C1(feat_s)
+        loss_s_c1 = self.softmax_loss_all_domain_soft(output_s_c1, label_s)
+        return loss_s_c1
+        
 
     def loss_soft_all_domain(self, img_s, img_t, label_s, epoch, img_s_cl):
         # Takes source images, target images, source labels and returns classifier loss, domain adaptation loss and entropy loss
