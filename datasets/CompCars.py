@@ -91,6 +91,8 @@ def read_comp_cars(target, compcars_directory, is_target, seed_id):
         label_dir = os.path.join(main_dir, 'label')
         all_imgs = read_images(img_dir)
 
+        print('all images', len(all_imgs))
+
         train_file = os.path.join(main_dir, 'train_test_split', 'classification', 'train.txt')
         test_file = os.path.join(main_dir, 'train_test_split', 'classification', 'test.txt')
         rel_paths_train = split_(train_file, label_dir)
@@ -100,12 +102,10 @@ def read_comp_cars(target, compcars_directory, is_target, seed_id):
         rel_paths_test = rel_paths_train_test
 
         labels_train = [int(x.split('/')[0]) for x in rel_paths_train]
-
         label_map = rev_(np.unique(np.array(labels_train)))
-
         labels_train = [label_map[i] for i in labels_train]
-        print(
-            "Num Train classes {}, {}, {}, {}".format(target, len(np.unique(np.array(labels_train))), min(labels_train),
+
+        print("Num Train classes {}, {}, {}, {}".format(target, len(np.unique(np.array(labels_train))), min(labels_train),
                                                       max(labels_train)))
         print("train_num_images {} ,{}".format(target, len(labels_train)))
 
@@ -117,10 +117,9 @@ def read_comp_cars(target, compcars_directory, is_target, seed_id):
             labels_train_tmp.append([labels_train[i], aux_labels_train[i][0], aux_labels_train[i][1]])
         labels_train = labels_train_tmp
          # -------------------------------------
-
         paths_train = [os.path.join(img_dir, x) for x in rel_paths_train]
-        labels_test = [int(x.split('/')[0]) for x in rel_paths_test]
 
+        labels_test = [int(x.split('/')[0]) for x in rel_paths_test]
         labels_test = [label_map[i] for i in labels_test]
         print("Num Test classes {}, {}".format(target, len(np.unique(np.array(labels_test))), min(labels_test),
                                                max(labels_test)))
@@ -134,7 +133,6 @@ def read_comp_cars(target, compcars_directory, is_target, seed_id):
             labels_test_tmp.append([labels_test[i], aux_labels_test[i][0], aux_labels_test[i][1]])
         labels_test = labels_test_tmp
          # -------------------------------------
-
         paths_test = [os.path.join(img_dir, x) for x in rel_paths_test]
 
         paths_valid = [paths_test[0]]
@@ -143,7 +141,6 @@ def read_comp_cars(target, compcars_directory, is_target, seed_id):
     if target == 'CCSurv':
         main_dir_tr = os.path.join(compcars_directory, 'CCWeb', 'data')
         img_dir_tr = os.path.join(main_dir_tr, 'image')
-
         model_num_to_car_name_map = model_num_to_car_name(img_dir_tr)
 
         # Find source labels and create a list of labels in source
@@ -156,13 +153,12 @@ def read_comp_cars(target, compcars_directory, is_target, seed_id):
         rel_paths_train_tr = rel_paths_train_test_tr
 
         labels_train_tr = [int(x.split('/')[0]) for x in rel_paths_train_tr]
-        
-        
         label_map = rev_(np.unique(np.array(labels_train_tr)))
+        #labels_train_tr = [label_map[i] for i in labels_train_tr]
+        #available_labels = set(np.unique(np.array(labels_train_tr)).flatten())
 
-
-        labels_train_tr = [label_map[i] for i in labels_train_tr]
-        available_labels = set(np.unique(np.array(labels_train_tr)).flatten())
+        available_car_models = set([int(x.split('/')[1]) for x in rel_paths_train_tr])
+        print('Web num car models', len(available_car_models))
 
         main_dir = os.path.join(compcars_directory, target, 'sv_data')
         img_dir = os.path.join(main_dir, 'image')
@@ -174,14 +170,25 @@ def read_comp_cars(target, compcars_directory, is_target, seed_id):
 
         rel_paths_train = split_(train_file, label_dir)
         paths_train = [os.path.join(img_dir, x) for x in rel_paths_train]
-        labels_train = [int(x.split('/')[0]) for x in rel_paths_train]
-        labels_train = [model_num_to_car_name_map[mat['sv_make_model_name'][x - 1, 2][0][0]] for x in labels_train]
+        idx_paths_train = [int(x.split('/')[0]) for x in rel_paths_train]
+        labels_train = [mat['sv_make_model_name'][x - 1, 2][0][0] for x in idx_paths_train]
+        print('Surv num car models', len(set([ii for ii in labels_train if ii in available_car_models])))
 
-        unav_train = set([i for i in range(len(labels_train)) if labels_train[i] not in label_map])
+        # -------------------------------------------
+        unav_train = set([i for i in range(len(labels_train)) if labels_train[i] not in available_car_models])
         paths_train = [paths_train[i] for i in range(len(paths_train)) if i not in unav_train]
-        labels_train = [label_map[labels_train[i]] for i in range(len(labels_train)) if i not in unav_train]
-        print(
-            "Num Train classes {}, {}, {}, {}".format(target, len(np.unique(np.array(labels_train))), min(labels_train),
+        labels_train = [label_map[model_num_to_car_name_map[labels_train[i]]] for i in range(len(labels_train)) if i not in unav_train]
+        # -------------------------------------------
+        print('Surv total train images', len(labels_train))
+
+        # -------------------------------------------
+        #curr_car_models_train = [mat['sv_make_model_name'][x - 1, 2][0][0] for x in idx_paths_train]
+        #unav_train = set([i for i in range(len(curr_car_models_train)) if curr_car_models_train[i] not in available_car_models])
+        #paths_train = [paths_train[i] for i in range(len(paths_train)) if i not in unav_train]
+        #labels_train = [label_map[labels_train[i]] for i in range(len(labels_train)) if i not in unav_train]
+        # -------------------------------------------
+
+        print("Num Train classes {}, {}, {}, {}".format(target, len(np.unique(np.array(labels_train))), min(labels_train),
                                                       max(labels_train)))
         print("using train_num_images {} ,{}".format(target, len(labels_train)))
         print("not train_num_images with unknown label {} ,{}".format(target, len(unav_train)))
@@ -195,18 +202,33 @@ def read_comp_cars(target, compcars_directory, is_target, seed_id):
         random.Random(seed_id).shuffle(rel_paths_test)
 
         paths_test = [os.path.join(img_dir, x) for x in rel_paths_test]
-        labels_test = np.array([int(x.split('/')[0]) for x in rel_paths_test])
-        labels_test = [model_num_to_car_name_map[mat['sv_make_model_name'][x - 1, 2][0][0]] for x in labels_test]
-        unav_test = set([i for i in range(len(labels_test)) if labels_test[i] not in label_map])
-        
-        
+        idx_paths_test = [int(x.split('/')[0]) for x in rel_paths_test]
+        labels_test = [mat['sv_make_model_name'][x - 1, 2][0][0] for x in idx_paths_test]
+        print('Surv num car models', len(set([ii for ii in labels_test if ii in available_car_models])))
+
+        # -------------------------------------------
+        unav_test = set([i for i in range(len(labels_test)) if labels_test[i] not in available_car_models])
         paths_test = [paths_test[i] for i in range(len(paths_test)) if i not in unav_test]
-        labels_test = np.array([label_map[labels_test[i]] for i in range(len(labels_test)) if i not in unav_test])
+        labels_test = [label_map[model_num_to_car_name_map[labels_test[i]]] for i in range(len(labels_test)) if i not in unav_test]
+        # -------------------------------------------
+        print('Surv total test images', len(labels_test))
+
+        # -------------------------------------------
+        #curr_car_models_test = [mat['sv_make_model_name'][x - 1, 2][0][0] for x in idx_paths_test]
+        #unav_test = set([i for i in range(len(curr_car_models_test)) if curr_car_models_test[i] not in available_car_models])
+        #paths_test = [paths_test[i] for i in range(len(paths_test)) if i not in unav_test]
+        #labels_test = np.array([label_map[labels_test[i]] for i in range(len(labels_test)) if i not in unav_test])
+        # -------------------------------------------
+
+        print("Num Test classes {}, {}, {}, {}".format(target, len(np.unique(np.array(labels_test))), min(labels_test),
+                                                      max(labels_test)))
+        print("using test_num_images {} ,{}".format(target, len(labels_test)))
+        print("not test_num_images with unknown label {} ,{}".format(target, len(unav_test)))
 
         n_images_per_class = 10
         valid_mask = []
         for i in range(75):
-            select_indices = np.where(labels_test==i)[0][:n_images_per_class]
+            select_indices = np.where(np.array(labels_test)==i)[0][:n_images_per_class]
             valid_mask.extend(select_indices.tolist())
         test_mask = [i for i in range(len(labels_test)) if i not in valid_mask]
         paths_valid = [paths_test[i] for i in valid_mask]

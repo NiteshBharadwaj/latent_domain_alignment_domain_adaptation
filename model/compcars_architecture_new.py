@@ -66,7 +66,7 @@ class Feature(nn.Module):
 		x = x.view(x.size(0), -1)
 
 		x = self.drop(self.relu(self.bn_fc2(self.fc2(x))))
-		x = self.relu(self.bn_fc3(self.fc3(x)))
+		x = self.bn_fc3(self.fc3(x))
 
 
 
@@ -90,7 +90,7 @@ class Predictor(nn.Module):
         self.relu = nn.ReLU()
 
     def forward(self, x, reverse=True):
-        x = self.relu(self.bn1(self.fc1(x)))
+        x = self.fc1(self.relu(x))
         return x
 class DomainPredictor_ResNet18(nn.Module):
     def __init__(self, num_domains, aux_classes, prob=0.5):
