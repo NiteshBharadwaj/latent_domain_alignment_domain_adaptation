@@ -36,6 +36,8 @@ parser.add_argument('--num_domain', type=int, default=4, metavar='N',
                     help='input latent domains')
 parser.add_argument('--data', type=str, default='', metavar='N',
                     help='digits,cars')
+parser.add_argument('--model_sel_acc', type=int, default=0, metavar='N',
+                    help='if want to do model selection using acc => 1')
 parser.add_argument('--record_folder', type=str, default='record', metavar='N',
                     help='record folder')
 parser.add_argument('--office_directory', type=str, default='.', metavar='N',

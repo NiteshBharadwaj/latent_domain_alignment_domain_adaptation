@@ -7,8 +7,6 @@ def train_MSDA_soft(solver, epoch, classifier_disc=True, record_file=None):
     solver.C1.train()
     solver.C2.train()
     solver.DP.train()
-    #torch.cuda.manual_seed(1)
-
     batch_idx_g = 0
     classwise_dataset_iterator = iter(solver.classwise_dataset)
     for batch_idx, data in enumerate(solver.datasets):
@@ -31,8 +29,10 @@ def train_MSDA_soft(solver, epoch, classifier_disc=True, record_file=None):
 #            loss = entropy_loss + kl_loss
 #        else:
 #            loss = loss_s_c1 + loss_msda + loss_s_c2 + entropy_loss + kl_loss
-        loss = loss_s_c1 + loss_msda + loss_s_c2 + entropy_loss + kl_loss
-        
+        if solver.args.adv_mode:
+            loss = loss_s_c1 + loss_msda + loss_s_c2
+        else:
+            loss = loss_s_c1 + loss_msda + loss_s_c2 + entropy_loss + kl_loss
         loss.backward()
         clip_value = 1.0
 
@@ -45,21 +45,28 @@ def train_MSDA_soft(solver, epoch, classifier_disc=True, record_file=None):
 #        for param_group in solver.DP.param_groups:
 #            print("LR opt_dp", param_group['lr'])
 
-        #torch.nn.utils.clip_grad_norm(solver.G.parameters(), clip_value) 
-        #torch.nn.utils.clip_grad_norm(solver.C1.parameters(), clip_value)
-        #if classifier_disc:
-        #    torch.nn.utils.clip_grad_norm(solver.C2.parameters(), clip_value)
-        #torch.nn.utils.clip_grad_norm(solver.DP.parameters(), clip_value)
+        torch.nn.utils.clip_grad_norm(solver.G.parameters(), clip_value) 
+        torch.nn.utils.clip_grad_norm(solver.C1.parameters(), clip_value)
+        if classifier_disc:
+            torch.nn.utils.clip_grad_norm(solver.C2.parameters(), clip_value)
+        torch.nn.utils.clip_grad_norm(solver.DP.parameters(), clip_value)
         solver.opt_g.step()
         solver.opt_c1.step()
         solver.opt_c2.step()
-        solver.opt_dp.step()
+        if not solver.args.adv_mode:
+            solver.opt_dp.step()
+        else:
+            solver.reset_grad()
+            _, _, loss_msda, entropy_loss, kl_loss, _ = solver.loss_soft_all_domain(img_s, img_t, label_s, epoch, img_s_cl, force_attach=True)
+            loss_adv = entropy_loss + kl_loss - loss_msda*solver.args.adv_wt
+            loss_adv.backward()
+            solver.opt_dp.step()
         loss_dis = loss * 0  # For printing purpose, it's reassigned if classifier_disc=True
         if classifier_disc:
             solver.reset_grad()
             loss_s_c1, loss_s_c2, loss_msda, entropy_loss, kl_loss, domain_prob = solver.loss_soft_all_domain(img_s, img_t, label_s, epoch, img_s_cl)
 
-            feat_t, conv_feat_t = solver.G(img_t)
+            feat_t, _, _ = solver.G(img_t)
             output_t1 = solver.C1(feat_t)
             output_t2 = solver.C2(feat_t)
 
@@ -75,7 +82,7 @@ def train_MSDA_soft(solver, epoch, classifier_disc=True, record_file=None):
             solver.reset_grad()
 
             for i in range(solver.args.num_k):
-                feat_t, conv_feat_t = solver.G(img_t)
+                feat_t, _, _ = solver.G(img_t)
                 output_t1 = solver.C1(feat_t)
                 output_t2 = solver.C2(feat_t)
                 loss_dis = solver.discrepancy(output_t1, output_t2)

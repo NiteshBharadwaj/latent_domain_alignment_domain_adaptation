@@ -2,7 +2,7 @@ import numpy as np
 from scipy.io import loadmat
 
 base_dir = './data'
-def load_mnist(directory,scale=True, usps=False, all_use=False):
+def load_mnist(directory,scale=True, use_full=False, usps_less_data_protocol=False):
     base_dir = directory
     mnist_data = loadmat(base_dir + '/mnist_data.mat')
     if scale:
@@ -28,11 +28,14 @@ def load_mnist(directory,scale=True, usps=False, all_use=False):
     mnist_train = mnist_train[inds]
     train_label = train_label[inds]
     test_label = np.argmax(mnist_labels_test, axis=1)
-    
-    mnist_train = mnist_train[:25000]
-    train_label = train_label[:25000]
-    mnist_test = mnist_test[:25000]
-    test_label = test_label[:25000]
+    if usps_less_data_protocol:
+        mnist_train = mnist_train[:2000]
+        train_label = train_label[:2000]
+    elif not use_full:
+        mnist_train = mnist_train[:25000]
+        train_label = train_label[:25000]
+        mnist_test = mnist_test[:25000]
+        test_label = test_label[:25000]
     print('mnist train X shape->',  mnist_train.shape)
     print('mnist train y shape->',  train_label.shape)
     print('mnist test X shape->',  mnist_test.shape)

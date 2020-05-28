@@ -248,8 +248,8 @@ class Solver(object):
     def loss_soft_all_domain(self, img_s, img_t, label_s, epoch, img_s_cl):
         # Takes source images, target images, source labels and returns classifier loss, domain adaptation loss and entropy loss
         feat_s_comb, feat_t_comb = self.feat_soft_all_domain(img_s, img_t)
-        feat_s, conv_feat_s = feat_s_comb
-        feat_t, conv_feat_t = feat_t_comb
+        feat_s, conv_feat_s,_ = feat_s_comb
+        feat_t, conv_feat_t,_ = feat_t_comb
         #with torch.no_grad():
         #    _, conv_feat_cl = self.G(img_s_cl)
         if self.to_detach:

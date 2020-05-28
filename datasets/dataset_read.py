@@ -20,21 +20,22 @@ from sklearn.decomposition import PCA
 from sklearn.cluster import KMeans
 
 
-def return_dataset(data, scale=False, usps=False, all_use='no', directory="."):
+def return_dataset(data, directory=".", is_multi=True, usps_less_data_protocol=False):
+    use_full = not is_multi
     if data == 'svhn':
         train_image, train_label, \
-        test_image, test_label = load_svhn(directory)
+        test_image, test_label = load_svhn(directory, use_full= use_full)
     if data == 'mnist':
         train_image, train_label, \
-        test_image, test_label = load_mnist(directory)
+        test_image, test_label = load_mnist(directory, use_full=use_full, usps_less_data_protocol=usps_less_data_protocol)
         # print(train_image.shape)
     if data == 'mnistm':
         train_image, train_label, \
-        test_image, test_label = load_mnistm(directory)
+        test_image, test_label = load_mnistm(directory, use_full=use_full)
         # print(train_image.shape)
     if data == 'usps':
         train_image, train_label, \
-        test_image, test_label = load_usps(directory)
+        test_image, test_label = load_usps(directory, use_full=use_full, usps_less_data_protocol=usps_less_data_protocol)
     if data == 'synth':
         train_image, train_label, \
         test_image, test_label = load_syntraffic(directory)
@@ -220,25 +221,35 @@ def dataset_hard_cluster(target, batch_size,num_clus):
     dataset_valid = val_loader.load_data()
     return dataset, dataset_test, dataset_valid
 
-
-def dataset_combined(target, batch_size, num_clus, directory, seed):
+# If multi-domain, read only a subset of data (as used by Peng.)
+# For single domain, usps less data protocol use less data
+# In other settings, use full dataset
+def dataset_combined(target, batch_size, num_clus, directory, seed, usps_less_data_protocol=False):
     S = []
     S_test = []
     T = {}
     T_test = {}
     T_val = {}
-    domain_map = {'mnistm':'mnistm', 'mnist':'mnist', 'usps':'usps', 'svhn':'svhn', 'syn':'syn'}
-    target = target.split('_')
-    source_codes = target[:-1]
-    target_code = target[-1]
+    if 1:
+        domain_map = {'mnistm':'mnistm', 'mnist':'mnist', 'usps':'usps', 'svhn':'svhn', 'syn':'syn'}
+        domain_all = ['mnistm', 'mnist', 'usps', 'svhn', 'syn']
+        target = target.split('_')
+        domain_all.remove(target[-1])
+        source_codes = domain_all
+        target_code = target[-1]
+    else:
+        domain_map = {'mnistm':'mnistm', 'mnist':'mnist', 'usps':'usps', 'svhn':'svhn', 'syn':'syn'}
+        target = target.split('_')
+        source_codes = target[:-1]
+        target_code = target[-1]
     target = domain_map[target_code]
     domain_all = [domain_map[x] for x in domain_map if x in source_codes]
 
     for i in range(len(domain_all)):
         S.append({})
         S_test.append({})
-    
-    target_train, target_train_label, target_test, target_test_label = return_dataset(target, directory=directory)
+    is_multi =  len(domain_all) > 1   
+    target_train, target_train_label, target_test, target_test_label = return_dataset(target, directory=directory, is_multi=is_multi, usps_less_data_protocol=usps_less_data_protocol)
     
     indices_tar = np.arange(0,target_test.shape[0])
     np.random.seed(seed)
@@ -256,13 +267,12 @@ def dataset_combined(target, batch_size, num_clus, directory, seed):
     target_test = target_test[test_mask]
     target_test_label = target_test_label[test_mask]
     for i in range(len(domain_all)):
-        source_train, source_train_label, source_test, source_test_label = return_dataset(domain_all[i], directory=directory)
+        source_train, source_train_label, source_test, source_test_label = return_dataset(domain_all[i], directory=directory, is_multi=is_multi, usps_less_data_protocol=usps_less_data_protocol)
         S[i]['imgs'] = source_train
         S[i]['labels'] = source_train_label
         # input target sample when test, source performance is not important
         S_test[i]['imgs'] = target_test
         S_test[i]['labels'] = target_test_label
-
     T['imgs'] = target_train
     T['labels'] = target_train_label
 
@@ -272,8 +282,15 @@ def dataset_combined(target, batch_size, num_clus, directory, seed):
 
     T_val['imgs'] = target_val
     T_val['labels'] = target_val_label
-    scale = 32
-
+    usps_only_exp = False 
+    if is_multi: #Like Peng
+        scale = 32 # Scale everything to 32
+    else:
+        # Traffic Signs are typically scaled to 40
+        # USPS only is scaled to 28 (Src: Maximum classifier discrepancy)
+        traffic_exp = 'synth' in source_codes
+        usps_only_exp = target=='usps' or 'usps' in source_codes
+        scale = 40 if traffic_exp else 28 if usps_only_exp else 32
     train_loader = CombinedDataLoader()
     train_loader.initialize(S, T, batch_size, batch_size, scale=scale)
     dataset = train_loader.load_data()
@@ -286,12 +303,11 @@ def dataset_combined(target, batch_size, num_clus, directory, seed):
     test_loader.initialize(S_test, T_test, batch_size, batch_size, scale=scale)
 
     dataset_test = test_loader.load_data()
-
     S_val = {}
-    S_val['imgs'] = np.zeros((20,3,32,32))
+    S_val['imgs'] = np.zeros((20,3,scale,scale))
     S_val['labels'] = np.zeros((20))
     val_loader = UnalignedDataLoader()
     val_loader.initialize([S_val], T_val, batch_size, batch_size, scale=scale)
 
     dataset_valid = val_loader.load_data()
-    return dataset, dataset_test, dataset_valid, dataset_class
+    return dataset, dataset_test, dataset_valid, dataset_class, is_multi, usps_only_exp

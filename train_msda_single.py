@@ -4,15 +4,16 @@ from torch.autograd import Variable
 import mmd
 import msda
 import math
-
+import numpy as np
+import random
 
 def loss_single_domain(solver, img_s, img_t, label_s):
     feat_s_comb, feat_t_comb = solver.feat_soft_all_domain(img_s, img_t)
-    feat_s, conv_feat_s = feat_s_comb
-    feat_t, conv_feat_t = feat_t_comb
+    feat_s, conv_feat_s, feat_da_s = feat_s_comb
+    feat_t, conv_feat_t, feat_da_t = feat_t_comb
     output_s_c1, output_t_c1 = solver.C1_all_domain_soft(feat_s, feat_t)
     output_s_c2, output_t_c2 = solver.C2_all_domain_soft(feat_s, feat_t)
-    loss_msda = msda.msda_regulizer_single(feat_s, feat_t, 5) * solver.msda_wt
+    loss_msda = msda.msda_regulizer_single(feat_da_s, feat_da_t, 5) * solver.msda_wt
 
     if (math.isnan(loss_msda.data.item())):
         raise Exception('msda loss is nan')
@@ -31,10 +32,8 @@ def train_MSDA_single(solver, epoch, classifier_disc=True, record_file=None):
     solver.C1.train()
     solver.C2.train()
     solver.DP.train()
-    #torch.cuda.manual_seed(1)
-
-    batch_idx_g = 0
-
+    #solver.datasets.reset()
+    batch_idx_g=0
     for batch_idx, data in enumerate(solver.datasets):
         batch_idx_g = batch_idx
         img_t = Variable(data['T'].cuda())
@@ -61,7 +60,7 @@ def train_MSDA_single(solver, epoch, classifier_disc=True, record_file=None):
             solver.reset_grad()
             loss_s_c1, loss_s_c2, loss_msda = loss_single_domain(solver,img_s, img_t, label_s)
 
-            feat_t, conv_feat_t = solver.G(img_t)
+            feat_t, conv_feat_t,_ = solver.G(img_t)
             output_t1 = solver.C1(feat_t)
             output_t2 = solver.C2(feat_t)
 
@@ -74,7 +73,7 @@ def train_MSDA_single(solver, epoch, classifier_disc=True, record_file=None):
             solver.reset_grad()
 
             for i in range(solver.args.num_k):
-                feat_t, conv_feat_t = solver.G(img_t)
+                feat_t, conv_feat_t,_ = solver.G(img_t)
                 output_t1 = solver.C1(feat_t)
                 output_t2 = solver.C2(feat_t)
                 loss_dis = solver.discrepancy(output_t1, output_t2)
@@ -82,10 +81,13 @@ def train_MSDA_single(solver, epoch, classifier_disc=True, record_file=None):
                 solver.opt_g.step()
                 solver.reset_grad()
 
+        #if batch_idx_g > 500:
+        #    return batch_idx_g
+
         if batch_idx % solver.interval == 0:
             print \
-                ('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss1: {:.6f}\t Loss2: {:.6f}\t Loss_mmd: {:.6f}\t Loss_entropy: {:.6f}\t kl_loss: {:.6f}'.format(
-                epoch, batch_idx, 100, 100. * batch_idx / 70000, loss_s_c1.data.item(), loss_s_c2.data.item(), loss_msda.data.item(), 0, 0))
+                    ('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss1: {:.6f}\t Loss2: {:.6f}\t Loss_mmd: {:.6f}\t Loss_entropy: {:.6f}\t kl_loss: {:.6f} \t loss_dis {:6f}'.format(
+                epoch, batch_idx, 100, 100. * batch_idx / 70000, loss_s_c1.data.item(), loss_s_c2.data.item(), loss_msda.data.item(), 0, 0, loss_dis.data.item()))
             if record_file:
                 record = open(record_file, 'a')
                 record.write('%s %s %s %s %s %s\n' %

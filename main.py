@@ -25,7 +25,7 @@ parser.add_argument('--all_use', type=str, default='no', metavar='N',
                     help='use all training data? in usps adaptation')
 parser.add_argument('--to_detach', type=str, default='no', metavar='N',
                     help='classifier_discrepancy? yes/no')
-parser.add_argument('--class_disc', type=str, default='yes', metavar='N',
+parser.add_argument('--class_disc', type=str, default='no', metavar='N',
                     help='classifier_discrepancy? yes/no')
 parser.add_argument('--dl_type', type=str, default='', metavar='N',
                     help='original, hard_cluster, combined, soft_cluster')
@@ -33,6 +33,8 @@ parser.add_argument('--num_domain', type=int, default=4, metavar='N',
                     help='input latent domains')
 parser.add_argument('--data', type=str, default='', metavar='N',
                     help='digits,cars')
+parser.add_argument('--usps_less_data_protocol', type=int, default=0, metavar='N',
+                    help='usps less data protocol? usps=1800, mnist=2000')
 parser.add_argument('--record_folder', type=str, default='record', metavar='N',
                     help='record folder')
 parser.add_argument('--office_directory', type=str, default='.', metavar='N',
@@ -49,8 +51,12 @@ parser.add_argument('--kl_wt', type=float, default=0.0, metavar='LR',
                     help='KL_wt (default: 0)')
 parser.add_argument('--msda_wt', type=float, default=0.00001, metavar='LR',
                     help='msda_wt (default: 0)')
+parser.add_argument('--adv_wt', type=float, default=1.0, metavar='LR',
+                    help='adv_wt (default: 0)')
 parser.add_argument('--entropy_wt', type=float, default=0.01, metavar='LR',
                     help='entropy_wt (default: 0)')
+parser.add_argument('--adv_mode', type=int, default=0, metavar='LR',
+                    help='adversarial mode? (default: 0)')
 parser.add_argument('--lr', type=float, default=0.0001, metavar='LR',
                     help='learning rate (default: 0.0002)')
 parser.add_argument('--max_epoch', type=int, default=200, metavar='N',
@@ -168,7 +174,7 @@ def main():
         solver = Solver(args, target=args.target, learning_rate=args.lr, batch_size=args.batch_size,
                     optimizer=args.optimizer, 
                     checkpoint_dir=args.checkpoint_dir,
-                    save_epoch=args.save_epoch)
+                    save_epoch=args.save_epoch, class_disc = classifier_disc)
         count = 0
         for t in range(args.max_epoch):
             print(t)
@@ -187,15 +193,16 @@ def main():
                     num = train_MSDA_hard(solver,t, classifier_disc, record_file=record_train)
             else:
                 raise Exception('One step solver not defined')
-            solver.sche_g.step()
-            solver.sche_c1.step()
-            solver.sche_c2.step()
-            solver.sche_dp.step()
+            #solver.sche_g.step()
+            #solver.sche_c1.step()
+            #solver.sche_c2.step()
+            #solver.sche_dp.step()
             count += num
             if t % 1 == 0:
                 if args.data=='cars':
                     test(solver, t, 'train', record_file=record_test, save_model=args.save_model)
                 best = test(solver, t, 'val', record_file=record_val, save_model=args.save_model)
+                #best = test(solver, t, 'test', record_file=record_val, save_model=args.save_model)
                 if best:
                     test(solver, t, 'test', record_file=record_test, save_model=args.save_model)
                     #view_clusters(solver, clusters_file, probs_csv)

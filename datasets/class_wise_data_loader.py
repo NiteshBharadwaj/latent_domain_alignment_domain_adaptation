@@ -72,7 +72,6 @@ class ClasswiseDataLoader():
                                                 num_workers=2))
 
         self.dataset_s = dataset_source
-
         self.paired_data = ClasswiseData(dataloader_source, float("inf"))
 
     def name(self):

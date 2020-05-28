@@ -1,4 +1,3 @@
-from __future__ import print_function
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -19,11 +18,13 @@ from scipy.stats import entropy
 from matplotlib import pyplot as plt
 from PIL import Image
 
+import random
+
 # Training settings
 class Solver(object):
     def __init__(self, args, batch_size=64,
                  target='mnist', learning_rate=0.0002, interval=100, optimizer='adam'
-                 , checkpoint_dir=None, save_epoch=10):
+                 , checkpoint_dir=None, save_epoch=10, class_disc= False):
         self.batch_size = batch_size
         self.target = target
         self.checkpoint_dir = checkpoint_dir
@@ -42,11 +43,14 @@ class Solver(object):
             elif args.dl_type == 'hard_cluster':
                 self.datasets, self.dataset_test, self.dataset_valid = dataset_hard_cluster(target, self.batch_size,args.num_domain)
             elif args.dl_type == 'soft_cluster':
-                self.datasets, self.dataset_test, self.dataset_valid, self.classwise_dataset = dataset_combined(target, self.batch_size,args.num_domain, args.office_directory, args.seed)
+                self.datasets, self.dataset_test, self.dataset_valid, self.classwise_dataset, self.is_multi, self.usps_only = dataset_combined(target, self.batch_size,args.num_domain, args.office_directory, args.seed, 
+                        usps_less_data_protocol = args.usps_less_data_protocol)
             elif args.dl_type == 'source_only':
-                self.datasets, self.dataset_test, self.dataset_valid, self.classwise_dataset = dataset_combined(target, self.batch_size,args.num_domain, args.office_directory, args.seed)
+                self.datasets, self.dataset_test, self.dataset_valid, self.classwise_dataset, self.is_multi, self.usps_only = dataset_combined(target, self.batch_size,args.num_domain, args.office_directory, args.seed,
+                        usps_less_data_protocol = args.usps_less_data_protocol)
             elif args.dl_type == 'source_target_only':
-                self.datasets, self.dataset_test, self.dataset_valid, self.classwise_dataset = dataset_combined(target, self.batch_size,args.num_domain, args.office_directory, args.seed)
+                self.datasets, self.dataset_test, self.dataset_valid, self.classwise_dataset, self.is_multi, self.usps_only = dataset_combined(target, self.batch_size,args.num_domain, args.office_directory, args.seed,
+                        usps_less_data_protocol = args.usps_less_data_protocol)
             else:
                 raise Exception('Type of experiment undefined')
 
@@ -58,10 +62,10 @@ class Solver(object):
             self.msda_wt = args.msda_wt
             self.kl_wt = args.kl_wt
             self.to_detach = args.to_detach
-            self.G = Generator_digit()
-            self.C1 = Classifier_digit()
-            self.C2 = Classifier_digit()
-            self.DP = DP_Digit(num_domains)
+            self.G = Generator_digit(cd=class_disc, usps_only=self.usps_only)
+            self.C1 = Classifier_digit(cd=class_disc, usps_only=self.usps_only)
+            self.C2 = Classifier_digit(cd=class_disc, usps_only=self.usps_only)
+            self.DP = DP_Digit(num_domains, self.usps_only)
         elif args.data == 'cars':
             if args.dl_type == 'soft_cluster':
                 self.datasets, self.dataset_test, self.dataset_valid = cars_combined(target, self.batch_size)
@@ -233,11 +237,11 @@ class Solver(object):
         domain_prob_sum = domain_prob_sum*mask + (1-mask.int())*1e-5
         return -(domain_prob_sum*(domain_prob_sum.log())).mean()
 
-    def loss_soft_all_domain(self, img_s, img_t, label_s, epoch, img_s_cl):
+    def loss_soft_all_domain(self, img_s, img_t, label_s, epoch, img_s_cl, force_attach = False):
         # Takes source images, target images, source labels and returns classifier loss, domain adaptation loss and entropy loss
         feat_s_comb, feat_t_comb = self.feat_soft_all_domain(img_s, img_t)
-        feat_s, conv_feat_s = feat_s_comb
-        feat_t, conv_feat_t = feat_t_comb
+        feat_s, conv_feat_s, feat_da_s = feat_s_comb
+        feat_t, conv_feat_t, feat_da_t = feat_t_comb
         #_, conv_s_cl = self.G(img_s_cl)
         #if self.to_detach:
         #    domain_logits, _ = self.DP(conv_feat_s.detach())
@@ -304,10 +308,10 @@ class Solver(object):
 
         output_s_c1, output_t_c1 = self.C1_all_domain_soft(feat_s, feat_t)
         output_s_c2, output_t_c2 = self.C2_all_domain_soft(feat_s, feat_t)
-        if self.to_detach:
-            loss_msda = msda.msda_regulizer_soft(feat_s, feat_t, 5, domain_prob.detach()) * self.msda_wt 
+        if self.to_detach and not force_attach:
+            loss_msda = msda.msda_regulizer_soft(feat_da_s, feat_da_t, 5, domain_prob.detach()) * self.msda_wt 
         else:
-            loss_msda = msda.msda_regulizer_soft(feat_s, feat_t, 5, domain_prob) * self.msda_wt
+            loss_msda = msda.msda_regulizer_soft(feat_da_s, feat_da_t, 5, domain_prob) * self.msda_wt
         if (math.isnan(loss_msda.data.item())):
             raise Exception('msda loss is nan')
         loss_s_c1 = \
