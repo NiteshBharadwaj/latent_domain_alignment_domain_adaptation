@@ -105,8 +105,9 @@ def train_MSDA_soft(solver, epoch, graph_data, classifier_disc=True, record_file
         cl_time = ct5 - ct4
         tot_classwisedata_time += cl_time
         # print('CLASSWISE DATA TIME', cl_time)
-        while (img_s_cl.size()[0] == 1):
+        if (img_s_cl.size()[0] <= 1):
             print('CLASS WISE is of size 1. Looping')
+            break
             classwise_data = next(classwise_dataset_iterator)
             img_s_cl = Variable(classwise_data['S'].cuda())
 

@@ -74,6 +74,8 @@ class DomainPredictor(nn.Module):
         self.drop = nn.Dropout(0.5)
 
     def forward(self, x_feat, reverse=False):
+        #import pdb
+        #pdb.set_trace()
         _, x_feat = self.feature(x_feat)
         x_feat = self.relu(x_feat)
         x = self.drop(self.relu(self.bn1(self.fc1(x_feat))))
