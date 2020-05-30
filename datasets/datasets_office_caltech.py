@@ -3,6 +3,7 @@ import torch.utils.data as data
 from PIL import Image
 import numpy as np
 import cv2
+#from PIL import pil_loader
 
 
 def resize2SquareKeepingAspectRation(img, size, interpolation):
@@ -61,6 +62,8 @@ class Dataset(data.Dataset):
             img = self.hashmap[img_path]
         else:
             img = Image.open(img_path)
+            img = img.convert('RGB')
+            #img = pil_loader(img_path)
             img = np.array(img)
             img = img[..., :3]
             img = Image.fromarray(img)

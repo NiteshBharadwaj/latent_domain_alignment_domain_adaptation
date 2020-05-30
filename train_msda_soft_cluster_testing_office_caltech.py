@@ -28,7 +28,7 @@ import time
 
 
 def train_MSDA_soft(solver, epoch, graph_data, classifier_disc=True, record_file=None):
-    print('inside function', time.time())
+    #print('inside function', time.time())
     global cluster_batch
     global amazon_batch
     global dslr_batch
