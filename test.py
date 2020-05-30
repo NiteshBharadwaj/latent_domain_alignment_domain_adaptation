@@ -82,7 +82,7 @@ def test(solver, epoch, split, record_file=None, save_model=False):
             checkpoint['C1_state_dict_opt'] = solver.opt_c1.state_dict()
             checkpoint['C2_state_dict_opt'] = solver.opt_c2.state_dict()
             checkpoint['DP_state_dict_opt'] = solver.opt_dp.state_dict()
-            torch.save(checkpoint, '%s/%s_model_best.pth' % (solver.checkpoint_dir, solver.target))
+            #torch.save(checkpoint, '%s/%s_model_best.pth' % (solver.checkpoint_dir, solver.target))
 
 #         if test_acc > solver.best_acc and size!=0:
 #             solver.best_acc = test_acc
