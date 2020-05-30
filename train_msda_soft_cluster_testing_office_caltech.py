@@ -35,7 +35,7 @@ def train_MSDA_soft(solver, epoch, graph_data, classifier_disc=True, record_file
     global webcam_batch
     global caltech_batch
     global classwise_batch
-    print('getting train mode', time.time())
+    #print('getting train mode', time.time())
     solver.G.train()
     solver.C1.train()
     solver.C2.train()
@@ -44,7 +44,7 @@ def train_MSDA_soft(solver, epoch, graph_data, classifier_disc=True, record_file
 
     batch_idx_g = 0
     tt = time.time()
-    print('creating classwise iterator', time.time())
+    #print('creating classwise iterator', time.time())
     solver.classwise_dataset.reset_iter()
     classwise_dataset_iterator = iter(solver.classwise_dataset)
 
@@ -52,7 +52,7 @@ def train_MSDA_soft(solver, epoch, graph_data, classifier_disc=True, record_file
     #     print(sum(1 for _ in main_dataset_iterator))
     main_dataset_iterator = iter(solver.datasets)
     # sys.exit()
-    print('starting iteration', time.time())
+    #print('starting iteration', time.time())
 
     tot_dataloading_time = 0
     tot_updates_time = 0
@@ -91,7 +91,7 @@ def train_MSDA_soft(solver, epoch, graph_data, classifier_disc=True, record_file
         label_s = Variable(data['S_label'].long().cuda())
         ct4 = time.time()
         if img_s.size()[0] < solver.batch_size or img_t.size()[0] < solver.batch_size:
-            print('Breaking because of low batch size')
+            #print('Breaking because of low batch size')
             break
 
         classwise_data = next(classwise_dataset_iterator)
@@ -106,7 +106,7 @@ def train_MSDA_soft(solver, epoch, graph_data, classifier_disc=True, record_file
         tot_classwisedata_time += cl_time
         # print('CLASSWISE DATA TIME', cl_time)
         if (img_s_cl.size()[0] <= 1):
-            print('CLASS WISE is of size 1. Looping')
+            #print('CLASS WISE is of size 1. Looping')
             break
             classwise_data = next(classwise_dataset_iterator)
             img_s_cl = Variable(classwise_data['S'].cuda())
@@ -206,8 +206,8 @@ def train_MSDA_soft(solver, epoch, graph_data, classifier_disc=True, record_file
                         loss_msda.data.item(), entropy_loss.data.item(), kl_loss.data.item(),
                         entropy_loss.data.item() + kl_loss.data.item()))
 
-    print('tot_dataloading_time', tot_dataloading_time, 'tot_updates_time', tot_updates_time)
-    print('CUDA Time', tot_cuda_time)
-    print('CLDL Total Time', tot_classwisedata_time)
-    print('MDL Total Time', tot_main_data_time)
+    #print('tot_dataloading_time', tot_dataloading_time, 'tot_updates_time', tot_updates_time)
+    #print('CUDA Time', tot_cuda_time)
+    #print('CLDL Total Time', tot_classwisedata_time)
+    #print('MDL Total Time', tot_main_data_time)
     return batch_idx_g, graph_data
