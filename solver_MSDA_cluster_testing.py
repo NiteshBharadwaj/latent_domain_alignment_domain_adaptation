@@ -9,9 +9,11 @@ from torch.autograd import Variable
 from model.build_gen_digits import Generator as Generator_digit, Classifier as Classifier_digit, \
     DomainPredictor as DP_Digit
 from model.build_gen import Generator as Generator_cars, Classifier as Classifier_cars, DomainPredictor as DP_cars
+from model.build_gen_office_caltech import Generator as Generator_office_caltech, Classifier as Classifier_office_caltech, DomainPredictor as DP_office_caltech
 from datasets.dataset_read_cluster_testing import dataset_read, dataset_hard_cluster, dataset_combined
 from datasets.cars import cars_combined
 from datasets.office import office_combined
+from datasets.office_caltech import office_caltech_combined
 import numpy as np
 import math
 from scipy.stats import entropy
@@ -117,6 +119,45 @@ class Solver(object):
             self.C1 = Classifier_office(num_classes)
             self.C2 = Classifier_office(num_classes)
             self.DP = DP_office(num_domains)
+
+        elif args.data == 'office_caltech':
+            if args.dl_type == 'soft_cluster':
+                self.datasets, self.dataset_test, self.dataset_valid, self.classwise_dataset = office_caltech_combined(target,
+                                                                                                               self.batch_size,
+                                                                                                               args.office_caltech_directory,
+                                                                                                               args.seed,
+                                                                                                               args.num_workers)
+                # if self.args.clustering_only:
+                # _, _, self.dataset_amazon, _ = office_caltech_combined('dwca', self.batch_size, args.office_caltech_directory, args.seed, args.num_workers)
+                # _, _, self.dataset_dslr, _ = office_caltech_combined('awcd', self.batch_size, args.office_caltech_directory, args.seed, args.num_workers)
+                # _, _, self.dataset_webcam, _ = office_caltech_combined('adcw', self.batch_size, args.office_caltech_directory, args.seed, args.num_workers)
+                # _, _, self.dataset_caltech, _ = office_caltech_combined('adwc', self.batch_size, args.office_caltech_directory, args.seed, args.num_workers)
+            elif args.dl_type == 'source_target_only':
+                self.datasets, self.dataset_test, self.dataset_valid, self.classwise_dataset = office_caltech_combined(target,
+                                                                                                               self.batch_size,
+                                                                                                               args.office_caltech_directory,
+                                                                                                               args.seed,
+                                                                                                               args.num_workers)
+            elif args.dl_type == 'source_only':
+                self.datasets, self.dataset_test, self.dataset_valid, self.classwise_dataset = office_caltech_combined(target,
+                                                                                                               self.batch_size,
+                                                                                                               args.office_caltech_directory,
+                                                                                                               args.seed,
+                                                                                                               args.num_workers)
+
+            print('load finished!')
+            self.entropy_wt = args.entropy_wt
+            self.msda_wt = args.msda_wt
+            self.kl_wt = args.kl_wt
+            self.to_detach = args.to_detach
+            num_classes = 10
+            num_domains = args.num_domain
+            self.num_domains = num_domains
+            self.G = Generator_office_caltech()
+            self.C1 = Classifier_office_caltech(num_classes)
+            self.C2 = Classifier_office_caltech(num_classes)
+            self.DP = DP_office_caltech(num_domains)
+
         # print(self.dataset['S1'].shape)
         print('model_loaded')
 

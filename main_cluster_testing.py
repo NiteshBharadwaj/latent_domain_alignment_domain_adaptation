@@ -13,6 +13,7 @@ import os
 from train_msda_hard import train_MSDA as train_MSDA_hard
 from train_msda_soft_cluster_testing import train_MSDA_soft
 from train_msda_soft_cluster_testing_office import train_MSDA_soft as train_MSDA_soft_office
+from train_msda_soft_cluster_testing_office_caltech import train_MSDA_soft as train_MSDA_soft_office_caltech
 from train_msda_single import train_MSDA_single
 from test import test
 from view_clusters import view_clusters
@@ -41,6 +42,8 @@ parser.add_argument('--record_folder', type=str, default='record', metavar='N',
                     help='record folder')
 parser.add_argument('--office_directory', type=str, default='.', metavar='N',
                     help='directory for office data')
+parser.add_argument('--office_caltech_directory', type=str, default='.', metavar='N',
+                    help='directory for office_caltech data')
 parser.add_argument('--batch-size', type=int, default=64, metavar='N',
                     help='input batch size for training (default: 64)')
 parser.add_argument('--checkpoint_dir', type=str, default='checkpoint', metavar='N',
@@ -201,6 +204,8 @@ def main():
                         num= train_MSDA_soft(solver,t,classifier_disc,record_file=record_train)
                     elif args.data == 'office':
                         num, graph_data = train_MSDA_soft_office(solver,t,graph_data,classifier_disc,record_file=record_train)
+                    elif args.data == 'office-caltech':
+                        num, graph_data = train_MSDA_soft_office_caltech(solver, t, graph_data, classifier_disc, record_file=record_train)
                     else:
                         print("WTF Noob")
                 elif args.dl_type=='source_only':
