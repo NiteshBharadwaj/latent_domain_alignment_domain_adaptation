@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 from torch.autograd import Variable
 
-def train_MSDA_soft(solver, epoch, classifier_disc=True, record_file=None):
+def train_MSDA_soft(solver, epoch, classifier_disc=True, record_file=None, single_domain_mode=False, summary_writer=None, epoch_start_idx=0):
     solver.G.train()
     solver.C1.train()
     solver.C2.train()
@@ -22,7 +22,7 @@ def train_MSDA_soft(solver, epoch, classifier_disc=True, record_file=None):
 
         solver.reset_grad()
 
-        loss_s_c1, loss_s_c2, loss_msda, entropy_loss, kl_loss, domain_prob = solver.loss_soft_all_domain(img_s, img_t, label_s, epoch, img_s_cl)
+        loss_s_c1, loss_s_c2, loss_msda_nc2, loss_msda_nc1, entropy_loss, kl_loss, domain_prob = solver.loss_soft_all_domain(img_s, img_t, label_s, epoch, img_s_cl, single_domain_mode=single_domain_mode)
         if not classifier_disc:
             loss_s_c2 = loss_s_c1
 #        if epoch > 2:
@@ -30,9 +30,9 @@ def train_MSDA_soft(solver, epoch, classifier_disc=True, record_file=None):
 #        else:
 #            loss = loss_s_c1 + loss_msda + loss_s_c2 + entropy_loss + kl_loss
         if solver.args.adv_mode:
-            loss = loss_s_c1 + loss_msda + loss_s_c2
+            loss = loss_s_c1 + loss_msda_nc1 + loss_msda_nc2 + loss_s_c2
         else:
-            loss = loss_s_c1 + loss_msda + loss_s_c2 + entropy_loss + kl_loss
+            loss = loss_s_c1 + loss_msda_nc1 + loss_msda_nc2 + loss_s_c2 + entropy_loss + kl_loss
         loss.backward()
         clip_value = 1.0
 
@@ -45,14 +45,21 @@ def train_MSDA_soft(solver, epoch, classifier_disc=True, record_file=None):
 #        for param_group in solver.DP.param_groups:
 #            print("LR opt_dp", param_group['lr'])
 
-        torch.nn.utils.clip_grad_norm(solver.G.parameters(), clip_value) 
-        torch.nn.utils.clip_grad_norm(solver.C1.parameters(), clip_value)
-        if classifier_disc:
-            torch.nn.utils.clip_grad_norm(solver.C2.parameters(), clip_value)
-        torch.nn.utils.clip_grad_norm(solver.DP.parameters(), clip_value)
+        #torch.nn.utils.clip_grad_norm(solver.G.parameters(), clip_value) 
+        #torch.nn.utils.clip_grad_norm(solver.C1.parameters(), clip_value)
+        #if classifier_disc:
+        #    torch.nn.utils.clip_grad_norm(solver.C2.parameters(), clip_value)
+        #torch.nn.utils.clip_grad_norm(solver.DP.parameters(), clip_value)
         solver.opt_g.step()
         solver.opt_c1.step()
         solver.opt_c2.step()
+        if summary_writer is not None:
+            summary_writer.add_scalar('Loss/loss_nc1', loss_msda_nc1/solver.args.msda_wt, epoch_start_idx + batch_idx_g)
+            summary_writer.add_scalar('Loss/loss_nc2', loss_msda_nc2/solver.args.msda_wt, epoch_start_idx + batch_idx_g)
+            summary_writer.add_scalar('Loss/loss_s_c1', loss_s_c1, epoch_start_idx + batch_idx_g)
+            summary_writer.add_scalar('Loss/loss_s_c2', loss_s_c2, epoch_start_idx + batch_idx_g)
+            summary_writer.add_scalar('Loss/loss_entropy', entropy_loss/solver.args.entropy_wt, epoch_start_idx + batch_idx_g)
+            summary_writer.add_scalar('Loss/loss_kl', kl_loss/solver.args.kl_wt, epoch_start_idx + batch_idx_g)
         if not solver.args.adv_mode:
             solver.opt_dp.step()
         else:
@@ -64,7 +71,7 @@ def train_MSDA_soft(solver, epoch, classifier_disc=True, record_file=None):
         loss_dis = loss * 0  # For printing purpose, it's reassigned if classifier_disc=True
         if classifier_disc:
             solver.reset_grad()
-            loss_s_c1, loss_s_c2, loss_msda, entropy_loss, kl_loss, domain_prob = solver.loss_soft_all_domain(img_s, img_t, label_s, epoch, img_s_cl)
+            loss_s_c1, loss_s_c2, loss_msda, entropy_loss, kl_loss, domain_prob = solver.loss_soft_all_domain(img_s, img_t, label_s, epoch, img_s_cl, single_domain_mode=single_domain_mode)
 
             feat_t, _, _ = solver.G(img_t)
             output_t1 = solver.C1(feat_t)
@@ -93,11 +100,6 @@ def train_MSDA_soft(solver, epoch, classifier_disc=True, record_file=None):
 
         if batch_idx % solver.interval == 0:
             print \
-                ('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss1: {:.6f}\t Loss2: {:.6f}\t Loss_mmd: {:.6f}\t Loss_entropy: {:.6f}\t kl_loss: {:.6f}'.format(
-                epoch, batch_idx, 100, 100. * batch_idx / 70000, loss_s_c1.data.item(), loss_s_c2.data.item(), loss_msda.data.item(), entropy_loss.data.item(), kl_loss.data.item()))
-            if record_file:
-                record = open(record_file, 'a')
-                record.write('%s %s %s %s %s %s\n' %
-                (0, loss_s_c1.data.item(), loss_s_c2.data.item(), loss_msda.data.item(), entropy_loss.data.item(), kl_loss.data.item()))
-                record.close()
+                    ('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss1: {:.6f}\t Loss2: {:.6f}\t Loss_mmd NC1: {:.6f}\t Loss_mmd NC2: {:6f} \t Loss_entropy: {:.6f}\t kl_loss: {:.6f}'.format(
+                epoch, batch_idx, 100, 100. * batch_idx / 70000, loss_s_c1.data.item(), loss_s_c2.data.item(), loss_msda_nc1.data.item(),loss_msda_nc2.data.item(), entropy_loss.data.item(), kl_loss.data.item()))
     return batch_idx_g

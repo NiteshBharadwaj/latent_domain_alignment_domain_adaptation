@@ -56,6 +56,8 @@ class Solver(object):
 
             print('load finished!')
             num_classes = 10
+            if args.dl_type=='source_target_only':
+                args.num_domain = 4 # To maintain reproducibility for a seed. Num domains is not used but can introduce a bit of randomness
             num_domains = args.num_domain
             self.num_domains = num_domains
             self.entropy_wt = args.entropy_wt
@@ -237,7 +239,7 @@ class Solver(object):
         domain_prob_sum = domain_prob_sum*mask + (1-mask.int())*1e-5
         return -(domain_prob_sum*(domain_prob_sum.log())).mean()
 
-    def loss_soft_all_domain(self, img_s, img_t, label_s, epoch, img_s_cl, force_attach = False):
+    def loss_soft_all_domain(self, img_s, img_t, label_s, epoch, img_s_cl, force_attach = False, single_domain_mode=False):
         # Takes source images, target images, source labels and returns classifier loss, domain adaptation loss and entropy loss
         feat_s_comb, feat_t_comb = self.feat_soft_all_domain(img_s, img_t)
         feat_s, conv_feat_s, feat_da_s = feat_s_comb
@@ -309,11 +311,13 @@ class Solver(object):
         output_s_c1, output_t_c1 = self.C1_all_domain_soft(feat_s, feat_t)
         output_s_c2, output_t_c2 = self.C2_all_domain_soft(feat_s, feat_t)
         if self.to_detach and not force_attach:
-            loss_msda = msda.msda_regulizer_soft(feat_da_s, feat_da_t, 5, domain_prob.detach()) * self.msda_wt 
+            loss_msda_nc2, loss_msda_nc1 = msda.msda_regulizer_soft(feat_da_s, feat_da_t, 5, domain_prob.detach(), single_domain_mode=single_domain_mode)
         else:
-            loss_msda = msda.msda_regulizer_soft(feat_da_s, feat_da_t, 5, domain_prob) * self.msda_wt
-        if (math.isnan(loss_msda.data.item())):
-            raise Exception('msda loss is nan')
+            loss_msda_nc2, loss_msda_nc1 = msda.msda_regulizer_soft(feat_da_s, feat_da_t, 5, domain_prob, single_domain_mode=single_domain_mode)
+        loss_msda_nc2 = loss_msda_nc2*self.msda_wt
+        loss_msda_nc1 = loss_msda_nc1*self.msda_wt
+        if (math.isnan(loss_msda_nc2.data.item())):
+            raise Exception('msda loss nc2 is nan')
         loss_s_c1 = \
             self.softmax_loss_all_domain_soft(output_s_c1, label_s)
         if (math.isnan(loss_s_c1.data.item())):
@@ -327,7 +331,7 @@ class Solver(object):
         #print(loss_s_c1, loss_s_c2, loss_msda, entropy_loss, kl_loss, domain_prob)
         #print(self.DP.fc3.weight)
 #        print("loss_s_c1", loss_s_c1, "loss_s_c2", loss_s_c2, "loss_msda", loss_msda, "entropy_loss", entropy_loss, "kl_loss", kl_loss)
-        return loss_s_c1, loss_s_c2, loss_msda, entropy_loss, kl_loss, domain_prob
+        return loss_s_c1, loss_s_c2, loss_msda_nc2, loss_msda_nc1, entropy_loss, kl_loss, domain_prob
 
 
 class HLoss(nn.Module):

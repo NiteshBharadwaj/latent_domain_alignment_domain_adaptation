@@ -17,6 +17,7 @@ from test import test
 from view_clusters import view_clusters
 from train_source_only import train_source_only
 from plot_tsne import plot_tsne1,plot_tsne2
+from torch.utils.tensorboard import SummaryWriter
 
 
 # Training settings
@@ -115,7 +116,7 @@ def main():
     torch.backends.cudnn.deterministic = True
     #torch.backends.cudnn.enabled = False 
     record_num = 0
-    
+    summary_writer = SummaryWriter(args.record_folder)    
     record_train = '%s/%s_%s.txt' % (args.record_folder, args.target,record_num)
     record_test = '%s/%s_%s_test.txt' % (args.record_folder, args.target, record_num)
     record_val = '%s/%s_%s_val.txt' % (args.record_folder, args.target, record_num)
@@ -182,29 +183,29 @@ def main():
                 # num = solver.train_merge_baseline(t, record_file=record_train)
                 if args.dl_type=='soft_cluster':
                     torch.cuda.empty_cache()
-                    num= train_MSDA_soft(solver,t,classifier_disc,record_file=record_train)
+                    num= train_MSDA_soft(solver,t,classifier_disc,record_file=record_train, summary_writer=summary_writer, epoch_start_idx=count)
                 elif args.dl_type=='source_only':
                     torch.cuda.empty_cache()
-                    num= train_source_only(solver,t,record_file=record_train)
+                    num= train_source_only(solver,t,record_file=record_train, summary_writer=summary_writer)
                 elif args.dl_type=='source_target_only':
                     torch.cuda.empty_cache()
-                    num= train_MSDA_single(solver,t,classifier_disc,record_file=record_train)
+                    num= train_MSDA_soft(solver,t,classifier_disc,record_file=record_train, single_domain_mode=True)
                 else:
                     num = train_MSDA_hard(solver,t, classifier_disc, record_file=record_train)
             else:
                 raise Exception('One step solver not defined')
-            #solver.sche_g.step()
-            #solver.sche_c1.step()
-            #solver.sche_c2.step()
-            #solver.sche_dp.step()
+            solver.sche_g.step()
+            solver.sche_c1.step()
+            solver.sche_c2.step()
+            solver.sche_dp.step()
             count += num
             if t % 1 == 0:
                 if args.data=='cars':
                     test(solver, t, 'train', record_file=record_test, save_model=args.save_model)
-                best = test(solver, t, 'val', record_file=record_val, save_model=args.save_model)
+                best = test(solver, t, 'val', record_file=record_val, save_model=args.save_model, summary_writer=summary_writer)
                 #best = test(solver, t, 'test', record_file=record_val, save_model=args.save_model)
                 if best:
-                    test(solver, t, 'test', record_file=record_test, save_model=args.save_model)
+                    test(solver, t, 'test', record_file=record_test, save_model=args.save_model, summary_writer=summary_writer)
                     #view_clusters(solver, clusters_file, probs_csv)
                     #print('clustering images saved in!')
                 
