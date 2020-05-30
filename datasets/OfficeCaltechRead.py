@@ -5,8 +5,9 @@ import numpy as np
 num_valid_per_class = 5
 
 
-def read_office_domain(domain, office_caltech_directory, is_target, seed_id):
+def read_office_caltech_domain(domain, office_caltech_directory, is_target, seed_id):
     random.seed(seed_id)
+
     trainFile = office_caltech_directory + '/data/Office-Caltech10/' + domain + '_data.csv'
     testFile = office_caltech_directory + '/data/Office-Caltech10/' + domain + '_data.csv'
     validFile = office_caltech_directory + '/data/Office-Caltech10/' + domain + '_data.csv'

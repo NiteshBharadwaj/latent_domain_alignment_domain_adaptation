@@ -204,7 +204,7 @@ def main():
                         num= train_MSDA_soft(solver,t,classifier_disc,record_file=record_train)
                     elif args.data == 'office':
                         num, graph_data = train_MSDA_soft_office(solver,t,graph_data,classifier_disc,record_file=record_train)
-                    elif args.data == 'office-caltech':
+                    elif args.data == 'office_caltech':
                         num, graph_data = train_MSDA_soft_office_caltech(solver, t, graph_data, classifier_disc, record_file=record_train)
                     else:
                         print("WTF Noob")

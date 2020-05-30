@@ -1,4 +1,4 @@
-import office_caltech_alexnet_architecture as office_caltech_architecture
+#import office_caltech_alexnet_architecture as office_caltech_architecture
 import office_caltech_architecture as office_caltech_architecture
 
 
