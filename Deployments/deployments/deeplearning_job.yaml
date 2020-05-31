@@ -45,7 +45,7 @@ spec:
         mountPath: "/root/ssh_mount"
       - name: dshm
         mountPath: /localdata/
-      - name: latent-pvc
+      - name: latent-pvc2
         mountPath: /data
       - name: shm
         mountPath: /dev/shm
@@ -54,9 +54,9 @@ spec:
       ${NODE_HOSTNAME}
     restartPolicy: Never
     volumes:
-      - name: latent-pvc
+      - name: latent-pvc2
         persistentVolumeClaim:
-          claimName: latent-pvc
+          claimName: latent-pvc2
       - name: ssh-secret-volume
         secret:
           ${SSH_KEY_NAME}
