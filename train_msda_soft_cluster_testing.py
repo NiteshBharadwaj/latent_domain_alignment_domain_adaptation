@@ -57,10 +57,10 @@ def train_MSDA_soft(solver, epoch, classifier_disc=True, record_file=None):
 #        switch_bn(solver.DP,True)
         solver.reset_grad()
 
-        loss_s_c1, loss_s_c2, loss_msda, entropy_loss, kl_loss, domain_prob = solver.loss_soft_all_domain(img_s, img_t, label_s, epoch, img_s_cl)
+        loss_s_c1, loss_s_c2, loss_msda_nc2, loss_msda_nc1, entropy_loss, kl_loss, domain_prob = solver.loss_soft_all_domain(img_s, img_t, label_s, epoch, img_s_cl)
         if not classifier_disc:
             loss_s_c2 = loss_s_c1
-        loss = loss_s_c1 + loss_s_c2 + loss_msda + entropy_loss + kl_loss
+        loss = loss_s_c1 + loss_s_c2 + loss_msda_nc2 + loss_msda_nc1 + entropy_loss + kl_loss
 
         loss.backward()
         clip_value = 1.0
@@ -125,8 +125,8 @@ def train_MSDA_soft(solver, epoch, classifier_disc=True, record_file=None):
             solver.C1.eval()
             solver.C2.eval()
             solver.DP.eval()
-            _, _, _, _, _, domain_prob = solver.loss_soft_all_domain(cluster_batch, img_t, label_s, epoch, img_s_cl)
-            _, _, _, _, _, domain_prob_cw = solver.loss_soft_all_domain(classwise_batch, img_t, label_s, epoch, img_s_cl)
+            _, _, _, _, _,_, domain_prob = solver.loss_soft_all_domain(cluster_batch, img_t, label_s, epoch, img_s_cl)
+            _, _, _, _, _,_, domain_prob_cw = solver.loss_soft_all_domain(classwise_batch, img_t, label_s, epoch, img_s_cl)
             print('Classwise Probs',domain_prob_cw.mean(0))
             
             directory = "clusters_data-{}-num_domain-{}-batch_size-{}-kl_wt-{}-entropy_wt-{}-lr-{}-seed-{}-target-{}-clustering_only-{}/".format(solver.args.data, solver.args.num_domain, solver.args.batch_size, solver.args.kl_wt, solver.args.entropy_wt, solver.args.lr, solver.args.seed, solver.args.target, solver.args.clustering_only)
@@ -147,13 +147,13 @@ def train_MSDA_soft(solver, epoch, classifier_disc=True, record_file=None):
 
             if batch_idx==0:
                 torchvision.utils.save_image(mnist_batch, "{}/mnist_images_{}_{}.png".format(directory,epoch,batch_idx), normalize=True)
-                _, _, _, _, _, domain_prob_svhn = solver.loss_soft_all_domain(svhn_batch, img_t, label_s, epoch, img_s_cl)
+                _, _, _, _, _,_, domain_prob_svhn = solver.loss_soft_all_domain(svhn_batch, img_t, label_s, epoch, img_s_cl)
                 print('SVHN Probs',domain_prob_svhn.mean(0))
-                _, _, _, _, _, domain_prob_usps = solver.loss_soft_all_domain(usps_batch, img_t, label_s, epoch, img_s_cl)
+                _, _, _, _, _,_, domain_prob_usps = solver.loss_soft_all_domain(usps_batch, img_t, label_s, epoch, img_s_cl)
                 print('USPS Probs',domain_prob_usps.mean(0))
-                _, _, _, _, _, domain_prob_syn = solver.loss_soft_all_domain(syn_batch, img_t, label_s, epoch, img_s_cl)
+                _, _, _, _, _,_, domain_prob_syn = solver.loss_soft_all_domain(syn_batch, img_t, label_s, epoch, img_s_cl)
                 print('SYN Probs',domain_prob_syn.mean(0))
-                _, _, _, _, _, domain_prob_mnist = solver.loss_soft_all_domain(mnist_batch, img_t, label_s, epoch, img_s_cl)
+                _, _, _, _, _,_, domain_prob_mnist = solver.loss_soft_all_domain(mnist_batch, img_t, label_s, epoch, img_s_cl)
                 print('MNIST Probs',domain_prob_mnist.mean(0))
             solver.G.train()
             solver.C1.train()
@@ -162,6 +162,6 @@ def train_MSDA_soft(solver, epoch, classifier_disc=True, record_file=None):
         if batch_idx % solver.interval == 0:
             print \
                 ('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss1: {:.6f}\t Loss2: {:.6f}\t Loss_mmd: {:.6f}\t Loss_entropy: {:.6f}\t kl_loss: {:.6f}'.format(
-                epoch, batch_idx, 100, 100. * batch_idx / 70000, loss_s_c1.data.item(), loss_s_c2.data.item(), loss_msda.data.item(), entropy_loss.data.item(), kl_loss.data.item()))
+                epoch, batch_idx, 100, 100. * batch_idx / 70000, loss_s_c1.data.item(), loss_s_c2.data.item(), loss_msda_nc2.data.item(), entropy_loss.data.item(), kl_loss.data.item()))
     return batch_idx_g
 

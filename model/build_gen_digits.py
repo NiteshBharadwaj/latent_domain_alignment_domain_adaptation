@@ -23,8 +23,11 @@ def Classifier(cd=False, usps_only=False):
         return svhn2mnist.Predictor()
 #    return svhn2mnist.Predictor_ResNet18()
 
-def DomainPredictor(num_domains, usps_only=False):
+def DomainPredictor(num_domains,cd=False, usps_only=False):
     if usps_only:
         return usps.DomainPredictor(num_domains)
-    return svhn2mnist.DomainPredictor(num_domains)
+    if cd:
+        return svhn2mnist_cd.DomainPredictor(num_domains)
+    else:
+        return svhn2mnist.DomainPredictor(num_domains)
 #    return svhn2mnist.DomainPredictor_ResNet18(num_domains)

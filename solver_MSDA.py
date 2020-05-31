@@ -56,8 +56,8 @@ class Solver(object):
 
             print('load finished!')
             num_classes = 10
-            if args.dl_type=='source_target_only':
-                args.num_domain = 4 # To maintain reproducibility for a seed. Num domains is not used but can introduce a bit of randomness
+            #if args.dl_type=='source_target_only':
+            #    args.num_domain = 4 # To maintain reproducibility for a seed. Num domains is not used but can introduce a bit of randomness
             num_domains = args.num_domain
             self.num_domains = num_domains
             self.entropy_wt = args.entropy_wt
@@ -67,7 +67,7 @@ class Solver(object):
             self.G = Generator_digit(cd=class_disc, usps_only=self.usps_only)
             self.C1 = Classifier_digit(cd=class_disc, usps_only=self.usps_only)
             self.C2 = Classifier_digit(cd=class_disc, usps_only=self.usps_only)
-            self.DP = DP_Digit(num_domains, self.usps_only)
+            self.DP = DP_Digit(num_domains,cd=class_disc, usps_only=self.usps_only)
         elif args.data == 'cars':
             if args.dl_type == 'soft_cluster':
                 self.datasets, self.dataset_test, self.dataset_valid = cars_combined(target, self.batch_size)

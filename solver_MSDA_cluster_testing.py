@@ -266,9 +266,11 @@ class Solver(object):
         kl_loss = kl_loss * self.kl_wt
        
         if self.to_detach:
-            loss_msda = msda.msda_regulizer_soft(feat_s, feat_t, 5, domain_prob.detach()) * self.msda_wt 
+            loss_msda_nc2, loss_msda_nc1 = msda.msda_regulizer_soft(feat_s, feat_t, 5, domain_prob.detach()) 
         else:
-            loss_msda = msda.msda_regulizer_soft(feat_s, feat_t, 5, domain_prob) * self.msda_wt
+            loss_msda_nc2, loss_msda_nc1 = msda.msda_regulizer_soft(feat_s, feat_t, 5, domain_prob)
+        loss_msda_nc2 = loss_msda_nc2*self.msda_wt
+        loss_msda_nc1 = loss_msda_nc1*self.msda_wt
         if (math.isnan(entropy_loss.data.item())):
             raise Exception('entropy loss is nan')
         entropy_loss = entropy_loss * self.entropy_wt
@@ -284,7 +286,7 @@ class Solver(object):
         #print(loss_s_c1, loss_s_c2, loss_msda, entropy_loss, kl_loss, domain_prob)
         #print(self.DP.fc3.weight)
 #        print("loss_s_c1", loss_s_c1, "loss_s_c2", loss_s_c2, "loss_msda", loss_msda, "entropy_loss", entropy_loss, "kl_loss", kl_loss)
-        return loss_s_c1, loss_s_c2, loss_msda, entropy_loss, kl_loss, domain_prob
+        return loss_s_c1, loss_s_c2, loss_msda_nc2, loss_msda_nc1, entropy_loss, kl_loss, domain_prob
 
 
 class HLoss(nn.Module):

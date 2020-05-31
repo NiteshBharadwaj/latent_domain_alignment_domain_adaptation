@@ -25,6 +25,8 @@ def train_MSDA_soft(solver, epoch, classifier_disc=True, record_file=None, singl
         loss_s_c1, loss_s_c2, loss_msda_nc2, loss_msda_nc1, entropy_loss, kl_loss, domain_prob = solver.loss_soft_all_domain(img_s, img_t, label_s, epoch, img_s_cl, single_domain_mode=single_domain_mode)
         if not classifier_disc:
             loss_s_c2 = loss_s_c1
+        else:
+            loss_msda_nc1 = loss_msda_nc1*0
 #        if epoch > 2:
 #            loss = entropy_loss + kl_loss
 #        else:
@@ -54,8 +56,8 @@ def train_MSDA_soft(solver, epoch, classifier_disc=True, record_file=None, singl
         solver.opt_c1.step()
         solver.opt_c2.step()
         if summary_writer is not None:
-            summary_writer.add_scalar('Loss/loss_nc1', loss_msda_nc1/solver.args.msda_wt, epoch_start_idx + batch_idx_g)
-            summary_writer.add_scalar('Loss/loss_nc2', loss_msda_nc2/solver.args.msda_wt, epoch_start_idx + batch_idx_g)
+            summary_writer.add_scalar('Loss/loss_nc1', loss_msda_nc1/(solver.args.msda_wt + 1e-8), epoch_start_idx + batch_idx_g)
+            summary_writer.add_scalar('Loss/loss_nc2', loss_msda_nc2/(solver.args.msda_wt + 1e-8), epoch_start_idx + batch_idx_g)
             summary_writer.add_scalar('Loss/loss_s_c1', loss_s_c1, epoch_start_idx + batch_idx_g)
             summary_writer.add_scalar('Loss/loss_s_c2', loss_s_c2, epoch_start_idx + batch_idx_g)
             summary_writer.add_scalar('Loss/loss_entropy', entropy_loss/solver.args.entropy_wt, epoch_start_idx + batch_idx_g)
@@ -71,13 +73,13 @@ def train_MSDA_soft(solver, epoch, classifier_disc=True, record_file=None, singl
         loss_dis = loss * 0  # For printing purpose, it's reassigned if classifier_disc=True
         if classifier_disc:
             solver.reset_grad()
-            loss_s_c1, loss_s_c2, loss_msda, entropy_loss, kl_loss, domain_prob = solver.loss_soft_all_domain(img_s, img_t, label_s, epoch, img_s_cl, single_domain_mode=single_domain_mode)
+            loss_s_c1, loss_s_c2, _, _, entropy_loss, kl_loss, domain_prob = solver.loss_soft_all_domain(img_s, img_t, label_s, epoch, img_s_cl, single_domain_mode=single_domain_mode)
 
             feat_t, _, _ = solver.G(img_t)
             output_t1 = solver.C1(feat_t)
             output_t2 = solver.C2(feat_t)
 
-            loss_s = loss_s_c1 + loss_msda + loss_s_c2
+            loss_s = loss_s_c1 + loss_s_c2
             loss_dis = solver.discrepancy(output_t1, output_t2)
             loss = loss_s - loss_dis
             loss.backward()

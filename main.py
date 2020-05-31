@@ -186,7 +186,7 @@ def main():
                     num= train_MSDA_soft(solver,t,classifier_disc,record_file=record_train, summary_writer=summary_writer, epoch_start_idx=count)
                 elif args.dl_type=='source_only':
                     torch.cuda.empty_cache()
-                    num= train_source_only(solver,t,record_file=record_train, summary_writer=summary_writer)
+                    num= train_source_only(solver,t,record_file=record_train)
                 elif args.dl_type=='source_target_only':
                     torch.cuda.empty_cache()
                     num= train_MSDA_soft(solver,t,classifier_disc,record_file=record_train, single_domain_mode=True)
