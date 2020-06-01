@@ -24,7 +24,7 @@ def switch_bn(model, on):
 
 import time
 
-def train_MSDA_soft(solver, epoch, graph_data, classifier_disc=True, record_file=None):
+def train_MSDA_soft(solver, epoch, classifier_disc=True, record_file=None):
     print('inside function', time.time())
     global cluster_batch
     global amazon_batch
@@ -128,13 +128,13 @@ def train_MSDA_soft(solver, epoch, graph_data, classifier_disc=True, record_file
         else:
             loss = loss_s_c1 + loss_s_c2 + loss_msda + kl_loss
         
-        graph_data['entropy'].append(entropy_loss.data.item())
-        graph_data['kl'].append(kl_loss.data.item())
-        graph_data['c1'].append(loss_s_c1.data.item())
-        graph_data['c2'].append(loss_s_c2.data.item())
-        graph_data['msda'].append(loss_msda.data.item())
-        graph_data['h'].append(entropy_loss.data.item() + kl_loss.data.item())
-        graph_data['total'].append(entropy_loss.data.item() + kl_loss.data.item() + loss_s_c1.data.item() + loss_msda.data.item())
+#         graph_data['entropy'].append(entropy_loss.data.item())
+#         graph_data['kl'].append(kl_loss.data.item())
+#         graph_data['c1'].append(loss_s_c1.data.item())
+#         graph_data['c2'].append(loss_s_c2.data.item())
+#         graph_data['msda'].append(loss_msda.data.item())
+#         graph_data['h'].append(entropy_loss.data.item() + kl_loss.data.item())
+#         graph_data['total'].append(entropy_loss.data.item() + kl_loss.data.item() + loss_s_c1.data.item() + loss_msda.data.item())
         
         loss.backward()
         clip_value = 1.0
@@ -193,5 +193,5 @@ def train_MSDA_soft(solver, epoch, graph_data, classifier_disc=True, record_file
     print('CUDA Time', tot_cuda_time)
     print('CLDL Total Time', tot_classwisedata_time)
     print('MDL Total Time', tot_main_data_time)
-    return batch_idx_g, graph_data
+    return batch_idx_g
 

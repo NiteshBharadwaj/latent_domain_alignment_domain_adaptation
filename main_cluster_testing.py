@@ -130,27 +130,27 @@ def main():
     record_test = '%s/%s_%s_test.txt' % (args.record_folder, args.target, record_num)
     record_val = '%s/%s_%s_val.txt' % (args.record_folder, args.target, record_num)
     checkpoint_dir = '%s/%s_%s' % (args.record_folder, args.target, record_num)
-    plot_before_source = '%s/%s_%s_plot_before_source.png' % (args.record_folder, args.target, record_num)
-    plot_before_target = '%s/%s_%s_plot_before_target.png' % (args.record_folder, args.target, record_num)
-    plot_after_source = '%s/%s_%s_plot_after_source.png' % (args.record_folder, args.target, record_num)
-    plot_after_target = '%s/%s_%s_plot_after_target.png' % (args.record_folder, args.target, record_num)
-    all_plots = '%s/%s_%s_source_target_plots.png' % (args.record_folder, args.target, record_num)
-    plot_domain1 = '%s/%s_%s_latent_domain_plot_conv.png' % (args.record_folder, args.target, record_num)
-    plot_domain2 = '%s/%s_%s_latent_domain_plot_last.png' % (args.record_folder, args.target, record_num)
-    plot_domain3 = '%s/%s_%s_latent_domain_plots.png' % (args.record_folder, args.target, record_num)
-    plot_domains = [plot_domain1, plot_domain2, plot_domain3]
-    loss_plot = '%s/%s_%s_loss_plots.png' % (args.record_folder, args.target, record_num)
-    clusters_file = []
-    for i in range(args.num_domain):
-        clusters_file.append('%s/cluster_%s.png' % (args.record_folder, str(i)))
-    probs_csv = '%s/best_%s.csv' % (args.record_folder, 'probs')
+#     plot_before_source = '%s/%s_%s_plot_before_source.png' % (args.record_folder, args.target, record_num)
+#     plot_before_target = '%s/%s_%s_plot_before_target.png' % (args.record_folder, args.target, record_num)
+#     plot_after_source = '%s/%s_%s_plot_after_source.png' % (args.record_folder, args.target, record_num)
+#     plot_after_target = '%s/%s_%s_plot_after_target.png' % (args.record_folder, args.target, record_num)
+#     all_plots = '%s/%s_%s_source_target_plots.png' % (args.record_folder, args.target, record_num)
+#     plot_domain1 = '%s/%s_%s_latent_domain_plot_conv.png' % (args.record_folder, args.target, record_num)
+#     plot_domain2 = '%s/%s_%s_latent_domain_plot_last.png' % (args.record_folder, args.target, record_num)
+#     plot_domain3 = '%s/%s_%s_latent_domain_plots.png' % (args.record_folder, args.target, record_num)
+#     plot_domains = [plot_domain1, plot_domain2, plot_domain3]
+#     loss_plot = '%s/%s_%s_loss_plots.png' % (args.record_folder, args.target, record_num)
+#     clusters_file = []
+#     for i in range(args.num_domain):
+#         clusters_file.append('%s/cluster_%s.png' % (args.record_folder, str(i)))
+#     probs_csv = '%s/best_%s.csv' % (args.record_folder, 'probs')
     while os.path.exists(record_train):
         record_num += 1
         record_train = '%s/%s_%s.txt' % (args.record_folder, args.target, record_num)
         record_test = '%s/%s_%s_test.txt' % (args.record_folder, args.target, record_num)
         record_val = '%s/%s_%s_val.txt' % (args.record_folder, args.target, record_num)
-    
         checkpoint_dir = '%s/%s_%s' % (args.record_folder, args.target, record_num)
+        
     if not os.path.exists(checkpoint_dir):
         os.makedirs(checkpoint_dir)
     if not os.path.exists(args.record_folder):
@@ -187,10 +187,10 @@ def main():
                     checkpoint_dir=args.checkpoint_dir,
                     save_epoch=args.save_epoch)
         count = 0
-        graph_data = {}
+        #graph_data = {}
         keys = ['entropy','kl','c1','c2','h','total','msda']
-        for k in keys:
-            graph_data[k] = []
+#         for k in keys:
+#             graph_data[k] = []
         for t in range(args.max_epoch):
             print(t)
             if not args.one_step:
@@ -200,7 +200,7 @@ def main():
                     if args.data == 'digits':
                         num= train_MSDA_soft(solver,t,classifier_disc,record_file=record_train)
                     elif args.data == 'office':
-                        num, graph_data = train_MSDA_soft_office(solver,t,graph_data,classifier_disc,record_file=record_train)
+                        num = train_MSDA_soft_office(solver,t,classifier_disc,record_file=record_train)
                     else:
                         print("WTF Noob")
                 elif args.dl_type=='source_only':
@@ -221,15 +221,15 @@ def main():
             count += num
             if t % 1 == 0:
                 #print('testing now')
-                if(args.dl_type=='soft_cluster'):
-                    plot_data(graph_data, loss_plot)
+                #if(args.dl_type=='soft_cluster'):
+                    #plot_data(graph_data, loss_plot)
                 if args.data=='cars':
                     test(solver, t, 'train', record_file=record_test, save_model=args.save_model)
                 best = test(solver, t, 'val', record_file=record_val, save_model=args.save_model)
                 if best:
                     #print('best epoch : ', t)
                     test(solver, t, 'test', record_file=record_test, save_model=args.save_model)
-                    view_clusters(solver, clusters_file, probs_csv, t)
+                    #view_clusters(solver, clusters_file, probs_csv, t)
                     #print('clustering images saved in!')
                 
         #generate_plots(solver, 0, 'test', plot_before_source, plot_before_target, plot_after_source, plot_after_target, False)
