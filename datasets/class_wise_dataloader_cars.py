@@ -76,33 +76,24 @@ class ClasswiseDataLoader():
                 [-0.5836, -0.6948, 0.4203],
             ])
         }
-    def initialize(self, source, batch_size, num_workers_, scale=256):
-        scale2 = 256
+    def initialize(self, source, batch_size, num_workers_, scale):
         transform = transforms.Compose([
             # transforms.Resize(scale),
             # transforms.RandomCrop(scale),
             # ResizeImage(256),
-            transforms.Scale(scale),
-            transforms.RandomResizedCrop(scale2),
+            transforms.RandomCrop(scale),
+            #transforms.Resize((scale, scale)),
+            #transforms.Scale(scale),
+            #transforms.RandomResizedCrop(scale2),
+
             transforms.RandomHorizontalFlip(),
-            # transforms.ColorJitter(0.4,0.2,0.2),
+            transforms.ColorJitter(0.4,0.4,0.4),
             transforms.ToTensor(),
             # Lighting(0.1, self.__imagenet_pca['eigval'],self.__imagenet_pca['eigvec']),
             transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                  std=[0.229, 0.224, 0.225])
         ])
-        transform_source = transforms.Compose([
-                # transforms.Resize(scale),
-                transforms.RandomCrop(224),
-                transforms.Resize((scale, scale)),
-                # transforms.RandomRotation(30),
-                transforms.RandomHorizontalFlip(),
-                transforms.ColorJitter(0.4, 0.4, 0.4),
-                transforms.ToTensor(),
-                #Lighting(0.1, self.__imagenet_pca['eigval'], self.__imagenet_pca['eigvec']),
-                transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                     std=[0.229, 0.224, 0.225])
-        ])
+
         dataset_source = []
         dataloader_source = []
         overall_images = []

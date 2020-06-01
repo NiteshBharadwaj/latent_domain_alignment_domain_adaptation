@@ -4,7 +4,7 @@ from torch.autograd import Variable
 import numpy as np
 
 
-def test(solver, epoch, split, record_file=None, save_model=False):
+def test(solver, epoch, split, record_file=None, save_model=False, summary_writer=None):
     solver.G.eval()
     solver.C1.eval()
     test_loss = 0
@@ -69,6 +69,11 @@ def test(solver, epoch, split, record_file=None, save_model=False):
                                                                                              size + 1e-6)))
     test_acc = 100. * correct1 / (size + 1e-6)
     best = False
+
+    if summary_writer is not None:
+        summary_writer.add_scalar(split+'/Loss_sc1',test_loss,epoch)
+        summary_writer.add_scalar(split+'/Acc',test_acc,epoch)
+
     if split == 'val' and size != 0:
         #         if save_model and epoch % solver.save_epoch == 0 and test_acc > solver.best_acc:
         if save_model and epoch % solver.save_epoch == 0 and test_loss < solver.best_loss:

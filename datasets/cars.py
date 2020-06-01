@@ -64,7 +64,7 @@ def cars_combined(target, batch_size, compcars_directory, seed_id, num_workers):
     T_valid['imgs'] = target_valid
     T_valid['labels'] = target_valid_label
 
-    scale = 256  # TODO
+    scale = 224  # TODO
 
     train_loader = CombinedDataLoader()
     train_loader.initialize(S, T, batch_size, batch_size, num_workers,scale=scale, split='Train')

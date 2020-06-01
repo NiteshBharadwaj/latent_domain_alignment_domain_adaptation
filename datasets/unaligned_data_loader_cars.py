@@ -141,9 +141,9 @@ class UnalignedDataLoader():
     def initialize(self, source, target, batch_size1, batch_size2, num_workers, scale=32, split='Train'):
         if split == 'Train':
             transform_source = transforms.Compose([
-                # transforms.Resize(scale),
-                transforms.RandomCrop(224),
-                transforms.Resize((scale, scale)),
+                #transforms.RandomAffine(5, (.05,.05)),
+                transforms.RandomCrop(scale),
+                #transforms.Resize((scale, scale)),
                 # transforms.RandomRotation(30),
                 transforms.RandomHorizontalFlip(),
                 transforms.ColorJitter(0.4, 0.4, 0.4),
@@ -153,8 +153,9 @@ class UnalignedDataLoader():
                                      std=[0.229, 0.224, 0.225])
             ])
             transform_target = transforms.Compose([
-                transforms.RandomCrop(224),
-                transforms.Resize((scale, scale)),
+                #transforms.RandomAffine(5, (.05,.05)),
+                transforms.RandomCrop(scale),
+                #transforms.Resize((scale, scale)),
                 # transforms.RandomRotation(30),
                 transforms.RandomHorizontalFlip(),
                 transforms.ColorJitter(0.4, 0.4, 0.4),
@@ -165,14 +166,14 @@ class UnalignedDataLoader():
             ])
         elif split == 'Test':
             transform_source = transforms.Compose([
-                # transforms.Resize(scale),
+                transforms.Resize((scale,scale)),
                 # transforms.RandomCrop(scale),
                 transforms.ToTensor(),
                 transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                      std=[0.229, 0.224, 0.225])
             ])
             transform_target = transforms.Compose([
-                # transforms.Resize((scale,scale)),
+                transforms.Resize((scale,scale)),
                 transforms.ToTensor(),
                 transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                      std=[0.229, 0.224, 0.225])

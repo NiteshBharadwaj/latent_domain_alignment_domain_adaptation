@@ -138,10 +138,12 @@ class TestDataLoader():
 
         scale2 = 224
         if split == 'Train':
+            assert(False)
             transform_source = transforms.Compose([
                 # transforms.Resize(scale),
                 # transforms.RandomCrop(scale),
                 ResizeImage(256),
+                #transforms.RandomAffine(5, (.05,.05)),
                 transforms.RandomResizedCrop(224),
                 transforms.RandomHorizontalFlip(),
                 # transforms.ColorJitter(0.4,0.2,0.2),
@@ -153,6 +155,7 @@ class TestDataLoader():
             transform_target = transforms.Compose([
                 # transforms.Resize((scale,scale)),
                 ResizeImage(256),
+                #transforms.RandomAffine(5, (.05,.05)),
                 transforms.RandomResizedCrop(224),
                 transforms.RandomHorizontalFlip(),
                 # transforms.ColorJitter(0.4,0.2,0.2),

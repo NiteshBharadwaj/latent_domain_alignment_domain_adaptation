@@ -64,27 +64,35 @@ def moment_soft(output_s, domain_prob, output_t):
     output_prob = torch.matmul(output_s, domain_prob)
     output_prob_sum = domain_prob.sum(0)
     output_prob = output_prob.sum(0)/output_prob_sum.reshape(1, domain_prob.shape[2])
-    loss = 0
+    nc2_loss = 0
+    nc1_loss = 0
     for i in range(output_prob.shape[1]):
         for j in range(i+1,output_prob.shape[1]):
-            loss += output_prob_sum[0,i]*output_prob_sum[0,j]*euclidean(output_prob[:,i], output_prob[:,j])/output_s.shape[0]/output_s.shape[0]
-        loss += output_prob_sum[0,i]*euclidean(output_prob[:,i], output_t)/output_s.shape[0]
-    return loss
+            nc2_loss += output_prob_sum[0,i]*output_prob_sum[0,j]*euclidean(output_prob[:,i], output_prob[:,j])/output_s.shape[0]/output_s.shape[0]
+        nc1_loss += output_prob_sum[0,i]*euclidean(output_prob[:,i], output_t)/output_s.shape[0]
+    return nc2_loss, nc1_loss
 
 
-def k_moment_soft(output_s, output_t, k, domain_prob):
+def k_moment_soft(output_s, output_t, k, domain_prob, single_domain_mode=False):
     output_s_k = (output_s**k)
     output_t = (output_t**k).mean(0)
+    if single_domain_mode:
+        domain_prob = domain_prob*0 + 1.0/domain_prob.shape[1]
     return moment_soft(output_s_k, domain_prob, output_t)
 
-def msda_regulizer_soft(output_s, output_t, belta_moment, domain_prob):
+def msda_regulizer_soft(output_s, output_t, belta_moment, domain_prob, single_domain_mode=False):
     # print('s1:{}, s2:{}, s3:{}, s4:{}'.format(output_s1.shape, output_s2.shape, output_s3.shape, output_t.shape))        
     reg_info = 0
-    reg_info = k_moment_soft(output_s, output_t, 1, domain_prob)
-    for i in range(1,belta_moment):
-        reg_info += k_moment_soft(output_s, output_t, i + 1, domain_prob)
 
-    return reg_info / 6
+    nc_2loss = 0
+    nc_1loss = 0
+    for i in range(0,belta_moment):
+        klosses = k_moment_soft(output_s, output_t, i + 1, domain_prob, single_domain_mode=single_domain_mode)
+        nc_2loss += klosses[0]
+        nc_1loss += klosses[1]
+    return nc_2loss/6, nc_1loss/6
+
+
 # return euclidean(output_s1, output_t)
 
 def k_moment_single(output_s, output_t, k):

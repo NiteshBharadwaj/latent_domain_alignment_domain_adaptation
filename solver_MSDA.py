@@ -64,22 +64,50 @@ class Solver(object):
             self.DP = DP_Digit(num_domains)
         elif args.data == 'cars':
             if args.dl_type == 'soft_cluster':
-                self.datasets, self.dataset_test, self.dataset_valid = cars_combined(target, self.batch_size)
+                self.datasets, self.dataset_test, self.dataset_valid, self.classwise_dataset = cars_combined(target,
+                                                                                                             self.batch_size,
+                                                                                                             args.cars_directory,
+                                                                                                             args.seed,
+                                                                                                             args.num_workers)
+
+
+                # TODO: Add debug code for clustering visualization
+                # TODO: Add args.cars_directory
+                # if self.args.clustering_only:
+                # for i in range(args.num_clusters):
+                #    _, _, self.dataset_amazon, _ = cars_combined(self.batch_size, args.cars_directory,
+                #                                               args.seed, args.num_workers)
+
+
             elif args.dl_type == 'source_target_only':
-                self.datasets, self.dataset_test, self.dataset_valid = cars_combined(target, self.batch_size)
+                self.datasets, self.dataset_test, self.dataset_valid, self.classwise_dataset = cars_combined(target,
+                                                                                                             self.batch_size,
+                                                                                                             args.cars_directory,
+                                                                                                             args.seed,
+                                                                                                             args.num_workers)
             elif args.dl_type == 'source_only':
-                self.datasets, self.dataset_test, self.dataset_valid = cars_combined(target, self.batch_size)
+                self.datasets, self.dataset_test, self.dataset_valid, self.classwise_dataset = cars_combined(target,
+                                                                                                             self.batch_size,
+                                                                                                             args.num_domain,
+                                                                                                             args.cars_directory,
+                                                                                                             args.seed)
+
             print('load finished!')
-            self.entropy_wt = args.entropy_wt
-            self.msda_wt = args.msda_wt
-            self.to_detach = args.to_detach
-            num_classes = 163
+            if args.dl_type=='source_target_only':
+                args.num_domain = 4
+            num_classes = 75
+            aux_classes = 6
             num_domains = args.num_domain
             self.num_domains = num_domains
-            self.G = Generator_cars()
+            self.entropy_wt = args.entropy_wt  # 0.1
+            self.msda_wt = args.msda_wt  # 0.25
+            self.kl_wt = args.kl_wt
+            self.to_detach = args.to_detach
+            self.G = Generator_cars(self.args.is_fine_tune, self.args.extra_fc)
             self.C1 = Classifier_cars(num_classes)
             self.C2 = Classifier_cars(num_classes)
-            self.DP = DP_cars(num_domains)
+            self.DP = DP_cars(num_domains, aux_classes, self.args.is_fine_tune, self.args.extra_fc, self.args.weight_reinit)
+
         elif args.data == 'office':
             if args.dl_type == 'soft_cluster':
                 self.datasets, self.dataset_test, self.dataset_valid, self.classwise_dataset = office_combined(target, self.batch_size, args.office_directory, args.seed)
@@ -124,7 +152,8 @@ class Solver(object):
         self.DP.cuda()
         self.interval = interval
         if args.data=='cars':
-            milestones = [100]
+            milestones = [150, 300, 450]
+            #milestones = [250, 500]
         else:
             milestones = [100]
         self.sche_g = torch.optim.lr_scheduler.MultiStepLR(self.opt_g, milestones, gamma=0.1)
@@ -141,14 +170,44 @@ class Solver(object):
 
             self.opt_c1 = optim.SGD(self.C1.parameters(), lr=lr, weight_decay=0.0005, momentum=momentum)
             self.opt_c2 = optim.SGD(self.C2.parameters(), lr=lr, weight_decay=0.0005, momentum=momentum)
-            self.opt_dp = optim.SGD(self.DP.parameters(), lr=lr/100.0, weight_decay=0.0005, momentum=momentum)
+            self.opt_dp = optim.SGD(self.DP.parameters(), lr=lr/self.args.lr_ratio, weight_decay=0.0005, momentum=momentum)
 
         if which_opt == 'adam':
-            self.opt_g = optim.Adam(self.G.parameters(), lr=lr, weight_decay=0.0005)
+            if self.args.is_fine_tune and self.args.extra_fc:
+                self.opt_g = optim.Adam([
+            {'params': self.G.model.conv1.parameters()},
+            {'params': self.G.model.bn1.parameters()},
+            {'params': self.G.model.relu.parameters()},
+            {'params': self.G.model.maxpool.parameters()},
+            {'params': self.G.model.layer1.parameters()},
+            {'params': self.G.model.layer2.parameters()},
+            {'params': self.G.model.layer3.parameters(), 'lr': lr},
+            {'params': self.G.model.layer4.parameters(), 'lr': lr},
+            {'params': self.G.model.avgpool.parameters(), 'lr': lr},
+            {'params': self.G.fc2.parameters(), 'lr': lr},
+            {'params': self.G.bn_fc2.parameters(), 'lr': lr},
+            {'params': self.G.fc3.parameters(), 'lr': lr},
+            {'params': self.G.bn_fc3.parameters(), 'lr': lr}], lr=lr*self.args.fine_tune_lr_ratio, weight_decay=0.0005)
+            elif self.args.is_fine_tune and not self.args.extra_fc:
+                self.opt_g = optim.Adam([
+            {'params': self.G.model.conv1.parameters()},
+            {'params': self.G.model.bn1.parameters()},
+            {'params': self.G.model.relu.parameters()},
+            {'params': self.G.model.maxpool.parameters()},
+            {'params': self.G.model.layer1.parameters()},
+            {'params': self.G.model.layer2.parameters()},
+            {'params': self.G.model.layer3.parameters(), 'lr': lr},
+            {'params': self.G.model.layer4.parameters(), 'lr': lr},
+            {'params': self.G.model.avgpool.parameters(), 'lr': lr},
+            {'params': self.G.bn_fc3.parameters(), 'lr': lr}], lr=lr*self.args.fine_tune_lr_ratio, weight_decay=0.0005)
+            elif not self.args.is_fine_tune:
+                self.opt_g = optim.Adam(self.G.parameters(), lr=lr, weight_decay=0.0005)
+
+            #self.opt_g = optim.Adam(self.G.parameters(), lr=lr, weight_decay=0.0005)
 
             self.opt_c1 = optim.Adam(self.C1.parameters(), lr=lr, weight_decay=0.0005)
             self.opt_c2 = optim.Adam(self.C2.parameters(), lr=lr, weight_decay=0.0005)
-            self.opt_dp = optim.Adam(self.DP.parameters(), lr=lr/100.0, weight_decay=0.0005)
+            self.opt_dp = optim.Adam(self.DP.parameters(), lr=lr/self.args.lr_ratio, weight_decay=0.0005)
 
     def reset_grad(self):
         self.opt_g.zero_grad()
@@ -233,98 +292,60 @@ class Solver(object):
         domain_prob_sum = domain_prob_sum*mask + (1-mask.int())*1e-5
         return -(domain_prob_sum*(domain_prob_sum.log())).mean()
 
-    def loss_soft_all_domain(self, img_s, img_t, label_s, epoch, img_s_cl):
+    def get_domain_probs_for_input(self, batch):
+        domain_logits, aux_logits = self.DP(batch)
+        _, domain_prob = self.entropy_loss(domain_logits)
+        return domain_prob
+
+    def loss_soft_all_domain(self, img_s, img_t, label_s, epoch, img_s_cl, single_domain_mode=False):
         # Takes source images, target images, source labels and returns classifier loss, domain adaptation loss and entropy loss
         feat_s_comb, feat_t_comb = self.feat_soft_all_domain(img_s, img_t)
         feat_s, conv_feat_s = feat_s_comb
         feat_t, conv_feat_t = feat_t_comb
-        #_, conv_s_cl = self.G(img_s_cl)
-        #if self.to_detach:
-        #    domain_logits, _ = self.DP(conv_feat_s.detach())
-        #    cl_s_logits,_ = self.DP(conv_s_cl.detach())
-        #else:
-        #    domain_logits, _ = self.DP(conv_feat_s)
-        #    cl_s_logits,_ = self.DP(conv_s_cl)
-        #_, conv_s_cl = self.G(img_s_cl)
+        # with torch.no_grad():
+        #    _, conv_feat_cl = self.G(img_s_cl)
         if self.to_detach:
-            domain_logits, _ = self.DP(img_s)
-            cl_s_logits,_ = self.DP(img_s_cl)
+            domain_logits, aux_logits = self.DP(img_s)
+            cl_s_logits, _ = self.DP(img_s_cl)
         else:
-            domain_logits, _ = self.DP(img_s)
-            cl_s_logits,_ = self.DP(img_s_cl)
+            domain_logits, aux_logits = self.DP(img_s)
+            cl_s_logits, _ = self.DP(img_s_cl)
         entropy_loss, domain_prob = self.entropy_loss(domain_logits)
 
-        _,cl_s_prob = self.entropy_loss(cl_s_logits)
-
-#        if self.args.eval_only:
-#            print("domain_prob", domain_prob)
-#            print("cl_s_prob", cl_s_prob)
-#            return 0, 0, 0, 0, 0, 0
-
+        _, cl_s_prob = self.entropy_loss(cl_s_logits)
         kl_loss = -self.get_domain_entropy(cl_s_prob)
         kl_loss = kl_loss * self.kl_wt
-        
-        
-#         kl_loss = self.get_kl_loss(domain_prob)
-#         kl_loss = kl_loss * self.kl_wt
-        
-#        kl_loss = torch.zeros(1).cuda()
 
-#         total_domains = domain_prob.size()[1]
-#         domains = domain_prob.data.max(1)[1]
-#         print(domains)
-#         if(epoch % 100 == 0):
-#             for i in range(total_domains):
-#                 i_index = ((domains == i).nonzero()).squeeze()
-#                 img_s_i = img_s[i_index,:,:]
-#                 for k in range(img_s_i.size()[0]):
-#                     img_ = img_s_i[k, :, :, :].squeeze().permute(1,2,0)
-#                     img_ = img_.cpu().detach().numpy()
-#                     #print(img_.shape)
-#                     #print(img_.size())
-#                     index = i_index[k]
-#                     plt.imshow(img_) 
-#                     plt.savefig(str(i)+'/'+str(index.item())+'.png')
-#                 im = Image.fromarray(img_.sum().item())
-#                 im.save()
-#                 matplotlib.image.imsave(str(i)+'/'+str(index), img_.cpu().sum().item())
-#        if (feat_s!=feat_s).any():
-#           import pdb
-#           pdb.set_trace()
-#       if (conv_feat_s!=conv_feat_s).any():
-#           import pdb
-#           pdb.set_trace()
-#   
-#       if (domain_prob!=domain_prob).any():
-#           import pdb
-#           pdb.set_trace()
-        if (math.isnan(entropy_loss.data.item())):
+        aux_loss = torch.zeros(1).cuda()
+        if self.args.data=='cars' and self.args.aux_loss:
+            aux_loss = self.softmax_loss_all_domain_soft(aux_logits, label_s[:,self.args.aux_loss])*self.args.aux_wt
+
+        if self.to_detach:
+            loss_msda_nc2, loss_msda_nc1 = msda.msda_regulizer_soft(feat_s, feat_t, 5, domain_prob.detach(), single_domain_mode=single_domain_mode)
+        else:
+            loss_msda_nc2, loss_msda_nc1 = msda.msda_regulizer_soft(feat_s, feat_t, 5, domain_prob, single_domain_mode=single_domain_mode)
+
+        loss_msda_nc2 *= self.msda_wt
+        loss_msda_nc1 *= self.msda_wt
+
+        if math.isnan(entropy_loss.data.item()):
             raise Exception('entropy loss is nan')
         entropy_loss = entropy_loss * self.entropy_wt
 
         output_s_c1, output_t_c1 = self.C1_all_domain_soft(feat_s, feat_t)
         output_s_c2, output_t_c2 = self.C2_all_domain_soft(feat_s, feat_t)
-        if self.to_detach:
-            loss_msda = msda.msda_regulizer_soft(feat_s, feat_t, 5, domain_prob.detach()) * self.msda_wt 
+        if self.args.data=='cars':
+             loss_s_c1 = self.softmax_loss_all_domain_soft(output_s_c1, label_s[:,0])
+             loss_s_c2 = self.softmax_loss_all_domain_soft(output_s_c2, label_s[:,0])
         else:
-            loss_msda = msda.msda_regulizer_soft(feat_s, feat_t, 5, domain_prob) * self.msda_wt
-        if (math.isnan(loss_msda.data.item())):
-            raise Exception('msda loss is nan')
-        loss_s_c1 = \
-            self.softmax_loss_all_domain_soft(output_s_c1, label_s)
-        if (math.isnan(loss_s_c1.data.item())):
+             loss_s_c1 = self.softmax_loss_all_domain_soft(output_s_c1, label_s)
+             loss_s_c2 = self.softmax_loss_all_domain_soft(output_s_c2, label_s)
+        if math.isnan(loss_s_c1.data.item()):
             raise Exception(' c1 loss is nan')
-        loss_s_c2 = \
-            self.softmax_loss_all_domain_soft(output_s_c2, label_s)
-        if (math.isnan(loss_s_c2.data.item())):
-            raise Exception(' c2 loss is nan')
-        if (math.isnan(kl_loss.data.item())):
-            raise Exception(' kl loss is nan')
-        #print(loss_s_c1, loss_s_c2, loss_msda, entropy_loss, kl_loss, domain_prob)
-        #print(self.DP.fc3.weight)
-#        print("loss_s_c1", loss_s_c1, "loss_s_c2", loss_s_c2, "loss_msda", loss_msda, "entropy_loss", entropy_loss, "kl_loss", kl_loss)
-        return loss_s_c1, loss_s_c2, loss_msda, entropy_loss, kl_loss, domain_prob
-
+        # print(loss_s_c1, loss_s_c2, loss_msda, entropy_loss, kl_loss, domain_prob)
+        # print(self.DP.fc3.weight)
+        #        print("loss_s_c1", loss_s_c1, "loss_s_c2", loss_s_c2, "loss_msda", loss_msda, "entropy_loss", entropy_loss, "kl_loss", kl_loss)
+        return loss_s_c1, loss_s_c2, loss_msda_nc2, loss_msda_nc1, entropy_loss, kl_loss, aux_loss, domain_prob
 
 class HLoss(nn.Module):
     def __init__(self):

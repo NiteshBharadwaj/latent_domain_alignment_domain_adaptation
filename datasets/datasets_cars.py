@@ -73,7 +73,7 @@ class Dataset(data.Dataset):
             # return img, target
         #return img, target * 1.0
         return_tar = [float(i) for i in target]
-        return_tar[1] = intensity_val
+        return_tar[2] = intensity_val
         return img, torch.Tensor(return_tar)
 
     def __len__(self):

@@ -89,7 +89,7 @@ class Dataset(data.Dataset):
             self.batch_it[class_idx] = 0
             start_idx = 0
             end_idx = min(start_idx + self.batch_size, self.act_lens[class_idx])
-        final_images = np.zeros((self.batch_size,3,256,256),dtype='float32')
+        final_images = np.zeros((self.batch_size,3,224,224),dtype='float32')
         final_labels = np.zeros((self.batch_size), dtype='float32')
         n_samples = 0
         for img_idx in range(start_idx,end_idx):
