@@ -1,0 +1,87 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+ name: ${NAME}
+spec:
+ completions: 1
+ parallelism: 1
+ template:
+  metadata:
+    name: ${NAME}
+  spec:
+    containers:
+    - name: deeplearning-container
+      tty: true
+      image: docker.io/ak3636/deeplearning:latest
+      #image: gitlab-registry.nautilus.optiputer.net/yol070/research-containers/research-tf36-v2:tag
+      imagePullPolicy: Always
+      command: ["/bin/sh","-c"]
+      # Pip cmds are hardcoded in deploy.py. Add over there.
+      args: ["${PIP_CMD}; ${UNZIP_CMD}; cd /data/office_caltech/code_MSDA_digit;${CMD}" ]
+      #args: ["/hooks/startup.sh" ]
+      lifecycle:
+        #postStart:
+          #exec:
+            #command: ["/bin/sleep", "1"]
+        preStop:
+          exec:
+            command: ["/hooks/stop.sh"]
+      resources:
+        limits:
+          memory: "8Gi"
+          cpu: "2.0"
+          nvidia.com/gpu: ${NGPUS}
+          ${MEM_LIMIT}
+        requests:
+          memory: "8Gi"
+          cpu: "2.0"
+          nvidia.com/gpu: ${NGPUS}
+          ${MEM_REQ}
+
+      volumeMounts:
+      #- name: nfs
+
+      - name: ssh-secret-volume
+        mountPath: "/root/ssh_mount"
+      - name: dshm
+        mountPath: /localdata/
+      - name: latent-pvc
+        mountPath: /data
+      - name: latent-pvc3
+        mountPath: /data2
+      - name: latent-pvc-res
+        mountPath: /results
+      - name: latent-pvc-res2
+        mountPath: /results2
+      - name: office-pvc
+        mountPath: /office
+      - name: shm
+        mountPath: /dev/shm
+
+    nodeSelector:
+      ${NODE_HOSTNAME}
+    restartPolicy: Never
+    volumes:
+      - name: latent-pvc
+        persistentVolumeClaim:
+          claimName: latent-pvc
+      - name: latent-pvc3
+        persistentVolumeClaim:
+          claimName: latent-pvc3
+      - name: latent-pvc-res
+        persistentVolumeClaim:
+          claimName: latent-pvc-res
+      - name: latent-pvc-res2
+        persistentVolumeClaim:
+          claimName: latent-pvc-res2
+      - name: office-pvc
+        persistentVolumeClaim:
+          claimName: office-pvc
+      - name: ssh-secret-volume
+        secret:
+          ${SSH_KEY_NAME}
+      - name: dshm
+        emptyDir: {}
+      - name: shm
+        emptyDir:
+          medium: Memory
