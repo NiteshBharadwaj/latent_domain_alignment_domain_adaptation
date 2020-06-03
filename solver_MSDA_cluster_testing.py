@@ -244,6 +244,14 @@ class Solver(object):
         mask = domain_prob_sum.ge(0.000001)
         domain_prob_sum = domain_prob_sum*mask + (1-mask.int())*1e-5
         return -(domain_prob_sum*(domain_prob_sum.log())).mean()
+    
+
+    def source_only_loss(self, img_s, label_s, epoch):
+        feat_s_comb = self.G(img_s)
+        feat_s, conv_feat_s = feat_s_comb
+        output_s_c1 = self.C1(feat_s)
+        loss_s_c1 = self.softmax_loss_all_domain_soft(output_s_c1, label_s)
+        return loss_s_c1
 
     def loss_soft_all_domain(self, img_s, img_t, label_s, epoch, img_s_cl):
         # Takes source images, target images, source labels and returns classifier loss, domain adaptation loss and entropy loss

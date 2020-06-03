@@ -2,7 +2,8 @@ import svhn2mnist
 import usps
 import syn2gtrsb
 #import syndig2svhn
-import office_architecture_new
+#import office_architecture_new
+import office_architecture_resnet50 as office_architecture_new
 
 def Generator():
     # #if source == 'usps' or target == 'usps':
