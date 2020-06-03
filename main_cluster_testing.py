@@ -151,7 +151,7 @@ def main():
         record_num += 1
         record_train = '%s/%s_%s.txt' % (args.record_folder, args.target, record_num)
         record_test = '%s/%s_%s_test.txt' % (args.record_folder, args.target, record_num)
-        record_val = '%s/%s_%s_val.txt' % (args.record_folder, args.target, record_num)
+        #record_val = '%s/%s_%s_val.txt' % (args.record_folder, args.target, record_num)
     
         checkpoint_dir = '%s/%s_%s' % (args.record_folder, args.target, record_num)
     if not os.path.exists(checkpoint_dir):
@@ -230,11 +230,11 @@ def main():
                     plot_data(graph_data, loss_plot)
                 if args.data=='cars':
                     test(solver, t, 'train', record_file=record_test, save_model=args.save_model)
-                best = test(solver, t, 'val', record_file=record_val, save_model=args.save_model)
-                if best:
+                #best = test(solver, t, 'val', record_file=record_val, save_model=args.save_model)
+                #if best:
                     #print('best epoch : ', t)
-                    test(solver, t, 'test', record_file=record_test, save_model=args.save_model)
-                    view_clusters(solver, clusters_file, probs_csv, t)
+                test(solver, t, 'test', record_file=record_test, save_model=args.save_model)
+                view_clusters(solver, clusters_file, probs_csv, t)
                     #print('clustering images saved in!')
                 
         #generate_plots(solver, 0, 'test', plot_before_source, plot_before_target, plot_after_source, plot_after_target, False)

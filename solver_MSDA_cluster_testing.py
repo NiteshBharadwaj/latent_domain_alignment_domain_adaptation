@@ -122,28 +122,46 @@ class Solver(object):
 
         elif args.data == 'office_caltech':
             if args.dl_type == 'soft_cluster':
-                self.datasets, self.dataset_test, self.dataset_valid, self.classwise_dataset = office_caltech_combined(target,
-                                                                                                               self.batch_size,
-                                                                                                               args.office_caltech_directory,
-                                                                                                               args.seed,
-                                                                                                               args.num_workers)
+                #self.datasets, self.dataset_test, self.dataset_valid, self.classwise_dataset = office_caltech_combined(target,
+                #                                                                                               self.batch_size,
+                #                                                                                               args.office_caltech_directory,
+                 #                                                                                              args.seed,
+                  #                                                                                             args.num_workers)
+
+                if args.dl_type == 'soft_cluster':
+                    self.datasets, self.dataset_test, self.classwise_dataset = office_caltech_combined(target,self.batch_size,
+                                                                                                        args.office_caltech_directory,
+                                                                                                        args.seed,
+                                                                                                        args.num_workers)
+
                 # if self.args.clustering_only:
                 # _, _, self.dataset_amazon, _ = office_caltech_combined('dwca', self.batch_size, args.office_caltech_directory, args.seed, args.num_workers)
                 # _, _, self.dataset_dslr, _ = office_caltech_combined('awcd', self.batch_size, args.office_caltech_directory, args.seed, args.num_workers)
                 # _, _, self.dataset_webcam, _ = office_caltech_combined('adcw', self.batch_size, args.office_caltech_directory, args.seed, args.num_workers)
                 # _, _, self.dataset_caltech, _ = office_caltech_combined('adwc', self.batch_size, args.office_caltech_directory, args.seed, args.num_workers)
             elif args.dl_type == 'source_target_only':
-                self.datasets, self.dataset_test, self.dataset_valid, self.classwise_dataset = office_caltech_combined(target,
-                                                                                                               self.batch_size,
-                                                                                                               args.office_caltech_directory,
-                                                                                                               args.seed,
-                                                                                                               args.num_workers)
+                #self.datasets, self.dataset_test, self.dataset_valid, self.classwise_dataset = office_caltech_combined(target,
+                #                                                                                               self.batch_size,
+                #                                                                                               args.office_caltech_directory,
+                #                                                                                               args.seed,
+                #                                                                                               args.num_workers)
+
+                self.datasets, self.dataset_test, self.classwise_dataset = office_caltech_combined(target,self.batch_size,
+                                                                                                    args.office_caltech_directory,
+                                                                                                    args.seed,args.num_workers)
+
+
             elif args.dl_type == 'source_only':
-                self.datasets, self.dataset_test, self.dataset_valid, self.classwise_dataset = office_caltech_combined(target,
-                                                                                                               self.batch_size,
-                                                                                                               args.office_caltech_directory,
-                                                                                                               args.seed,
-                                                                                                               args.num_workers)
+                #self.datasets, self.dataset_test, self.dataset_valid, self.classwise_dataset = office_caltech_combined(target,
+                #                                                                                               self.batch_size,
+                #                                                                                               args.office_caltech_directory,
+                #                                                                                               args.seed,
+                #                                                                                               args.num_workers)
+
+                self.datasets, self.dataset_test, self.classwise_dataset = office_caltech_combined(target,self.batch_size,
+                                                                                                    args.office_caltech_directory,
+                                                                                                    args.seed,
+                                                                                                    args.num_workers)
 
             print('load finished!')
             self.entropy_wt = args.entropy_wt
@@ -352,16 +370,3 @@ class HLoss(nn.Module):
         b = F.softmax(x, dim=1) * F.log_softmax(x, dim=1)
         b = -1.0 * b.mean()
         return b, domain_prob + 1e-5
-
-# Takes input tensor of shape (N x num_domains) and computes the entropy loss sum(p * logp)
-#class HLoss(nn.Module):
-#    def __init__(self):
-#        super(HLoss, self).__init__()
-
-#    def forward(self, x):
-#        input_ = F.softmax(x, dim=1)
-#        mask = input_.ge(0.000001)
-#        mask_out = input_*mask + (1-mask.int())*1e-5
-#        entropy = -(torch.sum(mask_out * torch.log(mask_out)))
-#        loss = entropy/ float(input_.size(0))
-#        return loss, mask_out
