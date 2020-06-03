@@ -252,7 +252,9 @@ def dataset_combined(target, batch_size, num_clus, directory, seed, usps_less_da
     np.random.shuffle(indices_tar)
     target_test = target_test[indices_tar]
     target_test_label = target_test_label[indices_tar]
-    n_images_per_class = 10
+    n_images_per_class = 100
+    if target=='usps':
+        n_images_per_class = 10
     valid_mask = []
     for i in range(10):
         select_indices = np.where(target_test_label==i)[0][:n_images_per_class]
