@@ -134,41 +134,54 @@ def dataset_hard_cluster(target, batch_size, num_clus, directory, seed, usps_les
     T = {}
     T_test = {}
     T_val = {}
-    domain_all = ['mnistm', 'mnist', 'usps', 'svhn', 'syn']
-    domain_all.remove(target)
+    
+    target = target.split('_')
+    source_codes = target[:-1]
+    target_code = target[-1]
+    
+    domain_map = {'mnistm':'mnistm', 'mnist':'mnist', 'usps':'usps', 'svhn':'svhn', 'syn':'syn'}
+    
+    if len(source_codes)<1 or source_codes[0]=='all':
+        domain_all = ['mnistm', 'mnist', 'usps', 'svhn', 'syn']
+        domain_all.remove(target_code)
+        source_codes = domain_all
+    target = domain_map[target_code]
+    domain_all = [domain_map[x] for x in domain_map if x in source_codes]
 
+    for i in range(len(domain_all)):
+        S.append({})
+        S_test.append({})
+    is_multi =  len(domain_all) > 1   
     target_train, target_train_label, target_test, target_test_label = return_dataset(target, directory=directory, is_multi=is_multi, usps_less_data_protocol=usps_less_data_protocol)
-
-    indices_tar = np.arange(0,target_test.shape[0]) 
+    
+    indices_tar = np.arange(0,target_test.shape[0])
     np.random.seed(seed)
     np.random.shuffle(indices_tar)
-    val_split = int(0.05*target_test.shape[0])
-    target_val = target_test[indices_tar[:val_split]]
-    target_val_label = target_test_label[indices_tar[:val_split]]
-    target_test = target_test[indices_tar[val_split:]]
-    target_test_label = target_test_label[indices_tar[val_split:]]
+    target_test = target_test[indices_tar]
+    target_test_label = target_test_label[indices_tar]
+    n_images_per_class = 100
+    if target=='usps':
+        n_images_per_class = 10
+    valid_mask = []
+    for i in range(10):
+        select_indices = np.where(target_test_label == i)[0][:n_images_per_class]
+        valid_mask.extend(select_indices.tolist())
+    test_mask = [i for i in range(target_test_label.shape[0]) if i not in valid_mask]
+    target_val = target_test[valid_mask]
+    target_val_label = target_test_label[valid_mask]
+    target_test = target_test[test_mask]
+    target_test_label = target_test_label[test_mask]
     # Generate target dataset label splits
     # target_train, target_train_label, target_test, target_test_label = return_dataset(target_dataset)
-
-    T['imgs'] = target_train
-    T['labels'] = target_train_label
-    # input target samples for both
-    T_test['imgs'] = target_test
-    T_test['labels'] = target_test_label
-
-    T_val['imgs'] = target_val
-    T_val['labels'] = target_val_label
     
     S_train = []
     S_train_labels = []
-    # S_train_std = []
+    # S_train_std = []        
 
     # Read the respective source domain datasets
     for i in range(len(domain_all)):
 
-        source_train, source_train_label, source_test, source_test_label = return_dataset(domain_all[i],
-                                                                                          directory=directory)
-
+        source_train, source_train_label, source_test, source_test_label = return_dataset(domain_all[i], directory=directory, is_multi=is_multi, usps_less_data_protocol=usps_less_data_protocol)
         # Convert all the datasets to (3,28,28) image size for (2352 Feature vector)
 
         # Broadcast to three channels
@@ -181,6 +194,26 @@ def dataset_hard_cluster(target, batch_size, num_clus, directory, seed, usps_les
         S_train_labels.append(source_train_label)
 
         # S_train_std.append(StandardScaler().fit_transform(source_train.reshape(source_train.shape[0], -1)))
+
+    T['imgs'] = target_train
+    T['labels'] = target_train_label
+
+    # input target samples for both
+    T_test['imgs'] = target_test
+    T_test['labels'] = target_test_label
+
+    T_val['imgs'] = target_val
+    T_val['labels'] = target_val_label
+    usps_only_exp = False
+    if is_multi: #Like Peng
+        scale = 32 # Scale everything to 32
+    else:
+        # Traffic Signs are typically scaled to 40
+        # USPS only is scaled to 28 (Src: Maximum classifier discrepancy)
+        traffic_exp = 'synth' in source_codes
+        usps_only_exp = target=='usps' or 'usps' in source_codes
+        scale = 40 if traffic_exp else 28 if usps_only_exp else 32
+
 
     X_combined = np.concatenate(S_train, axis=0)
     X_labels = np.concatenate(S_train_labels, axis=0)
@@ -228,6 +261,7 @@ def dataset_hard_cluster(target, batch_size, num_clus, directory, seed, usps_les
 
     return dataset, dataset_test, dataset_valid
 
+
 # If multi-domain, read only a subset of data (as used by Peng.)
 # For single domain, usps less data protocol use less data
 # In other settings, use full dataset
@@ -237,7 +271,7 @@ def dataset_combined(target, batch_size, num_clus, directory, seed, usps_less_da
     T = {}
     T_test = {}
     T_val = {}
-    domain_map = {'mnistm': 'mnistm', 'mnist': 'mnist', 'usps': 'usps', 'svhn': 'svhn', 'syn': 'syn'}
+    
     target = target.split('_')
     source_codes = target[:-1]
     target_code = target[-1]

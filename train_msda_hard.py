@@ -75,6 +75,6 @@ def train_MSDA(solver, epoch, classifier_disc=True, record_file=None, summary_wr
 
         if batch_idx % solver.interval == 0:
             print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss1: {:.6f}\t Loss2: {:.6f}\t  Loss_mmd NC1: {:.6f}\t Loss_mmd NC2: {:6f}'.format(
-                epoch, batch_idx, 100, 100. * batch_idx / 70000, loss_s_c1.data.item(), loss_s_c2.data.item(),  loss_msda_nc1.data.item(),loss_msda_nc2.data.item())))
+                epoch, batch_idx, 100, 100. * batch_idx / 70000, loss_s_c1.data.item(), loss_s_c2.data.item(),  loss_msda_nc1.data.item(),loss_msda_nc2.data.item()))
 
     return batch_idx_g
