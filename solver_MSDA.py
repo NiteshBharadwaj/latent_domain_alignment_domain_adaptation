@@ -41,7 +41,8 @@ class Solver(object):
             if args.dl_type == 'original':
                 self.datasets, self.dataset_test, self.dataset_valid = dataset_read(target, self.batch_size)
             elif args.dl_type == 'hard_cluster':
-                self.datasets, self.dataset_test, self.dataset_valid = dataset_hard_cluster(target, self.batch_size,args.num_domain)
+                self.datasets, self.dataset_test, self.dataset_valid = dataset_hard_cluster(target, self.batch_size, args.num_domain, args.office_directory, args.seed,
+                        usps_less_data_protocol = args.usps_less_data_protocol)
             elif args.dl_type == 'soft_cluster':
                 self.datasets, self.dataset_test, self.dataset_valid, self.classwise_dataset, self.is_multi, self.usps_only = dataset_combined(target, self.batch_size,args.num_domain, args.office_directory, args.seed, 
                         usps_less_data_protocol = args.usps_less_data_protocol)

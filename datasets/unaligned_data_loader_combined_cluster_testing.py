@@ -19,6 +19,15 @@ class CombinedData(Dataset):
         self.data_loader_t_iter = iter(self.data_loader_t)
         self.iter = 0
 
+    def reset(self):
+        self.stop_s = False
+        self.stop_t = False
+        self.data_loader_s_iter = iter(self.data_loader_s)
+        self.data_loader_t_iter = iter(self.data_loader_t)
+        self.iter = 0
+        return self
+
+
     def __getitem__(self, index):
         S, S_paths,t,t_paths = None, None, None, None
         try:
