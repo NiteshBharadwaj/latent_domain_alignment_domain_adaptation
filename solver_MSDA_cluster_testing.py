@@ -40,7 +40,8 @@ class Solver(object):
             if args.dl_type == 'original':
                 self.datasets, self.dataset_test, self.dataset_valid = dataset_read(target, self.batch_size)
             elif args.dl_type == 'hard_cluster':
-                self.datasets, self.dataset_test, self.dataset_valid = dataset_hard_cluster(target, self.batch_size,args.num_domain)
+                self.datasets, self.dataset_test, self.dataset_valid = dataset_hard_cluster(target, self.batch_size,
+                                                                                            args.num_domain,args.office_directory, args.seed)
             elif args.dl_type == 'soft_cluster':
                 self.datasets, self.dataset_test, self.dataset_valid, self.classwise_dataset = dataset_combined(target, self.batch_size,args.num_domain, args.office_directory, args.seed)
                 if self.args.clustering_only:
@@ -211,6 +212,35 @@ class Solver(object):
         loss_source_C2 = self.softmax_loss_all_domain(C2_feat_s, label_s)
         return loss_source_C1, loss_source_C2, loss_msda
 
+    def loss_hard_all_domain(self, img_s, img_t, label_s, domain_label):
+        # Takes source images, target images, source labels and returns classifier loss, domain adaptation loss and entropy loss
+        feat_s_comb, feat_t_comb = self.feat_soft_all_domain(img_s, img_t)
+        feat_s, conv_feat_s, _ = feat_s_comb
+        feat_t, conv_feat_t, _ = feat_t_comb
+
+        # Convert Domain Labels to One-Hot Encoded Vector
+        #domain_prob = torch.zeros(len(domain_label), domain_label.max() + 1).scatter_(1, domain_label.unsqueeze(1), 1.)
+        domain_prob = torch.nn.functional.one_hot(domain_label)
+
+        loss_msda_nc2, loss_msda_nc1 = msda.msda_regulizer_soft(feat_s, feat_t, 5, domain_prob)
+
+        loss_msda_nc2 = loss_msda_nc2 * self.msda_wt
+        loss_msda_nc1 = loss_msda_nc1 * self.msda_wt
+
+        output_s_c1, output_t_c1 = self.C1_all_domain_soft(feat_s, feat_t)
+        output_s_c2, output_t_c2 = self.C2_all_domain_soft(feat_s, feat_t)
+        loss_s_c1 = self.softmax_loss_all_domain_soft(output_s_c1, label_s)
+
+        if math.isnan(loss_s_c1.data.item()):
+            raise Exception('c1 loss is nan')
+
+        loss_s_c2 = self.softmax_loss_all_domain_soft(output_s_c2, label_s)
+        if math.isnan(loss_s_c2.data.item()):
+            raise Exception('c2 loss is nan')
+
+
+        return loss_s_c1, loss_s_c2, loss_msda_nc2, loss_msda_nc1
+
     def feat_soft_all_domain(self, img_s, img_t):
         # Takes input source and target images returns the feature from feature extractor
         return self.G(img_s), self.G(img_t)
@@ -298,16 +328,3 @@ class HLoss(nn.Module):
         b = F.softmax(x, dim=1) * F.log_softmax(x, dim=1)
         b = -1.0 * b.mean()
         return b, domain_prob + 1e-5
-
-# Takes input tensor of shape (N x num_domains) and computes the entropy loss sum(p * logp)
-#class HLoss(nn.Module):
-#    def __init__(self):
-#        super(HLoss, self).__init__()
-
-#    def forward(self, x):
-#        input_ = F.softmax(x, dim=1)
-#        mask = input_.ge(0.000001)
-#        mask_out = input_*mask + (1-mask.int())*1e-5
-#        entropy = -(torch.sum(mask_out * torch.log(mask_out)))
-#        loss = entropy/ float(input_.size(0))
-#        return loss, mask_out

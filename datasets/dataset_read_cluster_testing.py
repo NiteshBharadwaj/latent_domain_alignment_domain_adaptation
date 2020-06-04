@@ -3,6 +3,7 @@ import sys
 sys.path.append('../loader')
 from unaligned_data_loader import UnalignedDataLoader
 from .unaligned_data_loader_combined_cluster_testing import UnalignedDataLoader as CombinedDataLoader
+from .unaligned_data_loader_combined_cluster_testing import UnalignedDataLoaderDomain as CombinedDataLoaderDomain
 from class_wise_data_loader_cluster_testing import ClasswiseDataLoader
 from svhn import load_svhn
 from mnist import load_mnist
@@ -14,7 +15,7 @@ from synth_traffic import load_syntraffic
 
 # User imports for hard-cluster code
 import numpy as np
-#import random
+# import random
 # from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 from sklearn.cluster import KMeans
@@ -64,7 +65,7 @@ def dataset_read(target, batch_size):
     T = {}
     T_test = {}
     T_val = {}
-    domain_map = {'m':'mnistm', 't':'mnist', 'u':'usps', 'h':'svhn', 'y':'syn'}
+    domain_map = {'m': 'mnistm', 't': 'mnist', 'u': 'usps', 'h': 'svhn', 'y': 'syn'}
     source_codes = target[:-1]
     target_code = target[-1]
     target = domain_map[target_code]
@@ -72,11 +73,11 @@ def dataset_read(target, batch_size):
     domain_all.remove(target)
 
     target_train, target_train_label, target_test, target_test_label = return_dataset(target)
-    indices_tar = np.arange(0,target_test.shape[0])
+    indices_tar = np.arange(0, target_test.shape[0])
 
     np.random.seed(42)
     np.random.shuffle(indices_tar)
-    val_split = int(0.05*target_test.shape[0])
+    val_split = int(0.05 * target_test.shape[0])
     target_val = target_test[indices_tar[:val_split]]
     target_val_label = target_test_label[indices_tar[:val_split]]
     target_test = target_test[indices_tar[val_split:]]
@@ -117,7 +118,7 @@ def dataset_read(target, batch_size):
     dataset_test = test_loader.load_data()
 
     S_val = {}
-    S_val['imgs'] = np.zeros((20,3,32,32))
+    S_val['imgs'] = np.zeros((20, 3, 32, 32))
     S_val['labels'] = np.zeros((20))
     val_loader = UnalignedDataLoader()
     val_loader.initialize([S_val], T_val, batch_size, batch_size, scale=scale)
@@ -126,46 +127,58 @@ def dataset_read(target, batch_size):
     return dataset, dataset_test, dataset_valid
 
 
-def dataset_hard_cluster(target, batch_size,num_clus):
+def dataset_hard_cluster(target, batch_size, num_clus, directory, seed):
     # Number of components for PCA
     n_comp = 50
 
+    S = []
+    S_test = []
     T = {}
     T_test = {}
     T_val = {}
-    domain_all = ['mnistm', 'mnist', 'usps', 'svhn', 'syn']
-    domain_all.remove(target)
 
-    target_train, target_train_label, target_test, target_test_label = return_dataset(target)
+    domain_map = {'mnistm': 'mnistm', 'mnist': 'mnist', 'usps': 'usps', 'svhn': 'svhn', 'syn': 'syn'}
+    target = target.split('_')
+    source_codes = target[:-1]
+    target_code = target[-1]
+    target = domain_map[target_code]
+    domain_all = [domain_map[x] for x in domain_map if x in source_codes]
 
-    indices_tar = np.arange(0,target_test.shape[0]) 
-    np.random.seed(42)
+    for i in range(len(domain_all)):
+        S.append({})
+        S_test.append({})
+
+    target_train, target_train_label, target_test, target_test_label = return_dataset(target, directory=directory)
+
+    indices_tar = np.arange(0, target_test.shape[0])
+    np.random.seed(seed)
     np.random.shuffle(indices_tar)
-    val_split = int(0.05*target_test.shape[0])
-    target_val = target_test[indices_tar[:val_split]]
-    target_val_label = target_test_label[indices_tar[:val_split]]
-    target_test = target_test[indices_tar[val_split:]]
-    target_test_label = target_test_label[indices_tar[val_split:]]
+
+    target_test = target_test[indices_tar]
+    target_test_label = target_test_label[indices_tar]
+    n_images_per_class = 10
+    valid_mask = []
+    for i in range(10):
+        select_indices = np.where(target_test_label == i)[0][:n_images_per_class]
+        valid_mask.extend(select_indices.tolist())
+    test_mask = [i for i in range(target_test_label.shape[0]) if i not in valid_mask]
+    target_val = target_test[valid_mask]
+    target_val_label = target_test_label[valid_mask]
+    target_test = target_test[test_mask]
+    target_test_label = target_test_label[test_mask]
+
     # Generate target dataset label splits
-    #target_train, target_train_label, target_test, target_test_label = return_dataset(target_dataset)
+    # target_train, target_train_label, target_test, target_test_label = return_dataset(target_dataset)
 
-    T['imgs'] = target_train
-    T['labels'] = target_train_label
-    # input target samples for both
-    T_test['imgs'] = target_test
-    T_test['labels'] = target_test_label
-
-    T_val['imgs'] = target_val
-    T_val['labels'] = target_val_label
-    
     S_train = []
     S_train_labels = []
-    #S_train_std = []
+    # S_train_std = []
 
     # Read the respective source domain datasets
     for i in range(len(domain_all)):
 
-        source_train, source_train_label, source_test, source_test_label = return_dataset(domain_all[i])
+        source_train, source_train_label, source_test, source_test_label = return_dataset(domain_all[i],
+                                                                                          directory=directory)
 
         # Convert all the datasets to (3,28,28) image size for (2352 Feature vector)
 
@@ -178,7 +191,7 @@ def dataset_hard_cluster(target, batch_size,num_clus):
         S_train.append(source_train)
         S_train_labels.append(source_train_label)
 
-        #S_train_std.append(StandardScaler().fit_transform(source_train.reshape(source_train.shape[0], -1)))
+        # S_train_std.append(StandardScaler().fit_transform(source_train.reshape(source_train.shape[0], -1)))
 
     X_combined = np.concatenate(S_train, axis=0)
     X_labels = np.concatenate(S_train_labels, axis=0)
@@ -198,15 +211,26 @@ def dataset_hard_cluster(target, batch_size,num_clus):
         S.append({})
         S[i]['imgs'] = X_combined[predict == i]
         S[i]['labels'] = X_labels[predict == i]
+        S[i]['domain_labels'] = [i] * len(S[i]['labels'])
 
         # input target sample when test, source performance is not important
         S_test.append({})
         S_test[i]['imgs'] = target_test
         S_test[i]['labels'] = target_test_label
 
+    T['imgs'] = target_train
+    T['labels'] = target_train_label
+
+    # input target samples for both
+    T_test['imgs'] = target_test
+    T_test['labels'] = target_test_label
+
+    T_val['imgs'] = target_val
+    T_val['labels'] = target_val_label
+
     scale = 32
 
-    train_loader = UnalignedDataLoader()
+    train_loader = CombinedDataLoaderDomain()
     train_loader.initialize(S, T, batch_size, batch_size, scale=scale)
     dataset = train_loader.load_data()
 
@@ -216,12 +240,13 @@ def dataset_hard_cluster(target, batch_size,num_clus):
     dataset_test = test_loader.load_data()
 
     S_val = {}
-    S_val['imgs'] = np.zeros((20,3,32,32))
+    S_val['imgs'] = np.zeros((20, 3, 32, 32))
     S_val['labels'] = np.zeros((20))
     val_loader = UnalignedDataLoader()
     val_loader.initialize([S_val], T_val, batch_size, batch_size, scale=scale)
 
     dataset_valid = val_loader.load_data()
+
     return dataset, dataset_test, dataset_valid
 
 
@@ -231,7 +256,7 @@ def dataset_combined(target, batch_size, num_clus, directory, seed):
     T = {}
     T_test = {}
     T_val = {}
-    domain_map = {'mnistm':'mnistm', 'mnist':'mnist', 'usps':'usps', 'svhn':'svhn', 'syn':'syn'}
+    domain_map = {'mnistm': 'mnistm', 'mnist': 'mnist', 'usps': 'usps', 'svhn': 'svhn', 'syn': 'syn'}
     target = target.split('_')
     source_codes = target[:-1]
     target_code = target[-1]
@@ -241,10 +266,10 @@ def dataset_combined(target, batch_size, num_clus, directory, seed):
     for i in range(len(domain_all)):
         S.append({})
         S_test.append({})
-    
+
     target_train, target_train_label, target_test, target_test_label = return_dataset(target, directory=directory)
-    
-    indices_tar = np.arange(0,target_test.shape[0])
+
+    indices_tar = np.arange(0, target_test.shape[0])
     np.random.seed(seed)
     np.random.shuffle(indices_tar)
     target_test = target_test[indices_tar]
@@ -252,7 +277,7 @@ def dataset_combined(target, batch_size, num_clus, directory, seed):
     n_images_per_class = 10
     valid_mask = []
     for i in range(10):
-        select_indices = np.where(target_test_label==i)[0][:n_images_per_class]
+        select_indices = np.where(target_test_label == i)[0][:n_images_per_class]
         valid_mask.extend(select_indices.tolist())
     test_mask = [i for i in range(target_test_label.shape[0]) if i not in valid_mask]
     target_val = target_test[valid_mask]
@@ -260,10 +285,11 @@ def dataset_combined(target, batch_size, num_clus, directory, seed):
     target_test = target_test[test_mask]
     target_test_label = target_test_label[test_mask]
     for i in range(len(domain_all)):
-        source_train, source_train_label, source_test, source_test_label = return_dataset(domain_all[i], directory=directory)
-        #mask = np.where(source_train_label==digit_to_take)
-        #S[i]['imgs'] = source_train[mask]
-        #S[i]['labels'] = source_train_label[mask]
+        source_train, source_train_label, source_test, source_test_label = return_dataset(domain_all[i],
+                                                                                          directory=directory)
+        # mask = np.where(source_train_label==digit_to_take)
+        # S[i]['imgs'] = source_train[mask]
+        # S[i]['labels'] = source_train_label[mask]
         S[i]['imgs'] = source_train
         S[i]['labels'] = source_train_label
         # input target sample when test, source performance is not important
@@ -286,7 +312,7 @@ def dataset_combined(target, batch_size, num_clus, directory, seed):
     dataset = train_loader.load_data()
 
     class_loader = ClasswiseDataLoader()
-    class_loader.initialize(S,batch_size,scale=scale)
+    class_loader.initialize(S, batch_size, scale=scale)
     dataset_class = class_loader.load_data()
 
     test_loader = UnalignedDataLoader()
@@ -295,7 +321,7 @@ def dataset_combined(target, batch_size, num_clus, directory, seed):
     dataset_test = test_loader.load_data()
 
     S_val = {}
-    S_val['imgs'] = np.zeros((20,3,32,32))
+    S_val['imgs'] = np.zeros((20, 3, 32, 32))
     S_val['labels'] = np.zeros((20))
     val_loader = UnalignedDataLoader()
     val_loader.initialize([S_val], T_val, batch_size, batch_size, scale=scale)

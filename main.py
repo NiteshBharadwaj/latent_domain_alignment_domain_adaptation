@@ -191,7 +191,7 @@ def main():
                     torch.cuda.empty_cache()
                     num= train_MSDA_soft(solver,t,classifier_disc,record_file=record_train, single_domain_mode=True)
                 else:
-                    num = train_MSDA_hard(solver,t, classifier_disc, record_file=record_train)
+                    num = train_MSDA_hard(solver,t, classifier_disc, record_file=record_train, summary_writer=summary_writer, epoch_start_idx=count)
             else:
                 raise Exception('One step solver not defined')
             solver.sche_g.step()
