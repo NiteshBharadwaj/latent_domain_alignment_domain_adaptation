@@ -190,7 +190,8 @@ def main():
                 elif args.dl_type=='source_target_only':
                     torch.cuda.empty_cache()
                     num= train_MSDA_soft(solver,t,classifier_disc,record_file=record_train, single_domain_mode=True)
-                else:
+                elif args.dl_type=='hard_cluster':
+                    print("Hard Cluster")
                     num = train_MSDA_hard(solver,t, classifier_disc, record_file=record_train, summary_writer=summary_writer, epoch_start_idx=count)
             else:
                 raise Exception('One step solver not defined')
