@@ -259,7 +259,7 @@ def dataset_hard_cluster(target, batch_size, num_clus, directory, seed, usps_les
 
     dataset_valid = val_loader.load_data()
 
-    return dataset, dataset_test, dataset_valid
+    return dataset, dataset_test, dataset_valid, is_multi, usps_only_exp
 
 
 # If multi-domain, read only a subset of data (as used by Peng.)
@@ -352,4 +352,4 @@ def dataset_combined(target, batch_size, num_clus, directory, seed, usps_less_da
     val_loader.initialize([S_val], T_val, batch_size, batch_size, scale=scale)
 
     dataset_valid = val_loader.load_data()
-    return dataset, dataset_test, dataset_valid, dataset_class
+    return dataset, dataset_test, dataset_valid, dataset_class, is_multi, usps_only_exp
