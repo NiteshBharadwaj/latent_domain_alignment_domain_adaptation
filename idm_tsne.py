@@ -235,6 +235,7 @@ def plot_tsne2(solver,plot_before_source, plot_before_target, plot_after_source,
         domain_y2_bool = False
         total_s = 0
         total_t = 0
+        num_imgs = 5000
         if(solver.dl_type == 'soft_cluster'):
             for batch_idx, data in enumerate(solver.datasets):
                 img_t = data['T'].cuda()
@@ -246,7 +247,7 @@ def plot_tsne2(solver,plot_before_source, plot_before_target, plot_after_source,
                     _, img_transformed2 = solver.DP(img.cuda()) 
                 
                 #total_s += img.size()[0]
-                if(total_s > 5000):
+                if(total_s > num_imgs):
                     break
                 if(img.size()[0] > prev):
                     break
@@ -257,7 +258,7 @@ def plot_tsne2(solver,plot_before_source, plot_before_target, plot_after_source,
                 best_probs = domain_prob.data.max(1)[0]
                 for i in range(solver.num_domains):
                     i_index = ((best_domains == i).nonzero()).squeeze()
-                    i_index = ((best_probs[i_index] > 0.9).nonzero()).squeeze()
+                    #i_index = ((i_index[best_probs[i_index] > 0.9]).nonzero()).squeeze()
                     img_i = img[i_index,:,:,:]
                     total_s += img_i.size()[0]
                     img_transformed1_i = img_transformed1[i_index,:]
@@ -285,7 +286,7 @@ def plot_tsne2(solver,plot_before_source, plot_before_target, plot_after_source,
 
 
                 total_t += img_t.size()[0]
-                if (total_t < 1000 and img_t.size()[0]>0):
+                if (total_t < num_imgs//4 and img_t.size()[0]>0):
                     try:
                         a = img_t.size()[3]
                     except:
