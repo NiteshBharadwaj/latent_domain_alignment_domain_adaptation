@@ -16,7 +16,7 @@ from train_msda_single import train_MSDA_single
 from test import test
 from view_clusters import view_clusters
 from train_source_only import train_source_only
-from plot_tsne import plot_tsne1,plot_tsne2
+from idm_tsne import plot_tsne1,plot_tsne2
 from torch.utils.tensorboard import SummaryWriter
 
 
@@ -159,14 +159,14 @@ def main():
 
         #train_MSDA_soft(solver,0,classifier_disc)
 
-        test(solver, 0, 'test', record_file=None, save_model=False)
-        view_clusters(solver, clusters_file, probs_csv)
-        plot_tsne1(solver, plot_before_source, plot_before_target, plot_after_source, plot_after_target, all_plots, plot_domains, args.data)
+        #test(solver, 0, 'test', record_file=None, save_model=False)
+        #view_clusters(solver, clusters_file, probs_csv)
+        #plot_tsne1(solver, plot_before_source, plot_before_target, plot_after_source, plot_after_target, all_plots, plot_domains, args.data)
 
-        solver = Solver(args, target=args.target, learning_rate=args.lr, batch_size=args.batch_size,
-                    optimizer=args.optimizer, 
-                    checkpoint_dir=args.checkpoint_dir,
-                    save_epoch=args.save_epoch)
+        #solver = Solver(args, target=args.target, learning_rate=args.lr, batch_size=args.batch_size,
+        #            optimizer=args.optimizer, 
+        #            checkpoint_dir=args.checkpoint_dir,
+        #            save_epoch=args.save_epoch)
 
         plot_tsne2(solver, plot_before_source, plot_before_target, plot_after_source, plot_after_target, all_plots, plot_domains, args.data)
 

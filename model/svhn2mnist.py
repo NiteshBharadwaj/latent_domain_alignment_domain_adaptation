@@ -139,6 +139,7 @@ class DomainPredictor(nn.Module):
         x = F.dropout(x, training=self.training)
         if reverse:
             x = grad_reverse(x, self.lambd)
-        x = self.lrelu(self.bn2_fc(self.fc2(x)))
+        last_layer = self.bn2_fc(self.fc2(x))
+        x = self.lrelu(last_layer)
         output = self.fc3(x)
-        return output,x
+        return output,last_layer

@@ -239,6 +239,11 @@ class Solver(object):
         domain_prob_sum = domain_prob_sum*mask + (1-mask.int())*1e-5
         return -(domain_prob_sum*(domain_prob_sum.log())).mean()
 
+    def get_domain_probs(self, img):
+        domain_logits, _ = self.DP(img)
+        _, domain_prob = self.entropy_loss(domain_logits)
+        return domain_prob
+
     def loss_soft_all_domain(self, img_s, img_t, label_s, epoch, img_s_cl, force_attach = False, single_domain_mode=False):
         # Takes source images, target images, source labels and returns classifier loss, domain adaptation loss and entropy loss
         feat_s_comb, feat_t_comb = self.feat_soft_all_domain(img_s, img_t)
