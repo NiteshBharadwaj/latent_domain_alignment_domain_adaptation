@@ -5,6 +5,7 @@ import random
 import numpy as np
 import sys
 import os
+
 sys.path.append('./model')
 sys.path.append('./datasets')
 sys.path.append('./metric');
@@ -12,13 +13,11 @@ from solver_MSDA import Solver
 import os
 from train_msda_hard import train_MSDA as train_MSDA_hard
 from train_msda_soft import train_MSDA_soft
-from train_msda_single import train_MSDA_single
 from test import test
 from view_clusters import view_clusters
 from train_source_only import train_source_only
-from idm_tsne import plot_tsne1,plot_tsne2
+from idm_tsne import plot_tsne1, plot_tsne2
 from torch.utils.tensorboard import SummaryWriter
-
 
 # Training settings
 parser = argparse.ArgumentParser(description='PyTorch MSDA Implementation')
@@ -94,16 +93,12 @@ if args.cuda:
 print(args)
 
 
-
 def main():
-
     # if not args.one_step:
     boolDict = {
-        'yes' : True,
-        'no' : False
+        'yes': True,
+        'no': False
     }
-#     print(args.kl_wt)
-#     print(type(args.kl_wt))
     args.eval_only = boolDict[args.eval_only]
     seed = args.seed
     random.seed(seed)
@@ -111,13 +106,11 @@ def main():
     np.random.seed(seed)
     torch.manual_seed(seed)
     torch.cuda.manual_seed(seed)
-    torch.cuda.manual_seed_all(seed) # if you are using multi-GPU.
-    #torch.backends.cudnn.benchmark = False
+    torch.cuda.manual_seed_all(seed)  # if you are using multi-GPU.
     torch.backends.cudnn.deterministic = True
-    #torch.backends.cudnn.enabled = False 
     record_num = 0
-    summary_writer = SummaryWriter(args.record_folder)    
-    record_train = '%s/%s_%s.txt' % (args.record_folder, args.target,record_num)
+    summary_writer = SummaryWriter(args.record_folder)
+    record_train = '%s/%s_%s.txt' % (args.record_folder, args.target, record_num)
     record_test = '%s/%s_%s_test.txt' % (args.record_folder, args.target, record_num)
     record_val = '%s/%s_%s_val.txt' % (args.record_folder, args.target, record_num)
     checkpoint_dir = '%s/%s_%s' % (args.record_folder, args.target, record_num)
@@ -139,59 +132,48 @@ def main():
         record_train = '%s/%s_%s.txt' % (args.record_folder, args.target, record_num)
         record_test = '%s/%s_%s_test.txt' % (args.record_folder, args.target, record_num)
         record_val = '%s/%s_%s_val.txt' % (args.record_folder, args.target, record_num)
-    
+
         checkpoint_dir = '%s/%s_%s' % (args.record_folder, args.target, record_num)
     if not os.path.exists(checkpoint_dir):
         os.makedirs(checkpoint_dir)
     if not os.path.exists(args.record_folder):
         os.makedirs(args.record_folder)
     args.checkpoint_dir = checkpoint_dir
-    classifier_disc = True if args.class_disc=='yes' else False
-    args.to_detach = True if args.to_detach=='yes' else False
+    classifier_disc = True if args.class_disc == 'yes' else False
+    args.to_detach = True if args.to_detach == 'yes' else False
     if args.eval_only:
-        checkpoint_dir = '%s/%s_%s' % (args.record_folder, args.target, record_num-1)
-        args.checkpoint_dir = checkpoint_dir 
+        checkpoint_dir = '%s/%s_%s' % (args.record_folder, args.target, record_num - 1)
+        args.checkpoint_dir = checkpoint_dir
         solver = Solver(args, target=args.target, learning_rate=args.lr, batch_size=args.batch_size,
-                    optimizer=args.optimizer, 
-                    checkpoint_dir=args.checkpoint_dir,
-                    save_epoch=args.save_epoch)
-
-
-        #train_MSDA_soft(solver,0,classifier_disc)
+                        optimizer=args.optimizer,
+                        checkpoint_dir=args.checkpoint_dir,
+                        save_epoch=args.save_epoch)
 
         test(solver, 0, 'test', record_file=None, save_model=False)
         view_clusters(solver, clusters_file, probs_csv)
-        #plot_tsne1(solver, plot_before_source, plot_before_target, plot_after_source, plot_after_target, all_plots, plot_domains, args.data)
-
-        #solver = Solver(args, target=args.target, learning_rate=args.lr, batch_size=args.batch_size,
-        #            optimizer=args.optimizer, 
-        #            checkpoint_dir=args.checkpoint_dir,
-        #            save_epoch=args.save_epoch)
-
-        #plot_tsne2(solver, plot_before_source, plot_before_target, plot_after_source, plot_after_target, all_plots, plot_domains, args.data)
 
     else:
 
         solver = Solver(args, target=args.target, learning_rate=args.lr, batch_size=args.batch_size,
-                    optimizer=args.optimizer, 
-                    checkpoint_dir=args.checkpoint_dir,
-                    save_epoch=args.save_epoch, class_disc = classifier_disc)
+                        optimizer=args.optimizer,
+                        checkpoint_dir=args.checkpoint_dir,
+                        save_epoch=args.save_epoch, class_disc=classifier_disc)
         count = 0
         for t in range(args.max_epoch):
             print(t)
             if not args.one_step:
-                # num = solver.train_merge_baseline(t, record_file=record_train)
-                if args.dl_type=='soft_cluster':
+                if args.dl_type == 'soft_cluster':
                     torch.cuda.empty_cache()
-                    num= train_MSDA_soft(solver,t,classifier_disc,record_file=record_train, summary_writer=summary_writer, epoch_start_idx=count)
-                elif args.dl_type=='source_only':
+                    num = train_MSDA_soft(solver, t, classifier_disc, record_file=record_train,
+                                          summary_writer=summary_writer, epoch_start_idx=count)
+                elif args.dl_type == 'source_only':
                     torch.cuda.empty_cache()
-                    num= train_source_only(solver,t,record_file=record_train)
-                elif args.dl_type=='source_target_only':
+                    num = train_source_only(solver, t, record_file=record_train)
+                elif args.dl_type == 'source_target_only':
                     torch.cuda.empty_cache()
-                    num= train_MSDA_soft(solver,t,classifier_disc,record_file=record_train, single_domain_mode=True)
+                    num = train_MSDA_soft(solver, t, classifier_disc, record_file=record_train, single_domain_mode=True)
                 else:
-                    num = train_MSDA_hard(solver,t, classifier_disc, record_file=record_train)
+                    num = train_MSDA_hard(solver, t, classifier_disc, record_file=record_train)
             else:
                 raise Exception('One step solver not defined')
             solver.sche_g.step()
@@ -200,16 +182,13 @@ def main():
             solver.sche_dp.step()
             count += num
             if t % 1 == 0:
-                if args.data=='cars':
-                    test(solver, t, 'train', record_file=record_test, save_model=args.save_model)
-                best = test(solver, t, 'val', record_file=record_val, save_model=args.save_model, summary_writer=summary_writer)
-                #best = test(solver, t, 'test', record_file=record_val, save_model=args.save_model)
+                best = test(solver, t, 'val', record_file=record_val, save_model=args.save_model,
+                            summary_writer=summary_writer)
                 if best:
-                    test(solver, t, 'test', record_file=record_test, save_model=args.save_model, summary_writer=summary_writer)
-                    #view_clusters(solver, clusters_file, probs_csv)
-                    #print('clustering images saved in!')
-                
-        #generate_plots(solver, 0, 'test', plot_before_source, plot_before_target, plot_after_source, plot_after_target, False)
+                    test(solver, t, 'test', record_file=record_test, save_model=args.save_model,
+                         summary_writer=summary_writer)
+
+        # generate_plots(solver, 0, 'test', plot_before_source, plot_before_target, plot_after_source, plot_after_target, False)
 
 
 if __name__ == '__main__':

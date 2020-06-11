@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 from torch.autograd import Variable
 
+
 def train_MSDA(solver, epoch, classifier_disc=True, record_file=None):
     solver.G.train()
     solver.C1.train()
@@ -25,7 +26,7 @@ def train_MSDA(solver, epoch, classifier_disc=True, record_file=None):
         loss_source_C1, loss_source_C2, loss_msda = solver.loss_all_domain(img_s, img_t, label_s)
         loss_s_c1 = sum(loss_source_C1)
         loss_s_c2 = sum(loss_source_C2)
-        loss = loss_s_c1+loss_s_c2
+        loss = loss_s_c1 + loss_s_c2
         loss += loss_msda
 
         loss.backward()

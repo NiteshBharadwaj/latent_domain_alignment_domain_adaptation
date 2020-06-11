@@ -19,5 +19,3 @@ def main():
                     checkpoint_dir=args.checkpoint_dir,
                     save_epoch=args.save_epoch)
     test(solver, 0, 'test', record_file=None, save_model=False)
-    
-    
