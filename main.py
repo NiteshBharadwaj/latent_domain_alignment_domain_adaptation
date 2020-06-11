@@ -4,7 +4,6 @@ import torch
 import random
 import numpy as np
 import sys
-import os
 
 sys.path.append('./model')
 sys.path.append('./datasets')

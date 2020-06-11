@@ -8,10 +8,8 @@ def loss_source_only(solver, img_s, label_s):
     feat_s, conv_feat_s, feat_da_s = solver.G(img_s)
     output_s_c1 = solver.C1(feat_s)
     output_s_c2 = solver.C2(feat_s)
-    loss_s_c1 = \
-        solver.softmax_loss_all_domain_soft(output_s_c1, label_s)
-    loss_s_c2 = \
-        solver.softmax_loss_all_domain_soft(output_s_c2, label_s)
+    loss_s_c1 = solver.softmax_loss_all_domain_soft(output_s_c1, label_s)
+    loss_s_c2 = solver.softmax_loss_all_domain_soft(output_s_c2, label_s)
     return loss_s_c1, loss_s_c2
 
 

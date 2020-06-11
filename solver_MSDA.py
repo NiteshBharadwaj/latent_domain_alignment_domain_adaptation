@@ -10,6 +10,7 @@ from datasets.dataset_read import dataset_read, dataset_hard_cluster, dataset_co
 import numpy as np
 import math
 
+
 # Training settings
 class Solver(object):
     def __init__(self, args, batch_size=64,
