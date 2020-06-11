@@ -235,7 +235,7 @@ def plot_tsne2(solver,plot_before_source, plot_before_target, plot_after_source,
         domain_y2_bool = False
         total_s = 0
         total_t = 0
-        num_imgs = 5000
+        num_imgs = 1000
         if(solver.dl_type == 'soft_cluster'):
             for batch_idx, data in enumerate(solver.datasets):
                 img_t = data['T'].cuda()
@@ -301,6 +301,7 @@ def plot_tsne2(solver,plot_before_source, plot_before_target, plot_after_source,
                         domain_x1_torch = torch.cat((domain_x1_torch, img_transformed_t), 0)
 
 
+            print(domain_x1_torch.size()[0], domain_x2_torch.size()[0])
             domain_y1_torch = tuple(domain_y1_torch)
             domain_y1_torch = torch.cat(domain_y1_torch,axis=0)
             domain_y1_torch = domain_y1_torch.data.cpu().numpy()

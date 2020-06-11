@@ -30,7 +30,7 @@ def view_clusters(solver,clusters_file,probs_csv):
    
     interval = 10
     cluster_viz_res = {}
-    max_bucket_size = 64
+    max_bucket_size = 25
     for cluster_id in range(solver.num_domains):
         cluster_viz_res[cluster_id] = []
         for i in range(0,101,interval):
