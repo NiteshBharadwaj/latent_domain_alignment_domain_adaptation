@@ -50,17 +50,6 @@ def scatter(x, colors, labelsOfInterest, figSize, plotName):
     ax.axis('off')
     ax.axis('tight')
 
-#     # We add the labels for each digit.
-#     txts = []
-#     for i in range(len(labelsOfInterest)):
-#         # Position of each label.
-#         a = np.median(x[colors == labelsOfInterest[i], :], axis=0)
-#         print(a)
-# #         txt = ax.text(xtext, ytext, str(i), fontsize=24)
-# #         txt.set_path_effects([
-# #             PathEffects.Stroke(linewidth=5, foreground="w"),
-# #             PathEffects.Normal()])
-# #         txts.append(txt)
 
 #     return f, ax, sc, txts
 
@@ -78,7 +67,7 @@ def plot_tsne1(solver,plot_before_source, plot_before_target, plot_after_source,
     if(dataset == 'office'):
         labelsOfInterest = [2,8,14,22,30]
     if(dataset == 'digits'):
-        labelsOfInterest = [1,2,3,4,5,6,7,8,9]
+        labelsOfInterest = [0,1,2,3,4,5,6,7,8,9]
     prev = solver.batch_size
     total = 0
     with torch.no_grad():
@@ -125,17 +114,7 @@ def plot_tsne1(solver,plot_before_source, plot_before_target, plot_after_source,
         source_label_torch = torch.cat(source_label_torch,axis=0)
         source_label_torch = source_label_torch.data.cpu().numpy()
         after_source_torch = after_source_torch.data.cpu().numpy()
-        
-#         scatter(TSNE(random_state=RS).fit_transform(before_source_torch),source_label_torch,labelsOfInterest,(5,5))
-#         plt.savefig(plot_before_source, dpi=120)
-#         print('source before plot saved in : ', plot_before_source)
-        
-#         scatter(TSNE(random_state=RS).fit_transform(after_source_torch),source_label_torch,labelsOfInterest,(5,5))
-#         plt.savefig(plot_after_source, dpi=120)
-#         print('source after plot saved in : ', plot_after_source)
-        
-        
-        
+
         after_target_torch = 0
         after_target_bool = False
         target_label_torch = []
@@ -177,6 +156,14 @@ def plot_tsne1(solver,plot_before_source, plot_before_target, plot_after_source,
                         after_target_torch = torch.cat((after_target_torch,img_transformed_l),0)
         target_label_torch = tuple(target_label_torch)
         target_label_torch = torch.cat(target_label_torch,axis=0)
+
+        print("SAVING TORCH TENSORS in TSNE1")
+        torch.save(source_label_torch, "plot_tsne1-source_label_torch.pt")
+        torch.save(target_label_torch, "plot_tsne1-target_label_torch.pt")
+        torch.save(after_source_torch, "plot_tsne1-after_source_torch.pt")
+        torch.save(after_target_torch, "plot_tsne1-after_target_torch.pt")
+        print("SAVED TORCH TENSORS in TSNE1")
+
         target_label_torch = target_label_torch.data.cpu().numpy()
         after_target_torch = after_target_torch.data.cpu().numpy()
         
@@ -233,14 +220,23 @@ def plot_tsne2(solver,plot_before_source, plot_before_target, plot_after_source,
         domain_y1_bool = False
         domain_y2_torch = []
         domain_y2_bool = False
+        label_y_s_torch = []
+        label_y_t_torch = []
+        
         total_s = 0
         total_t = 0
+<<<<<<< HEAD
         num_imgs = 1000
+=======
+        num_imgs = 2000
+>>>>>>> ae64cb697b3021db6a7dbda9e44f96ac5e24d685
         if(solver.dl_type == 'soft_cluster'):
             for batch_idx, data in enumerate(solver.datasets):
                 img_t = data['T'].cuda()
                 img = data['S'].cuda()
-                label = data['S_label'].long().cuda()
+                label_s = data['S_label'].long().cuda()
+                label_t = data['T_label'].long().cuda()
+                
                 if dataset == 'digits':
                     img_transformed1, _, _ = solver.G(img.cuda())
                     img_transformed_t, _, _ = solver.G(img_t.cuda())
@@ -258,8 +254,8 @@ def plot_tsne2(solver,plot_before_source, plot_before_target, plot_after_source,
                 best_probs = domain_prob.data.max(1)[0]
                 for i in range(solver.num_domains):
                     i_index = ((best_domains == i).nonzero()).squeeze()
-                    #i_index = ((i_index[best_probs[i_index] > 0.9]).nonzero()).squeeze()
                     img_i = img[i_index,:,:,:]
+                    label_si = label_s[i_index]
                     total_s += img_i.size()[0]
                     img_transformed1_i = img_transformed1[i_index,:]
                     img_transformed2_i = img_transformed2[i_index,:]
@@ -275,6 +271,7 @@ def plot_tsne2(solver,plot_before_source, plot_before_target, plot_after_source,
                         cur_y = torch.zeros([img_i.size()[0]]).fill_(i)
                         domain_y1_torch.append(cur_y)
                         domain_y2_torch.append(cur_y)
+                        label_y_s_torch.append(label_si)
                         if(domain_x1_bool == False):
                             domain_x1_torch = img_transformed1_i
                             domain_x1_bool = True
@@ -294,24 +291,41 @@ def plot_tsne2(solver,plot_before_source, plot_before_target, plot_after_source,
                         img_transformed_t = torch.unsqueeze(img_transformed_t, 0)
                     img_transformed_t = img_transformed_t.view(img_transformed_t.size()[0], -1)
                     cur_y = torch.zeros([img_t.size()[0]]).fill_(solver.num_domains)
+                    label_y_t_torch.append(label_t)
+                    
                     domain_y1_torch.append(cur_y)
                     if domain_x1_bool == False:
                         assert(False)
                     else:
                         domain_x1_torch = torch.cat((domain_x1_torch, img_transformed_t), 0)
 
+            
 
             print(domain_x1_torch.size()[0], domain_x2_torch.size()[0])
+            print("SAVING TORCH TENSORS in TSNE2")
             domain_y1_torch = tuple(domain_y1_torch)
             domain_y1_torch = torch.cat(domain_y1_torch,axis=0)
+            torch.save(domain_y1_torch, "plot_tsne2-domain_y1_torch.pt")
             domain_y1_torch = domain_y1_torch.data.cpu().numpy()
 
             domain_y2_torch = tuple(domain_y2_torch)
             domain_y2_torch = torch.cat(domain_y2_torch,axis=0)
+            torch.save(domain_y2_torch, "plot_tsne2-domain_y2_torch.pt")
             domain_y2_torch = domain_y2_torch.data.cpu().numpy()
 
+            print("SAVED TORCH TENSORS in TSNE2")
+            torch.save(domain_x1_torch, "plot_tsne2-domain_x1_torch.pt")
+            torch.save(domain_x2_torch, "plot_tsne2-domain_x2_torch.pt")
             domain_x1_torch = domain_x1_torch.data.cpu().numpy()
             domain_x2_torch = domain_x2_torch.data.cpu().numpy()
+
+            label_y_s_torch = tuple(label_y_s_torch)
+            label_y_s_torch = torch.cat(label_y_s_torch,axis=0)
+            label_y_t_torch = tuple(label_y_t_torch)
+            label_y_t_torch = torch.cat(label_y_t_torch,axis=0)
+
+            torch.save(label_y_s_torch, "plot_tsne2-label_y_s_torch.pt")
+            torch.save(label_y_t_torch, "plot_tsne2-label_y_t_torch.pt")
 
             scatter(TSNE(random_state=RS).fit_transform(domain_x1_torch),domain_y1_torch,[i for i in range(solver.num_domains+1)], (8,8), 'Main network features')
             plt.savefig(plot_domains[0], dpi=120)
@@ -324,19 +338,5 @@ def plot_tsne2(solver,plot_before_source, plot_before_target, plot_after_source,
             final.save(plot_domains[2])
             print('latent domain plots saved in : ', plot_domains[2])
             
-            #os.remove(plot_domains[0])
-            #os.remove(plot_domains[1])
-        
-        
-        
-        
-
-
-
-
-
-
-
-
-
-
+            os.remove(plot_domains[0])
+            os.remove(plot_domains[1])
