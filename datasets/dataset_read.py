@@ -220,16 +220,8 @@ def dataset_combined(target, batch_size, num_clus, directory, seed, usps_less_da
     T = {}
     T_test = {}
     T_val = {}
-    target = target.split('_')
-    source_codes = target[:-1]
-    target_code = target[-1]
-    domain_map = {'mnistm': 'mnistm', 'mnist': 'mnist', 'usps': 'usps', 'svhn': 'svhn', 'syn': 'syn'}
-    if len(source_codes) > 1 or source_codes[0] == 'all':
-        domain_all = ['mnistm', 'mnist', 'usps', 'svhn', 'syn']
-        domain_all.remove(target_code)
-        source_codes = domain_all
-    target = domain_map[target_code]
-    domain_all = [domain_map[x] for x in domain_map if x in source_codes]
+    domain_all = ['mnistm', 'mnist', 'usps', 'svhn', 'syn']
+    domain_all.remove(target)
 
     for i in range(len(domain_all)):
         S.append({})
