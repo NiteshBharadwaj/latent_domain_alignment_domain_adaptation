@@ -16,10 +16,6 @@ Deep unsupervised domain adaptation aligns a labeled source domain with an unlab
 pip install git+https://github.com/pytorch/tnt.git@master
 ```
 
-- GPU: 8Gi, CPU: 8Gi, Batch Size: 128, 
-	- Training Time USPS: < 5min Acc 96%
-	- Training Time MNIST-M: < 2hrs Acc 73% 
-
 ### Digit-Five
 #### Dataset Setup
 - Download dataset 
@@ -47,27 +43,31 @@ pip install git+https://github.com/pytorch/tnt.git@master
 
 ##### For training
 
-
-
-- Bash scripts:
+```python
+   python3 main.py --target [TARGET_DOMAIN] --dl_type [CLUSTERING_METHOD] --num_domain [NUM_LATENT_DOMAIN] --class_disc [BOOL_CLASS_DISCREPANCY] --record_folder [RECORD_FOLDER] --seed 0 --office_directory [DIGITS_DIRECTORY] --data 'digits' --max_epoch [NUM_EPOCHS] --kl_wt [KL_WEIGHT] --entropy_wt [ENTROPY_WEIGHT] --to_detach 'yes' --msda_wt [MSDA_WEIGHT]
 ```
-    bash ./experiment_do.sh [TAR DOM] 100 0 record/[EXPT_DIRECTORY] [DATA] [NUM CLUSTERS] no 	
-```
+
 Choices: 
 DATA - digits, cars, office
-TAR_DOM (digits) - mnistm, svhn, usps, syn, mnist
-TAR_DOM (cars) - CCSurv
-TAR_DOM (office) - amazon, dslr
-NUM_CLUSTERS - >1 (Choose from report)
-EXPT_DIRECTORY - Any top level directory inside records folder (to replicate the corresponding experiment's results)
+TARGET_DOMAIN - format -> source1_source2_..._source_k_target
+CLUSTERING_METHOD - soft_cluster, hard_cluster, source_only, source_target_only
+NUM_LATENT_DOMAIN - Number of inherent latent domains (Choose from paper)
+BOOL_CLASS_DISCREPANCY - yes/no for choosing Maximum Classifier Discrepancy
+RECORD_FOLDER - Top level directory inside records folder (to replicate the corresponding experiment's results)
+KL_WEIGHT, ENTROPY_WEIGHT, MSDA_WEIGHT - hyperparameter scaling factors for different losses as reported
 
+E.g.
+1. MNIST,USPS,SYN,SVHN -> MNISTM with soft_cluster (k=4)
+```python
+python3 main.py --target 'mnist_usps_syn_svhn_mnistm' --dl_type 'soft_cluster' --num_domain 4 --class_disc 'no' --record_folder '/results/mnistm4d-sc0' --seed 0 --office_directory '/data/Digit-Five' --data 'digits' --max_epoch 400 --kl_wt 0.01 --entropy_wt 0.01 --to_detach 'yes' --msda_wt 0.005
+```
+2. SVHN -> MNIST with source to target adaptation
+```python
+python3 main.py --target 'svhn_mnist' --dl_type 'source_target_only' --num_domain 2 --class_disc 'no' --record_folder '/results/svhn-mnist2d-nocd-st0' --seed 0 --office_directory '/data/Digit-Five' --data 'digits' --max_epoch 400 --kl_wt 0.01 --entropy_wt 0.01 --to_detach 'yes' --msda_wt 0.001
+```
 
-e.g.
-```
-   bash ./experiment_do.sh CCSurv 100 0 record/cars_src_agg source_only cars 6 no                          
+3. MNIST,USPS,MNISTM,SVHN -> SYN with source only adaptation with Maximum Classifier Discrepancy
+```python
+python3 main.py --target 'mnist_mnistm_svhn_usps_syn' --dl_type 'soft_cluster' --num_domain 3 --class_disc 'yes' --record_folder '/results/syn3d-so1-cd' --seed 1 --office_directory '/data/Digit-Five' --data 'digits' --max_epoch 400 --kl_wt 0.01 --entropy_wt 0.01 --to_detach 'yes' --msda_wt 0.0
 ```
 
-```
-    bash experiment_do.sh mnistm 100 0 record/mnistm soft_cluster digits 4 yes
-```
-- Change second argument to usps/svhn/syn to train corresponding models
