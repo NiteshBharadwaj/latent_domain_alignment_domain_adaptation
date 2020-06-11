@@ -2,7 +2,9 @@ import numpy as np
 from scipy.io import loadmat
 
 base_dir = './data'
-def load_mnist(directory,scale=True, use_full=False, usps_less_data_protocol=False):
+
+
+def load_mnist(directory, scale=True, use_full=False, usps_less_data_protocol=False):
     base_dir = directory
     mnist_data = loadmat(base_dir + '/mnist_data.mat')
     if scale:
@@ -16,7 +18,7 @@ def load_mnist(directory,scale=True, use_full=False, usps_less_data_protocol=Fal
         mnist_labels_test = mnist_data['label_test']
     else:
         mnist_train = mnist_data['train_28']
-        mnist_test =  mnist_data['test_28']
+        mnist_test = mnist_data['test_28']
         mnist_labels_train = mnist_data['label_train']
         mnist_labels_test = mnist_data['label_test']
         mnist_train = mnist_train.astype(np.float32)
@@ -36,9 +38,9 @@ def load_mnist(directory,scale=True, use_full=False, usps_less_data_protocol=Fal
         train_label = train_label[:25000]
         mnist_test = mnist_test[:25000]
         test_label = test_label[:25000]
-    print('mnist train X shape->',  mnist_train.shape)
-    print('mnist train y shape->',  train_label.shape)
-    print('mnist test X shape->',  mnist_test.shape)
-    print('mnist test y shape->', test_label.shape)
+    print('mnist train X shape->', mnist_train.shape)
+    print('mnist train Y shape->', train_label.shape)
+    print('mnist test X shape->', mnist_test.shape)
+    print('mnist test Y shape->', test_label.shape)
 
     return mnist_train, train_label, mnist_test, test_label

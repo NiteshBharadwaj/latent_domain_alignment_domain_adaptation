@@ -8,7 +8,6 @@ from svhn import load_svhn
 from mnist import load_mnist
 from mnist_m import load_mnistm
 from usps_ import load_usps
-from gtsrb import load_gtsrb
 from synth_number import load_syn
 from synth_traffic import load_syntraffic
 
@@ -26,11 +25,9 @@ def return_dataset(data, directory=".", is_multi=True, usps_less_data_protocol=F
         train_image, train_label, \
         test_image, test_label = load_mnist(directory, use_full=use_full,
                                             usps_less_data_protocol=usps_less_data_protocol)
-        # print(train_image.shape)
     if data == 'mnistm':
         train_image, train_label, \
         test_image, test_label = load_mnistm(directory, use_full=use_full)
-        # print(train_image.shape)
     if data == 'usps':
         train_image, train_label, \
         test_image, test_label = load_usps(directory, use_full=use_full,
@@ -38,9 +35,6 @@ def return_dataset(data, directory=".", is_multi=True, usps_less_data_protocol=F
     if data == 'synth':
         train_image, train_label, \
         test_image, test_label = load_syntraffic(directory)
-    if data == 'gtsrb':
-        train_image, train_label, \
-        test_image, test_label = load_gtsrb(directory)
     if data == 'syn':
         train_image, train_label, \
         test_image, test_label = load_syn(directory)

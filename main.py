@@ -16,7 +16,7 @@ from train_msda_soft import train_MSDA_soft
 from test import test
 from view_clusters import view_clusters
 from train_source_only import train_source_only
-from idm_tsne import plot_tsne1, plot_tsne2
+from plot_tsne import plot_tsne
 from torch.utils.tensorboard import SummaryWriter
 
 # Training settings
@@ -151,6 +151,8 @@ def main():
 
         test(solver, 0, 'test', record_file=None, save_model=False)
         view_clusters(solver, clusters_file, probs_csv)
+        plot_tsne(solver, plot_before_source, plot_before_target, plot_after_source, plot_after_target, all_plots,
+                   plot_domains, args.data)
 
     else:
 

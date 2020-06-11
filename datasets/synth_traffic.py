@@ -1,6 +1,7 @@
 import numpy as np
 import pickle as pkl
 
+
 def load_syntraffic():
     data_source = pkl.load(open('../data/data_synthetic'))
     source_train = np.random.permutation(len(data_source['image']))

@@ -5,6 +5,8 @@ import torchvision.transforms as transforms
 from datasets_ import Dataset, Dataset2
 
 import numpy as np
+
+
 class ClasswiseData(object):
     def __init__(self, data_loader_s, max_dataset_size):
         self.data_loader_s = data_loader_s
@@ -62,14 +64,14 @@ class ClasswiseDataLoader():
             for j in range(len(source)):
                 imgs = source[j]['imgs']
                 labels = source[j]['labels']
-                mask = labels==i
+                mask = labels == i
                 img_list.append(imgs[mask])
                 label_list.append(labels[mask])
             dataset_source.append(Dataset2(img_list, label_list, transform=transform))
             self.max_len = max(self.max_len, len(dataset_source))
             dataloader_source.append(
                 torch.utils.data.DataLoader(dataset_source[i], batch_size=batch_size, shuffle=True,
-                                                num_workers=2))
+                                            num_workers=2))
 
         self.dataset_s = dataset_source
         self.paired_data = ClasswiseData(dataloader_source, float("inf"))

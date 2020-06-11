@@ -1,6 +1,7 @@
 from torch import nn
 from torch.nn import functional as F
 
+
 class HLoss(nn.Module):
     def __init__(self):
         super(HLoss, self).__init__()

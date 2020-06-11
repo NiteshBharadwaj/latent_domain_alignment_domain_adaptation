@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 from torch.autograd import Variable
 
+
 def loss_source_only(solver, img_s, label_s):
     # Takes source images, target images, source labels and returns classifier loss, domain adaptation loss and entropy loss
     feat_s, conv_feat_s, feat_da_s = solver.G(img_s)
@@ -14,15 +15,12 @@ def loss_source_only(solver, img_s, label_s):
     return loss_s_c1, loss_s_c2
 
 
-
 def train_source_only(solver, epoch, record_file=None):
     criterion = nn.CrossEntropyLoss().cuda()
     solver.G.train()
     solver.C1.train()
     solver.C2.train()
     solver.DP.train()
-    #torch.cuda.manual_seed(1)
-    #solver.datasets.reset()
     batch_idx_g = 0
 
     for batch_idx, data in enumerate(solver.datasets):
@@ -35,7 +33,7 @@ def train_source_only(solver, epoch, record_file=None):
 
         solver.reset_grad()
 
-        loss_s_c1, loss_s_c2 = loss_source_only(solver,img_s, label_s)
+        loss_s_c1, loss_s_c2 = loss_source_only(solver, img_s, label_s)
 
         loss = loss_s_c1
 
@@ -44,8 +42,6 @@ def train_source_only(solver, epoch, record_file=None):
         solver.opt_g.step()
         solver.opt_c1.step()
 
-        #if batch_idx > 500:
-        #    return batch_idx
         if batch_idx % solver.interval == 0:
             print(
                 'Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss1: {:.6f}\t Loss2: {:.6f}\t Loss_mmd: {:.6f}\t Loss_entropy: {:.6f}\t Discrepancy: {:.6f}'.format(

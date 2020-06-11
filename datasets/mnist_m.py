@@ -2,11 +2,13 @@ import numpy as np
 from scipy.io import loadmat
 
 base_dir = './data'
-def load_mnistm(directory, use_full = False):
+
+
+def load_mnistm(directory, use_full=False):
     base_dir = directory
     mnistm_data = loadmat(base_dir + '/mnistm_with_label.mat')
     mnistm_train = mnistm_data['train']
-    mnistm_test =  mnistm_data['test']
+    mnistm_test = mnistm_data['test']
     mnistm_train = mnistm_train.transpose(0, 3, 1, 2).astype(np.float32)
     mnistm_test = mnistm_test.transpose(0, 3, 1, 2).astype(np.float32)
     mnistm_labels_train = mnistm_data['label_train']
@@ -17,14 +19,14 @@ def load_mnistm(directory, use_full = False):
     mnistm_train = mnistm_train[inds]
     train_label = train_label[inds]
     test_label = np.argmax(mnistm_labels_test, axis=1)
-    
+
     if not use_full:
         mnistm_train = mnistm_train[:25000]
         train_label = train_label[:25000]
         mnistm_test = mnistm_test[:9000]
         test_label = test_label[:9000]
-    print('mnist_m train X shape->',  mnistm_train.shape)
-    print('mnist_m train y shape->',  train_label.shape)
-    print('mnist_m test X shape->',  mnistm_test.shape)
-    print('mnist_m test y shape->', test_label.shape)
+    print('mnist_m train X shape->', mnistm_train.shape)
+    print('mnist_m train Y shape->', train_label.shape)
+    print('mnist_m test X shape->', mnistm_test.shape)
+    print('mnist_m test Y shape->', test_label.shape)
     return mnistm_train, train_label, mnistm_test, test_label
