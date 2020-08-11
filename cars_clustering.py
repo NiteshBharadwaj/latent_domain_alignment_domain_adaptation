@@ -1,6 +1,6 @@
 from __future__ import print_function
 from datasets.cars import cars_combined
-datasets, dataset_test, dataset_valid, classwise_dataset = cars_combined('CCSurv',128,"/data/CompCarsCropped/data_cropped",0,10)
+datasets, dataset_test, dataset_valid, classwise_dataset = cars_combined('CCSurv',128,"/data/CompCarsCropped/data_cropped",0,5)
 
 import torch
 import torch.nn as nn
