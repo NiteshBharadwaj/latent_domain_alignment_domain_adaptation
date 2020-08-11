@@ -44,7 +44,7 @@ def cars_combined(target, batch_size, compcars_directory, seed_id, num_workers):
 
     for i in range(len(domain_all)):
         source_train, source_train_label, source_test, source_test_label, source_valid, source_valid_label = return_dataset(
-            domain_all[i], compcars_directory, False, seed_id)
+            target, compcars_directory, False, seed_id)
 
         S[i]['imgs'] = source_train
         S[i]['labels'] = source_train_label
