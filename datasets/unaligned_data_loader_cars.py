@@ -98,19 +98,19 @@ class CombinedData(Dataset):
     def __getitem__(self, index):
         S, S_paths, t, t_paths = None, None, None, None
         try:
-            S, S_paths, S_real_paths = next(self.data_loader_s_iter)
+            S, S_paths = next(self.data_loader_s_iter)
         except StopIteration:
             if S is None or S_paths is None:
                 self.stop_s = True
                 self.data_loader_s_iter = iter(self.data_loader_s)
-                S, S_paths, S_real_paths = next(self.data_loader_s_iter)
+                S, S_paths = next(self.data_loader_s_iter)
         try:
             t, t_paths, t_real_paths = next(self.data_loader_t_iter)
         except StopIteration:
             if t is None or t_paths is None:
                 self.stop_t = True
                 self.data_loader_t_iter = iter(self.data_loader_t)
-                t, t_paths, t_real_paths = next(self.data_loader_t_iter)
+                t, t_paths = next(self.data_loader_t_iter)
 
         if (self.stop_s and self.stop_t) or self.iter > self.max_dataset_size:
             self.stop_s = False
@@ -118,11 +118,55 @@ class CombinedData(Dataset):
             raise StopIteration()
         else:
             self.iter += 1
-            return {'S': S, 'S_label': S_paths, 'S_paths': S_real_paths,
-                    'T': t, 'T_label': t_paths, 'T_paths': t_real_paths}
+            return {'S': S, 'S_label': S_paths,
+                    'T': t, 'T_label': t_paths}
 
     def __len__(self):
         return self.max_dataset_size * self.num_datasets
+
+# class CombinedData(Dataset):
+#     def __init__(self, data_loader_s, data_loader_t, max_dataset_size):
+#         super(Dataset, self).__init__()
+#         self.data_loader_s = data_loader_s
+#         self.data_loader_t = data_loader_t
+
+#         self.stop_s = False
+#         self.stop_t = False
+
+#         self.max_dataset_size = max_dataset_size
+
+#         self.data_loader_s_iter = iter(self.data_loader_s)
+#         self.data_loader_t_iter = iter(self.data_loader_t)
+#         self.iter = 0
+
+#     def __getitem__(self, index):
+#         S, S_paths, t, t_paths = None, None, None, None
+#         try:
+#             S, S_paths, S_real_paths = next(self.data_loader_s_iter)
+#         except StopIteration:
+#             if S is None or S_paths is None:
+#                 self.stop_s = True
+#                 self.data_loader_s_iter = iter(self.data_loader_s)
+#                 S, S_paths, S_real_paths = next(self.data_loader_s_iter)
+#         try:
+#             t, t_paths, t_real_paths = next(self.data_loader_t_iter)
+#         except StopIteration:
+#             if t is None or t_paths is None:
+#                 self.stop_t = True
+#                 self.data_loader_t_iter = iter(self.data_loader_t)
+#                 t, t_paths, t_real_paths = next(self.data_loader_t_iter)
+
+#         if (self.stop_s and self.stop_t) or self.iter > self.max_dataset_size:
+#             self.stop_s = False
+#             self.stop_t = False
+#             raise StopIteration()
+#         else:
+#             self.iter += 1
+#             return {'S': S, 'S_label': S_paths, 'S_paths': S_real_paths,
+#                     'T': t, 'T_label': t_paths, 'T_paths': t_real_paths}
+
+#     def __len__(self):
+#         return self.max_dataset_size * self.num_datasets
 
 
 class UnalignedDataLoader():

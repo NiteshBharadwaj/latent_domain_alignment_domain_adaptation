@@ -13,7 +13,6 @@ lengthForPCA = 2000
 small_dimension = 50
 for batch_idx, data in enumerate(datasets):
 	img_s = data['S']
-	img_path = data['S_paths']
 	print(img_s.size())
 	print(img_path)
 	sys.exit()
