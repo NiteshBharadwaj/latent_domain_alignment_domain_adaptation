@@ -116,7 +116,7 @@ def read_comp_cars(target, compcars_directory, is_target, seed_id):
         for i in range(len(labels_train)):
             labels_train_tmp.append([labels_train[i], aux_labels_train[i][0], aux_labels_train[i][1]])
         labels_train = labels_train_tmp
-         # -------------------------------------
+        #-------------------------------------
         paths_train = [os.path.join(img_dir, x) for x in rel_paths_train]
 
         labels_test = [int(x.split('/')[0]) for x in rel_paths_test]
@@ -255,5 +255,6 @@ def read_comp_cars(target, compcars_directory, is_target, seed_id):
         labels_valid = labels_valid_tmp
         # -------------------------------------
 
-
+    print(paths_train[:10])
+    print(labels_train[:10])
     return paths_train, labels_train, paths_test, labels_test, paths_valid, labels_valid

@@ -19,3 +19,9 @@ record_variance*/
 *.tar
 *.swp
 clusters*
+clus/
+core.703
+idm_tsne.py
+model/.compcars_architecture_new.py.swm
+model/.compcars_architecture_new.py.swn
+model/.compcars_architecture_new.py.swo
