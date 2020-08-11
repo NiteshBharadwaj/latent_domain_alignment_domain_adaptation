@@ -12,7 +12,7 @@ from model.build_gen_cars import Generator as Generator_cars, Classifier as Clas
 from model.build_gen_office import Generator as Generator_office, Classifier as Classifier_office, \
     DomainPredictor as DP_office
 from datasets.dataset_read_cluster_testing import dataset_read, dataset_hard_cluster, dataset_combined
-from datasets.cars import cars_combined
+from datasets.cars import cars_combined, cars_combined_real
 from datasets.office import office_combined
 import numpy as np
 import math
@@ -117,6 +117,13 @@ class Solver(object):
                                                                                                              args.num_domain,
                                                                                                              args.cars_directory,
                                                                                                              args.seed)
+
+            elif args.dl_type == 'hard_cluster_adaptation':
+                self.datasets, self.dataset_test, self.dataset_valid, self.classwise_dataset = cars_combined_real(target,
+                                                                                                             self.batch_size,
+                                                                                                             args.num_domain,
+                                                                                                             args.cars_directory,
+                                                                                                             args.seed)                
 
             print('load finished!')
             num_classes = 75
@@ -344,6 +351,8 @@ class Solver(object):
         # print(self.DP.fc3.weight)
         #        print("loss_s_c1", loss_s_c1, "loss_s_c2", loss_s_c2, "loss_msda", loss_msda, "entropy_loss", entropy_loss, "kl_loss", kl_loss)
         return loss_s_c1, loss_s_c2, loss_msda, entropy_loss, kl_loss, aux_loss, domain_prob
+
+
 
 
 class HLoss(nn.Module):

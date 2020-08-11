@@ -19,6 +19,7 @@ from train_msda_single import train_MSDA_single
 from test import test
 from view_clusters import view_clusters
 from train_source_only import train_source_only
+from train_msda_hard_Cluster_cars import train_MSDA_hard_adaptation
 
 # from plot_tsne import plot_tsne1,plot_tsne2
 
@@ -203,6 +204,9 @@ def main():
                 elif args.dl_type == 'source_target_only':
                     torch.cuda.empty_cache()
                     num = train_MSDA_single(solver, t, classifier_disc, record_file=record_train)
+                elif args.dl_type == 'hard_cluster_adaptation':
+                    torch.cuda.empty_cache()
+                    num = train_MSDA_hard_adaptation(solver, t, classifier_disc, record_file=record_train)
                 else:
                     num = train_MSDA_hard(solver, t, classifier_disc, record_file=record_train)
             else:

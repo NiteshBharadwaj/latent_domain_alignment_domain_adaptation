@@ -254,3 +254,89 @@ class UnalignedDataLoader():
 
     def __len__(self):
         return self.num_samples
+
+class UnalignedDataLoaderReal():
+    # Returns paired dataloader for source and target domain images and labels. 
+    def __init__(self):
+
+        self.__imagenet_pca = {
+            'eigval': torch.Tensor([0.2175, 0.0188, 0.0045]),
+            'eigvec': torch.Tensor([
+                [-0.5675, 0.7192, 0.4009],
+                [-0.5808, -0.0045, -0.8140],
+                [-0.5836, -0.6948, 0.4203],
+            ])
+        }
+
+    def initialize(self, source, target, batch_size1, batch_size2, num_workers, clusterDict, scale=32, split='Train'):
+        if split == 'Train':
+            transform_source = transforms.Compose([
+                #transforms.RandomAffine(5, (.05,.05)),
+                transforms.RandomCrop(scale),
+                #transforms.Resize((scale, scale)),
+                # transforms.RandomRotation(30),
+                transforms.RandomHorizontalFlip(),
+                transforms.ColorJitter(0.4, 0.4, 0.4),
+                transforms.ToTensor(),
+                #Lighting(0.1, self.__imagenet_pca['eigval'], self.__imagenet_pca['eigvec']),
+                transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                     std=[0.229, 0.224, 0.225])
+            ])
+            transform_target = transforms.Compose([
+                #transforms.RandomAffine(5, (.05,.05)),
+                transforms.RandomCrop(scale),
+                #transforms.Resize((scale, scale)),
+                # transforms.RandomRotation(30),
+                transforms.RandomHorizontalFlip(),
+                transforms.ColorJitter(0.4, 0.4, 0.4),
+                transforms.ToTensor(),
+                #Lighting(0.1, self.__imagenet_pca['eigval'], self.__imagenet_pca['eigvec']),
+                transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                     std=[0.229, 0.224, 0.225])
+            ])
+        elif split == 'Test':
+            transform_source = transforms.Compose([
+                transforms.Resize((scale,scale)),
+                # transforms.RandomCrop(scale),
+                transforms.ToTensor(),
+                transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                     std=[0.229, 0.224, 0.225])
+            ])
+            transform_target = transforms.Compose([
+                transforms.Resize((scale,scale)),
+                transforms.ToTensor(),
+                transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                     std=[0.229, 0.224, 0.225])
+            ])
+        else:
+            raise Exception('Wrong split')
+        data_sources = []
+        data_loader_s = []
+        max_size = 0
+        for i in range(len(source)):
+            data_sources.append(DatasetReal(source[i]['imgs'], source[i]['labels'], clusterDict, transform=transform_source))
+            data_loader_s.append(
+                torch.utils.data.DataLoader(data_sources[i], batch_size=batch_size1, shuffle=True, num_workers=num_workers,
+                                            pin_memory=True))
+            max_size = max(max_size, len(data_sources[i]))
+        self.dataset_s = data_loader_s
+
+        dataset_target = DatasetReal(target['imgs'], target['labels'], {}, transform=transform_target)
+        data_loader_t = torch.utils.data.DataLoader(dataset_target, batch_size=batch_size2, shuffle=True, num_workers=num_workers,
+                                                    pin_memory=True)
+
+        self.dataset_t = dataset_target
+        self.paired_data = CombinedData(data_loader_s[0], data_loader_t,
+                                        float("inf"))
+
+        self.num_datasets = len(source)
+        self.num_samples = min(max(max_size, len(self.dataset_t)), float("inf")) * self.num_datasets
+
+    def name(self):
+        return 'UnalignedDataLoader'
+
+    def load_data(self):
+        return self.paired_data
+
+    def __len__(self):
+        return self.num_samples

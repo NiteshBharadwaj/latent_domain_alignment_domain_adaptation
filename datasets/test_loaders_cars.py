@@ -2,7 +2,7 @@ import torch.utils.data
 import torchnet as tnt
 from builtins import object
 import torchvision.transforms as transforms
-from datasets_cars import Dataset
+from datasets_cars import Dataset, DatasetReal
 import numpy as np
 from PIL import Image, ImageOps
 
@@ -104,7 +104,7 @@ class Data(Dataset):
     def __getitem__(self, index):
         t, t_paths = None, None
         try:
-            t, t_paths = next(self.data_loader_t_iter)
+            t, t_paths, t_real_paths = next(self.data_loader_t_iter)
         except StopIteration:
             if t is None or t_paths is None:
                 self.data_loader_t_iter = iter(self.data_loader_t)
@@ -112,8 +112,8 @@ class Data(Dataset):
                 raise StopIteration()
 
         self.iter += 1
-        return {'S': t, 'S_label': t_paths,
-                'T': t, 'T_label': t_paths}
+        return {'S': t, 'S_label': t_paths, 'S_paths': t_real_paths
+                'T': t, 'T_label': t_paths, 'T_paths': t_real_paths}
 
     def __len__(self):
         return self.max_dataset_size * self.num_datasets
@@ -197,6 +197,103 @@ class TestDataLoader():
         self.dataset_s = data_loader_s
 
         dataset_target = Dataset(target['imgs'], target['labels'], transform=transform_target)
+        data_loader_t = torch.utils.data.DataLoader(dataset_target, batch_size=batch_size2, shuffle=(split == 'Train'),
+                                                    num_workers=num_workers_, worker_init_fn=worker_init_fn)
+
+        self.dataset_t = dataset_target
+        self.paired_data = Data(data_loader_t,
+                                float("inf"))
+
+        self.num_datasets = len(source)
+        self.num_samples = len(self.dataset_t)
+
+    def name(self):
+        return 'UnalignedDataLoader'
+
+    def load_data(self):
+        return self.paired_data
+
+    def __len__(self):
+        return self.num_samples
+
+class TestDataLoaderReal():
+    def __init__(self):
+
+        self.__imagenet_pca = {
+            'eigval': torch.Tensor([0.2175, 0.0188, 0.0045]),
+            'eigvec': torch.Tensor([
+                [-0.5675, 0.7192, 0.4009],
+                [-0.5808, -0.0045, -0.8140],
+                [-0.5836, -0.6948, 0.4203],
+            ])
+        }
+
+    def initialize(self, source, target, batch_size1, batch_size2, num_workers_, scale=256, split='Train'):
+        start_first = 0
+        start_center = (256 - 224 - 1) / 2
+        start_last = 256 - 224 - 1
+
+        scale2 = 224
+        if split == 'Train':
+            transform_source = transforms.Compose([
+                # transforms.Resize(scale),
+                # transforms.RandomCrop(scale),
+                ResizeImage(256),
+                transforms.RandomResizedCrop(224),
+                transforms.RandomHorizontalFlip(),
+                # transforms.ColorJitter(0.4,0.2,0.2),
+                transforms.ToTensor(),
+                # Lighting(0.1, self.__imagenet_pca['eigval'],self.__imagenet_pca['eigvec']),
+                transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                     std=[0.229, 0.224, 0.225])
+            ])
+            transform_target = transforms.Compose([
+                # transforms.Resize((scale,scale)),
+                ResizeImage(256),
+                transforms.RandomResizedCrop(224),
+                transforms.RandomHorizontalFlip(),
+                # transforms.ColorJitter(0.4,0.2,0.2),
+                transforms.ToTensor(),
+                # Lighting(0.1,self.__imagenet_pca['eigval'],self.__imagenet_pca['eigvec']),
+                transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                     std=[0.229, 0.224, 0.225])
+            ])
+        elif split == 'Test':
+            transform_source = transforms.Compose([
+                # transforms.Resize(scale),
+                # transforms.RandomCrop(scale),
+                transforms.Scale(scale),
+                transforms.CenterCrop(scale2),
+                # ResizeImage(256),
+                # PlaceCrop(224, start_center, start_center),
+                transforms.ToTensor(),
+                transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                     std=[0.229, 0.224, 0.225])
+            ])
+            transform_target = transforms.Compose([
+                # transforms.Resize((scale,scale)),
+                transforms.Scale(scale),
+                transforms.CenterCrop(scale2),
+                # ResizeImage(256),
+                # PlaceCrop(224, start_center, start_center),
+                transforms.ToTensor(),
+                transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                     std=[0.229, 0.224, 0.225])
+            ])
+        else:
+            raise Exception('Wrong split')
+        data_sources = []
+        data_loader_s = []
+        max_size = 0
+        for i in range(len(source)):
+            data_sources.append(DatasetReal(source[i]['imgs'], source[i]['labels'], {}, transform=transform_source))
+            data_loader_s.append(
+                torch.utils.data.DataLoader(data_sources[i], batch_size=batch_size1, shuffle=(split == 'Train'),
+                                            num_workers=num_workers_, worker_init_fn=worker_init_fn))
+            max_size = max(max_size, len(data_sources[i]))
+        self.dataset_s = data_loader_s
+
+        dataset_target = DatasetReal(target['imgs'], target['labels'], {}, transform=transform_target)
         data_loader_t = torch.utils.data.DataLoader(dataset_target, batch_size=batch_size2, shuffle=(split == 'Train'),
                                                     num_workers=num_workers_, worker_init_fn=worker_init_fn)
 
