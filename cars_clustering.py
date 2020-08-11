@@ -7,12 +7,18 @@ import torch.nn as nn
 from torch.autograd import Variable
 import torchvision
 import os
+import sys
 
+lengthForPCA = 2000
+small_dimension = 50
 for batch_idx, data in enumerate(datasets):
-	img_s = Variable(data['S'])
-	img_path = Variable(data['S_paths'])
-	print(img_s)
-	print(img_path)
+	img_s = data['S']
+	img_path = data['S_paths']
 	print(img_s.size())
+	print(img_path)
+	sys.exit()
+
+
+
 
 
