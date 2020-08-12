@@ -16,12 +16,13 @@ parser.add_argument('--num_workers', type=int, default=0, metavar='N',
                     help='dataloader num_workers')
 args = parser.parse_args()
 
-lengthForPCA = 600
+lengthForPCA = 200
 small_dimension = 30
 arrayOfClusterstorch = []
 print('starting to read dataloader')
 for batch_idx, data in enumerate(datasets):
 	img_s = data['S'].cuda()
+	print(img_s.size())
 	arrayOfClusterstorch.append(img_s)
 	if(len(arrayOfClusterstorch) > lengthForPCA):
 		break
