@@ -1,7 +1,7 @@
 from __future__ import print_function
 from datasets.cars import cars_combined
 
-datasets, dataset_test, dataset_valid, classwise_dataset = cars_combined('CCSurv',128,"/data/CompCarsCropped/data_cropped",0,0)
+datasets, dataset_test, dataset_valid, classwise_dataset = cars_combined('CCSurv',32,"/data/CompCarsCropped/data_cropped",0,0)
 
 import torch
 import torch.nn as nn
@@ -19,13 +19,17 @@ args = parser.parse_args()
 lengthForPCA = 200
 small_dimension = 30
 arrayOfClusterstorch = []
+totalTillNow = 0
 print('starting to read dataloader')
 for batch_idx, data in enumerate(datasets):
+	print('here')
 	img_s = data['S'].cuda()
 	print(img_s.size())
 	arrayOfClusterstorch.append(img_s)
-	if(len(arrayOfClusterstorch) > lengthForPCA):
+	totalTillNow += img_s.size()[0]
+	if(totalTillNow > lengthForPCA):
 		break
+
 print('collected for PCA')
 concatenatedTensor = torch.cat(tuple(arrayOfClusterstorch), 0)
 concatenatedTensor = torch.reshape(concatenatedTensor, (concatenatedTensor.size()[0],-1))
@@ -48,10 +52,14 @@ datasets, dataset_test, dataset_valid, classwise_dataset = cars_combined('CCSurv
 arrayOfClusterstorch = []
 arrayOfPaths = []
 print('starting to read dataloader again')
+totalTillNow = 0
 for batch_idx, data in enumerate(datasets):
 	img_s = data['S'].cuda()
 	arrayOfClusterstorch.append(img_s)
 	arrayOfPaths += data['S_paths']
+	totalTillNow += img_s.size()[0]
+	if(totalTillNow > 200):
+		break	
 
 concatenatedTensor = torch.cat(tuple(arrayOfClusterstorch), 0)
 concatenatedTensor = torch.reshape(concatenatedTensor, (concatenatedTensor.size()[0],-1))
