@@ -55,34 +55,43 @@ arrayOfClusterstorch = []
 arrayOfPaths = []
 print('starting to read dataloader again')
 totalTillNow = 0
+shortened_numpys = []
 for batch_idx, data in enumerate(datasets):
 	img_s = data['S'].cuda()
 	arrayOfClusterstorch.append(img_s)
 	arrayOfPaths += data['S_paths']
 	totalTillNow += img_s.size()[0]
+	print(img_s.size())
+	if(totalTillNow > 1000):
+		print(totalTillNow)
+		concatenatedTensor = torch.cat(tuple(arrayOfClusterstorch), 0)
+		concatenatedTensor = torch.reshape(concatenatedTensor, (concatenatedTensor.size()[0],-1))
+		X_vec = concatenatedTensor.cpu().data.numpy()
+		X_vec = X_vec - mean
+		transformed_data = pca_transformed.transform(X_vec)
+		shortened_numpys.append(transformed_data)
+		totalTillNow = 0
+		arrayOfClusterstorch = []
 
 concatenatedTensor = torch.cat(tuple(arrayOfClusterstorch), 0)
 concatenatedTensor = torch.reshape(concatenatedTensor, (concatenatedTensor.size()[0],-1))
-print('whole data collected')
-
-print(concatenatedTensor.size())
-
-
-print(len(arrayOfPaths))
-
 X_vec = concatenatedTensor.cpu().data.numpy()
 X_vec = X_vec - mean
-
-print('transforming via PCA')
 transformed_data = pca_transformed.transform(X_vec)
+shortened_numpys.append(transformed_data)
+
+shortened_numpys = tuple(shortened_numpys)
+shortened_numpys = np.concatenate(shortened_numpys, axis=0)
+
 print('starting k means now')
-kmeans = KMeans(n_clusters=2, random_state=0).fit(transformed_data)
+kmeans = KMeans(n_clusters=4, random_state=0).fit(shortened_numpys)
+
 zip_iterator = zip(arrayOfPaths, kmeans.labels_)
 a_dictionary = dict(zip_iterator)
 
 print(a_dictionary)
 import pickle
-with open('/data/cars_clusters.pickle', 'wb') as handle:
+with open('/data/cars_clusters_optimized.pickle', 'wb') as handle:
     pickle.dump(a_dictionary, handle)
 
 
