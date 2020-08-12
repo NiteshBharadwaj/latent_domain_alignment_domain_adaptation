@@ -1,8 +1,6 @@
 from __future__ import print_function
 from datasets.cars import cars_combined
 
-datasets, dataset_test, dataset_valid, classwise_dataset = cars_combined('CCSurv',128,"/data/CompCarsCropped/data_cropped",0,0)
-
 import torch
 import torch.nn as nn
 from torch.autograd import Variable
@@ -15,6 +13,8 @@ parser = argparse.ArgumentParser(description='clustering compcars')
 parser.add_argument('--num_workers', type=int, default=0, metavar='N',
                     help='dataloader num_workers')
 args = parser.parse_args()
+
+datasets, dataset_test, dataset_valid, classwise_dataset = cars_combined('CCWeb',128,"/data/CompCarsCropped/data_cropped",0,args.num_workers)
 
 lengthForPCA = 200
 small_dimension = 30
@@ -48,7 +48,7 @@ X_vec = X_vec - mean
 pca_transformed = PCA(n_components=small_dimension).fit(X_vec)
 print('PCA done')
 
-datasets, dataset_test, dataset_valid, classwise_dataset = cars_combined('CCSurv',128,"/data/CompCarsCropped/data_cropped",0,args.num_workers)
+datasets, dataset_test, dataset_valid, classwise_dataset = cars_combined('CCWeb',128,"/data/CompCarsCropped/data_cropped",0,args.num_workers)
 arrayOfClusterstorch = []
 arrayOfPaths = []
 print('starting to read dataloader again')
@@ -81,6 +81,7 @@ zip_iterator = zip(arrayOfPaths, kmeans.labels_)
 a_dictionary = dict(zip_iterator)
 
 print(a_dictionary)
+import pickle
 with open('/data/cars_clusters.pickle', 'wb') as handle:
     pickle.dump(a_dictionary, handle)
 
