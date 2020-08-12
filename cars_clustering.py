@@ -13,10 +13,10 @@ parser = argparse.ArgumentParser(description='clustering compcars')
 parser.add_argument('--num_workers', type=int, default=0, metavar='N',
                     help='dataloader num_workers')
 args = parser.parse_args()
+print('MAKING dataloader')
+datasets, dataset_test, dataset_valid, classwise_dataset = cars_combined('CCWeb',128,"/data/CompCarsCropped/data_cropped",0,args.num_workers)
 
-datasets, dataset_test, dataset_valid, classwise_dataset = cars_combined('CCSurv',128,"/data/CompCarsCropped/data_cropped",0,args.num_workers)
-
-lengthForPCA = 200
+lengthForPCA = 1000
 small_dimension = 30
 arrayOfClusterstorch = []
 totalTillNow = 0
@@ -48,7 +48,9 @@ X_vec = X_vec - mean
 pca_transformed = PCA(n_components=small_dimension).fit(X_vec)
 print('PCA done')
 
-datasets, dataset_test, dataset_valid, classwise_dataset = cars_combined('CCSurv',128,"/data/CompCarsCropped/data_cropped",0,args.num_workers)
+
+print('MAKING dataloader')
+datasets, dataset_test, dataset_valid, classwise_dataset = cars_combined('CCWeb',128,"/data/CompCarsCropped/data_cropped",0,args.num_workers)
 arrayOfClusterstorch = []
 arrayOfPaths = []
 print('starting to read dataloader again')
