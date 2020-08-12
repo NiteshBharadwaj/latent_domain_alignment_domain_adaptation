@@ -142,7 +142,7 @@ def cars_combined_real(target, batch_size, compcars_directory, seed_id, num_work
         with open('/data/cars_clusters.pickle', 'wb') as handle:
             clusterDict = pickle.load(handle)
     except:
-        continue
+        pass
 
     train_loader = CombinedDataLoaderReal()
     train_loader.initialize(S, T, batch_size, batch_size, num_workers, clusterDict, scale=scale, split='Train')
