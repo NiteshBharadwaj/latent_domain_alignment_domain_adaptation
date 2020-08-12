@@ -1,7 +1,7 @@
 from __future__ import print_function
 from datasets.cars import cars_combined
 
-datasets, dataset_test, dataset_valid, classwise_dataset = cars_combined('CCSurv',32,"/data/CompCarsCropped/data_cropped",0,0)
+datasets, dataset_test, dataset_valid, classwise_dataset = cars_combined('CCSurv',128,"/data/CompCarsCropped/data_cropped",0,0)
 
 import torch
 import torch.nn as nn
@@ -71,15 +71,16 @@ print(concatenatedTensor.size())
 print(len(arrayOfPaths))
 
 X_vec = concatenatedTensor.cpu().data.numpy()
-adasdas_vec = X_vec - mean
+X_vec = X_vec - mean
 
 print('transforming via PCA')
-transformed_data = pca_transformed.transform(complete_data)
+transformed_data = pca_transformed.transform(X_vec)
 print('starting k means now')
 kmeans = KMeans(n_clusters=2, random_state=0).fit(transformed_data)
 zip_iterator = zip(arrayOfPaths, kmeans.labels_)
 a_dictionary = dict(zip_iterator)
 
+print(a_dictionary)
 with open('/data/cars_clusters.pickle', 'wb') as handle:
     pickle.dump(a_dictionary, handle)
 
