@@ -104,7 +104,7 @@ class Data(Dataset):
     def __getitem__(self, index):
         t, t_paths = None, None
         try:
-            t, t_paths, t_real_paths = next(self.data_loader_t_iter)
+            t, t_paths = next(self.data_loader_t_iter)
         except StopIteration:
             if t is None or t_paths is None:
                 self.data_loader_t_iter = iter(self.data_loader_t)
@@ -112,8 +112,8 @@ class Data(Dataset):
                 raise StopIteration()
 
         self.iter += 1
-        return {'S': t, 'S_label': t_paths, 'S_paths': t_real_paths
-                'T': t, 'T_label': t_paths, 'T_paths': t_real_paths}
+        return {'S': t, 'S_label': t_paths,
+                'T': t, 'T_label': t_paths}
 
     def __len__(self):
         return self.max_dataset_size * self.num_datasets
@@ -138,10 +138,12 @@ class TestDataLoader():
 
         scale2 = 224
         if split == 'Train':
+            assert(False)
             transform_source = transforms.Compose([
                 # transforms.Resize(scale),
                 # transforms.RandomCrop(scale),
                 ResizeImage(256),
+                #transforms.RandomAffine(5, (.05,.05)),
                 transforms.RandomResizedCrop(224),
                 transforms.RandomHorizontalFlip(),
                 # transforms.ColorJitter(0.4,0.2,0.2),
@@ -153,6 +155,7 @@ class TestDataLoader():
             transform_target = transforms.Compose([
                 # transforms.Resize((scale,scale)),
                 ResizeImage(256),
+                #transforms.RandomAffine(5, (.05,.05)),
                 transforms.RandomResizedCrop(224),
                 transforms.RandomHorizontalFlip(),
                 # transforms.ColorJitter(0.4,0.2,0.2),
@@ -192,13 +195,13 @@ class TestDataLoader():
             data_sources.append(Dataset(source[i]['imgs'], source[i]['labels'], transform=transform_source))
             data_loader_s.append(
                 torch.utils.data.DataLoader(data_sources[i], batch_size=batch_size1, shuffle=(split == 'Train'),
-                                            num_workers=num_workers_, worker_init_fn=worker_init_fn))
+                                            num_workers=num_workers_, worker_init_fn=worker_init_fn, pin_memory=True))
             max_size = max(max_size, len(data_sources[i]))
         self.dataset_s = data_loader_s
 
         dataset_target = Dataset(target['imgs'], target['labels'], transform=transform_target)
         data_loader_t = torch.utils.data.DataLoader(dataset_target, batch_size=batch_size2, shuffle=(split == 'Train'),
-                                                    num_workers=num_workers_, worker_init_fn=worker_init_fn)
+                                                    num_workers=num_workers_, worker_init_fn=worker_init_fn, pin_memory=True)
 
         self.dataset_t = dataset_target
         self.paired_data = Data(data_loader_t,
