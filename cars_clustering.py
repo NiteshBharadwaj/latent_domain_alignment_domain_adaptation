@@ -60,8 +60,6 @@ for batch_idx, data in enumerate(datasets):
 	arrayOfClusterstorch.append(img_s)
 	arrayOfPaths += data['S_paths']
 	totalTillNow += img_s.size()[0]
-	if(totalTillNow > 200):
-		break	
 
 concatenatedTensor = torch.cat(tuple(arrayOfClusterstorch), 0)
 concatenatedTensor = torch.reshape(concatenatedTensor, (concatenatedTensor.size()[0],-1))

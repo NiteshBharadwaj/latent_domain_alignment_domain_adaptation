@@ -19,7 +19,7 @@ from train_msda_single import train_MSDA_single
 from test import test
 from view_clusters import view_clusters
 from train_source_only import train_source_only
-from train_msda_hard_Cluster_cars import train_MSDA_hard_adaptation
+from train_msda_hard_cluster_cars import train_MSDA_hard_adaptation
 
 # from plot_tsne import plot_tsne1,plot_tsne2
 
