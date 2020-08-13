@@ -1,5 +1,5 @@
 from __future__ import print_function
-from datasets.cars import cars_combined
+from datasets.cars import cars_combined_real
 
 import torch
 import torch.nn as nn
@@ -14,7 +14,7 @@ parser.add_argument('--num_workers', type=int, default=0, metavar='N',
                     help='dataloader num_workers')
 args = parser.parse_args()
 print('MAKING dataloader')
-datasets, dataset_test, dataset_valid, classwise_dataset = cars_combined('CCWeb',128,"/data/CompCarsCropped/data_cropped",0,args.num_workers)
+datasets, dataset_test, dataset_valid, classwise_dataset = cars_combined_real('CCSurv',128,"/data/CompCarsCropped/data_cropped",0,args.num_workers)
 
 lengthForPCA = 1000
 small_dimension = 30
@@ -24,11 +24,13 @@ print('starting to read dataloader')
 for batch_idx, data in enumerate(datasets):
 	print('here')
 	img_s = data['S'].cuda()
+	img_s_domain_label = data['S_paths']
 	print(img_s.size())
 	arrayOfClusterstorch.append(img_s)
 	totalTillNow += img_s.size()[0]
 	if(totalTillNow > lengthForPCA):
 		break
+sys.exit()
 
 print('collected for PCA')
 concatenatedTensor = torch.cat(tuple(arrayOfClusterstorch), 0)
@@ -50,7 +52,7 @@ print('PCA done')
 
 
 print('MAKING dataloader')
-datasets, dataset_test, dataset_valid, classwise_dataset = cars_combined('CCWeb',128,"/data/CompCarsCropped/data_cropped",0,args.num_workers)
+datasets, dataset_test, dataset_valid, classwise_dataset = cars_combined('CCSurv',128,"/data/CompCarsCropped/data_cropped",0,args.num_workers)
 arrayOfClusterstorch = []
 arrayOfPaths = []
 print('starting to read dataloader again')
