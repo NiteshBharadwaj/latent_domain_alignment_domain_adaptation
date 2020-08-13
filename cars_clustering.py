@@ -91,7 +91,7 @@ a_dictionary = dict(zip_iterator)
 
 print(a_dictionary)
 import pickle
-with open('/data/ccweb_clusters.pickle', 'wb') as handle:
+with open('/data/ccweb_clusterss.pickle', 'wb') as handle:
     pickle.dump(a_dictionary, handle)
 
 
