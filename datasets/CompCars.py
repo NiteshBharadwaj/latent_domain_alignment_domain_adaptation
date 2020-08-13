@@ -98,8 +98,8 @@ def read_comp_cars(target, compcars_directory, is_target, seed_id):
         rel_paths_train = split_(train_file, label_dir)
         rel_paths_test = split_(test_file, label_dir)
         rel_paths_train_test = rel_paths_train + rel_paths_test
-        rel_paths_train = rel_paths_train_test
-        rel_paths_test = rel_paths_train[:2000]
+        rel_paths_train = rel_paths_train_test[:2000]
+        rel_paths_test = rel_paths_train
         rel_paths_test = rel_paths_train_test[:2000]
 
         labels_train = [int(x.split('/')[0]) for x in rel_paths_train]
