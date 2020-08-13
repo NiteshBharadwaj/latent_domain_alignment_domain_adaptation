@@ -14,20 +14,28 @@ def loss_single_domain(solver, img_s, img_t, label_s. img_s_domain_label):
     output_s_c2, output_t_c2 = solver.C2_all_domain_soft(feat_s, feat_t)
 
     num_clusters = 4
+    loss_msda = msda.msda_regulizer_single(feat_t, feat_t, 1) * solver.msda_wt
     indices_0 = ((img_s_domain_label == 0).nonzero()).squeeze()
-    feat_s_0 = img_s[indices_0,:,:,:]
+    if(len(indices_0.size()) > 1):
+        feat_s_0 = img_s[indices_0,:]
+        loss_msda = loss_msda + msda.msda_regulizer_single(feat_s_0, feat_t, 5) * solver.msda_wt
     indices_1 = ((img_s_domain_label == 1).nonzero()).squeeze()
-    feat_s_1 = img_s[indices_1,:,:,:]
+    if(len(indices_1.size()) > 1):
+        feat_s_1 = img_s[indices_1,:]
+        loss_msda = loss_msda + msda.msda_regulizer_single(feat_s_1, feat_t, 5) * solver.msda_wt
     indices_2 = ((img_s_domain_label == 2).nonzero()).squeeze()
-    feat_s_2 = img_s[indices_2,:,:,:]
+    if(len(indices_2.size()) > 1):
+        feat_s_2 = img_s[indices_2,:]
+        loss_msda = loss_msda + msda.msda_regulizer_single(feat_s_2, feat_t, 5) * solver.msda_wt
     indices_3 = ((img_s_domain_label == 3).nonzero()).squeeze()
-    feat_s_3 = img_s[indices_3,:,:,:]
+    if(len(indices_3.size()) > 1):
+        feat_s_3 = img_s[indices_3,:]
+        loss_msda = loss_msda + msda.msda_regulizer_single(feat_s_3, feat_t, 5) * solver.msda_wt
 
-
-    loss_msda = msda.msda_regulizer_single(feat_s_0, feat_t, 5) * solver.msda_wt
-    loss_msda = loss_msda + msda.msda_regulizer_single(feat_s_1, feat_t, 5) * solver.msda_wt
-    loss_msda = loss_msda + msda.msda_regulizer_single(feat_s_2, feat_t, 5) * solver.msda_wt
-    loss_msda = loss_msda + msda.msda_regulizer_single(feat_s_3, feat_t, 5) * solver.msda_wt
+    # loss_msda = msda.msda_regulizer_single(feat_s_0, feat_t, 5) * solver.msda_wt
+    # loss_msda = loss_msda + msda.msda_regulizer_single(feat_s_1, feat_t, 5) * solver.msda_wt
+    # loss_msda = loss_msda + msda.msda_regulizer_single(feat_s_2, feat_t, 5) * solver.msda_wt
+    # loss_msda = loss_msda + msda.msda_regulizer_single(feat_s_3, feat_t, 5) * solver.msda_wt
 
     if (math.isnan(loss_msda.data.item())):
         raise Exception('msda loss is nan')

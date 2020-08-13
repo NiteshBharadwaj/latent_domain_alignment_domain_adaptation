@@ -139,7 +139,7 @@ def cars_combined_real(target, batch_size, compcars_directory, seed_id, num_work
 
     clusterDict = {}
     try:
-        with open('/data/cars_clusters.pickle', 'wb') as handle:
+        with open('/data/cars_clusters_optimized.pickle', 'wb') as handle:
             clusterDict = pickle.load(handle)
     except:
         pass
