@@ -107,7 +107,9 @@ class DatasetReal(data.Dataset):
          """
 
         img_path, target = self.data[index], self.labels[index]
-        cluster = self.clusters.get(img_path, -1)
+        from random import randrange
+        num = randrange(4)
+        cluster = self.clusters.get(img_path, num)
         img = Image.open(img_path)
         img = np.array(img)
         avg_pixel_val = np.mean(img)

@@ -104,7 +104,7 @@ class Data(Dataset):
     def __getitem__(self, index):
         t, t_paths = None, None
         try:
-            t, t_paths = next(self.data_loader_t_iter)
+            t, t_paths, t_real_paths = next(self.data_loader_t_iter)
         except StopIteration:
             if t is None or t_paths is None:
                 self.data_loader_t_iter = iter(self.data_loader_t)
@@ -112,8 +112,8 @@ class Data(Dataset):
                 raise StopIteration()
 
         self.iter += 1
-        return {'S': t, 'S_label': t_paths,
-                'T': t, 'T_label': t_paths}
+        return {'S': t, 'S_label': t_paths, 'S_paths': t_real_paths,
+                'T': t, 'T_label': t_paths, 'T_paths': t_real_paths}
 
     def __len__(self):
         return self.max_dataset_size * self.num_datasets

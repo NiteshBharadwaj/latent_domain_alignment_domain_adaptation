@@ -15,25 +15,26 @@ def loss_single_domain(solver, img_s, img_t, label_s, img_s_domain_label):
 
     num_clusters = 4
     loss_msda = msda.msda_regulizer_single(feat_t, feat_t, 1) * solver.msda_wt
+    print(img_s_domain_label)
     indices_0 = ((img_s_domain_label == 0).nonzero()).squeeze()
-    print(indices_0.size())
-    if(len(indices_0.size()) > 0):
-        feat_s_0 = img_s[indices_0,:]
+    #print(indices_0.size())
+    if(indices_0.size()[0] > 0):
+        feat_s_0 = feat_s[indices_0,:]
         loss_msda = loss_msda + msda.msda_regulizer_single(feat_s_0, feat_t, 5) * solver.msda_wt
     indices_1 = ((img_s_domain_label == 1).nonzero()).squeeze()
-    print(indices_1.size())
-    if(len(indices_1.size()) > 0):
-        feat_s_1 = img_s[indices_1,:]
+    #print(indices_1.size())
+    if(indices_1.size()[0] > 0):
+        feat_s_1 = feat_s[indices_1,:]
         loss_msda = loss_msda + msda.msda_regulizer_single(feat_s_1, feat_t, 5) * solver.msda_wt
-    print(indices_2.size())
     indices_2 = ((img_s_domain_label == 2).nonzero()).squeeze()
-    if(len(indices_2.size()) > 0):
-        feat_s_2 = img_s[indices_2,:]
+    #print(indices_2.size())
+    if(indices_2.size()[0] > 0):
+        feat_s_2 = feat_s[indices_2,:]
         loss_msda = loss_msda + msda.msda_regulizer_single(feat_s_2, feat_t, 5) * solver.msda_wt
     indices_3 = ((img_s_domain_label == 3).nonzero()).squeeze()
-    print(indices_3.size())
-    if(len(indices_3.size()) > 0):
-        feat_s_3 = img_s[indices_3,:]
+    #print(indices_3.size())
+    if(indices_3.size()[0] > 0):
+        feat_s_3 = feat_s[indices_3,:]
         loss_msda = loss_msda + msda.msda_regulizer_single(feat_s_3, feat_t, 5) * solver.msda_wt
 
     # loss_msda = msda.msda_regulizer_single(feat_s_0, feat_t, 5) * solver.msda_wt

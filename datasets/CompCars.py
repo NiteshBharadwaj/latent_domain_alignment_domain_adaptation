@@ -98,9 +98,9 @@ def read_comp_cars(target, compcars_directory, is_target, seed_id):
         rel_paths_train = split_(train_file, label_dir)
         rel_paths_test = split_(test_file, label_dir)
         rel_paths_train_test = rel_paths_train + rel_paths_test
-        rel_paths_train = rel_paths_train_test[:2000]
+        rel_paths_train = rel_paths_train_test
         rel_paths_test = rel_paths_train
-        rel_paths_test = rel_paths_train_test[:2000]
+        rel_paths_test = rel_paths_train_test
 
         labels_train = [int(x.split('/')[0]) for x in rel_paths_train]
         label_map = rev_(np.unique(np.array(labels_train)))
@@ -170,8 +170,8 @@ def read_comp_cars(target, compcars_directory, is_target, seed_id):
         mat = sio.loadmat(mat_file)
 
         rel_paths_train = split_(train_file, label_dir)
-        paths_train = [os.path.join(img_dir, x) for x in rel_paths_train][:2000]
-        idx_paths_train = [int(x.split('/')[0]) for x in rel_paths_train][:2000]
+        paths_train = [os.path.join(img_dir, x) for x in rel_paths_train]
+        idx_paths_train = [int(x.split('/')[0]) for x in rel_paths_train]
         labels_train = [mat['sv_make_model_name'][x - 1, 2][0][0] for x in idx_paths_train]
         print('Surv num car models', len(set([ii for ii in labels_train if ii in available_car_models])))
 
