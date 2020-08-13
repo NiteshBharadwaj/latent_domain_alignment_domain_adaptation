@@ -17,6 +17,10 @@ from class_wise_dataloader_cars import ClasswiseDataLoader
 
 
 def return_dataset(target, compcars_directory, is_target, seed_id):
+    print(target)
+    print(compcars_directory)
+    print(is_target)
+    print(seed_id)
     return read_comp_cars(target, compcars_directory, is_target, seed_id)
 
 
