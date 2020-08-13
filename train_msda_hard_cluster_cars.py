@@ -6,7 +6,7 @@ import msda
 import math
 
 
-def loss_single_domain(solver, img_s, img_t, label_s. img_s_domain_label):
+def loss_single_domain(solver, img_s, img_t, label_s, img_s_domain_label):
     feat_s_comb, feat_t_comb = solver.feat_soft_all_domain(img_s, img_t)
     feat_s, conv_feat_s = feat_s_comb
     feat_t, conv_feat_t = feat_t_comb
@@ -14,20 +14,32 @@ def loss_single_domain(solver, img_s, img_t, label_s. img_s_domain_label):
     output_s_c2, output_t_c2 = solver.C2_all_domain_soft(feat_s, feat_t)
 
     num_clusters = 4
+    loss_msda = msda.msda_regulizer_single(feat_t, feat_t, 1) * solver.msda_wt
     indices_0 = ((img_s_domain_label == 0).nonzero()).squeeze()
-    feat_s_0 = img_s[indices_0,:,:,:]
+    print(indices_0.size())
+    if(len(indices_0.size()) > 0):
+        feat_s_0 = img_s[indices_0,:]
+        loss_msda = loss_msda + msda.msda_regulizer_single(feat_s_0, feat_t, 5) * solver.msda_wt
     indices_1 = ((img_s_domain_label == 1).nonzero()).squeeze()
-    feat_s_1 = img_s[indices_1,:,:,:]
+    print(indices_1.size())
+    if(len(indices_1.size()) > 0):
+        feat_s_1 = img_s[indices_1,:]
+        loss_msda = loss_msda + msda.msda_regulizer_single(feat_s_1, feat_t, 5) * solver.msda_wt
+    print(indices_2.size())
     indices_2 = ((img_s_domain_label == 2).nonzero()).squeeze()
-    feat_s_2 = img_s[indices_2,:,:,:]
+    if(len(indices_2.size()) > 0):
+        feat_s_2 = img_s[indices_2,:]
+        loss_msda = loss_msda + msda.msda_regulizer_single(feat_s_2, feat_t, 5) * solver.msda_wt
     indices_3 = ((img_s_domain_label == 3).nonzero()).squeeze()
-    feat_s_3 = img_s[indices_3,:,:,:]
+    print(indices_3.size())
+    if(len(indices_3.size()) > 0):
+        feat_s_3 = img_s[indices_3,:]
+        loss_msda = loss_msda + msda.msda_regulizer_single(feat_s_3, feat_t, 5) * solver.msda_wt
 
-
-    loss_msda = msda.msda_regulizer_single(feat_s_0, feat_t, 5) * solver.msda_wt
-    loss_msda = loss_msda + msda.msda_regulizer_single(feat_s_1, feat_t, 5) * solver.msda_wt
-    loss_msda = loss_msda + msda.msda_regulizer_single(feat_s_2, feat_t, 5) * solver.msda_wt
-    loss_msda = loss_msda + msda.msda_regulizer_single(feat_s_3, feat_t, 5) * solver.msda_wt
+    # loss_msda = msda.msda_regulizer_single(feat_s_0, feat_t, 5) * solver.msda_wt
+    # loss_msda = loss_msda + msda.msda_regulizer_single(feat_s_1, feat_t, 5) * solver.msda_wt
+    # loss_msda = loss_msda + msda.msda_regulizer_single(feat_s_2, feat_t, 5) * solver.msda_wt
+    # loss_msda = loss_msda + msda.msda_regulizer_single(feat_s_3, feat_t, 5) * solver.msda_wt
 
     if (math.isnan(loss_msda.data.item())):
         raise Exception('msda loss is nan')
@@ -55,13 +67,13 @@ def train_MSDA_hard_adaptation(solver, epoch, classifier_disc=True, record_file=
         img_t = Variable(data['T'].cuda())
         img_s = Variable(data['S'].cuda())
         label_s = Variable(data['S_label'].long().cuda())
-        img_s_domain_label = data['S_paths']
+        img_s_domain_label = data['S_paths'].long().cuda()
         if img_s.size()[0] < solver.batch_size or img_t.size()[0] < solver.batch_size:
             break
 
         solver.reset_grad()
 
-        loss_s_c1, loss_s_c2, loss_msda = loss_single_domain(solver,img_s, img_t, label_s)
+        loss_s_c1, loss_s_c2, loss_msda = loss_single_domain(solver,img_s, img_t, label_s, img_s_domain_label)
         if not classifier_disc:
             loss_s_c2 = loss_s_c1
         loss = loss_s_c1 + loss_msda + loss_s_c2
