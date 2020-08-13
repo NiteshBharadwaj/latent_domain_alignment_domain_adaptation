@@ -121,9 +121,9 @@ class Solver(object):
             elif args.dl_type == 'hard_cluster_adaptation':
                 self.datasets, self.dataset_test, self.dataset_valid, self.classwise_dataset = cars_combined_real(target,
                                                                                                              self.batch_size,
-                                                                                                             args.num_domain,
                                                                                                              args.cars_directory,
-                                                                                                             args.seed)                
+                                                                                                             args.seed,
+                                                                                                             args.num_workers)                
 
             print('load finished!')
             num_classes = 75
