@@ -1,5 +1,5 @@
 from __future__ import print_function
-from datasets.cars import cars_combined
+from datasets.cars import cars_combined_real
 
 import torch
 import torch.nn as nn
