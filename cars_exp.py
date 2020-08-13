@@ -14,7 +14,7 @@ parser.add_argument('--num_workers', type=int, default=0, metavar='N',
                     help='dataloader num_workers')
 args = parser.parse_args()
 print('MAKING dataloader')
-datasets, dataset_test, dataset_valid, classwise_dataset = cars_combined('CCWeb',128,"/data/CompCarsCropped/data_cropped",0,args.num_workers)
+datasets, dataset_test, dataset_valid, classwise_dataset = cars_combined_real('CCSurv',128,"/data/CompCarsCropped/data_cropped",0,args.num_workers)
 
 lengthForPCA = 1000
 small_dimension = 30
