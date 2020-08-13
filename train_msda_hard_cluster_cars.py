@@ -6,7 +6,7 @@ import msda
 import math
 
 
-def loss_single_domain(solver, img_s, img_t, label_s. img_s_domain_label):
+def loss_single_domain(solver, img_s, img_t, label_s, img_s_domain_label):
     feat_s_comb, feat_t_comb = solver.feat_soft_all_domain(img_s, img_t)
     feat_s, conv_feat_s = feat_s_comb
     feat_t, conv_feat_t = feat_t_comb
