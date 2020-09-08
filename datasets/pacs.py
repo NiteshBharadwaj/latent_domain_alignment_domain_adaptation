@@ -13,7 +13,7 @@ def return_dataset(target, pacs_directory, is_target, seed_id):
     return read_pacs_domain(target, pacs_directory, is_target, seed_id)
 
 
-def office_combined(target, batch_size, pacs_directory, seed_id, num_workers):
+def pacs_combined(target, batch_size, pacs_directory, seed_id, num_workers):
     S1 = {}
     S1_test = {}
     S1_valid = {}

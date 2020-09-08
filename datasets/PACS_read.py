@@ -2,11 +2,11 @@ import csv
 import random
 import numpy as np
 
-def read_pacs(domain, pacs_directory, is_target, seed_id):
+def read_pacs_domain(domain, pacs_directory, is_target, seed_id):
     random.seed(seed_id)
-    trainFile = pacs_directory + '/' + domain + '_train_kfold.txt'
-    testFile = pacs_directory + '/' + domain + '_test_kfold.txt'
-    validFile = pacs_directory + '/' + domain + '_crossval_kfold.txt'
+    trainFile = pacs_directory + '/splits/' + domain + '_train_kfold.txt'
+    testFile = pacs_directory + '/splits/' + domain + '_test_kfold.txt'
+    validFile = pacs_directory + '/splits/' + domain + '_crossval_kfold.txt'
 
     trainReader = csv.reader(open(trainFile, 'r'))
     testReader = csv.reader(open(testFile, 'r'))
