@@ -16,14 +16,15 @@ class Feature(nn.Module):
         self.model = models.resnet18(pretrained=True)
         for param in self.model.parameters():
             param.requires_grad = False
-        self.relu = nn.ReLU()
-        self.drop = nn.Dropout(0.5)
-        self.fc1 = nn.Linear(512, 1024)
-        self.bn1 = nn.BatchNorm1d(1024)
-        self.fc2 = nn.Linear(1024, 512)
-        self.bn2 = nn.BatchNorm1d(512)
-        self.fc3 = nn.Linear(512, 256)
-        self.bn3 = nn.BatchNorm1d(256, affine=False)
+
+        # self.relu = nn.ReLU()
+        # self.drop = nn.Dropout(0.5)
+        # self.fc1 = nn.Linear(512, 1024)
+        self.bn1 = nn.BatchNorm1d(512, affine=False)
+        # self.fc2 = nn.Linear(1024, 512)
+        # self.bn2 = nn.BatchNorm1d(512)
+        # self.fc3 = nn.Linear(512, 256)
+        # self.bn3 = nn.BatchNorm1d(256, affine=False)
 
     def forward(self, x, reverse=False):
         x = self.model.conv1(x)
@@ -40,10 +41,10 @@ class Feature(nn.Module):
         x = self.model.avgpool(x)
 
         x_feat = x.view(x.size(0), -1)
-
-        x = self.drop(self.relu(self.bn1(self.fc1(x_feat))))
-        x = self.drop(self.relu(self.bn2(self.fc2(x))))
-        x = self.bn3(self.fc3(x))
+        x = self.bn1(x)
+        # x = self.drop(self.relu(self.bn1(self.fc1(x_feat))))
+        # x = self.drop(self.relu(self.bn2(self.fc2(x))))
+        # x = self.bn3(self.fc3(x))
 
         return x, x_feat
 
@@ -51,7 +52,7 @@ class Feature(nn.Module):
 class Predictor(nn.Module):
     def __init__(self, num_classes):
         super(Predictor, self).__init__()
-        self.fc1 = nn.Linear(256, num_classes)
+        self.fc1 = nn.Linear(512, num_classes)
         self.bn1 = nn.BatchNorm1d(num_classes)
         self.relu = nn.ReLU()
 

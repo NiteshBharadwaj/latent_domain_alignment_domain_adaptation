@@ -226,7 +226,7 @@ class Solver(object):
         if args.data=='cars':
             milestones = [100]
         else:
-            milestones = [100]
+            milestones = [900]
         self.sche_g = torch.optim.lr_scheduler.MultiStepLR(self.opt_g, milestones, gamma=0.1)
         self.sche_c1 = torch.optim.lr_scheduler.MultiStepLR(self.opt_c1, milestones, gamma=0.1)
         self.sche_c2 = torch.optim.lr_scheduler.MultiStepLR(self.opt_c2, milestones, gamma=0.1)
@@ -237,18 +237,18 @@ class Solver(object):
 
     def set_optimizer(self, which_opt='momentum', lr=0.001, momentum=0.9):
         if which_opt == 'momentum':
-            self.opt_g = optim.SGD(self.G.parameters(),lr=lr, weight_decay=0.0005, momentum=momentum)
+            self.opt_g = optim.SGD(self.G.parameters(),lr=lr, weight_decay=1e-6, momentum=momentum)
 
-            self.opt_c1 = optim.SGD(self.C1.parameters(), lr=lr, weight_decay=0.0005, momentum=momentum)
-            self.opt_c2 = optim.SGD(self.C2.parameters(), lr=lr, weight_decay=0.0005, momentum=momentum)
-            self.opt_dp = optim.SGD(self.DP.parameters(), lr=lr/self.args.lr_ratio, weight_decay=0.0005, momentum=momentum)
+            self.opt_c1 = optim.SGD(self.C1.parameters(), lr=lr*10, weight_decay=1e-6, momentum=momentum)
+            self.opt_c2 = optim.SGD(self.C2.parameters(), lr=lr*10, weight_decay=1e-6, momentum=momentum)
+            self.opt_dp = optim.SGD(self.DP.parameters(), lr=lr/self.args.lr_ratio, weight_decay=1e-6, momentum=momentum)
 
         if which_opt == 'adam':
-            self.opt_g = optim.Adam(self.G.parameters(), lr=lr, weight_decay=0.0005)
+            self.opt_g = optim.Adam(self.G.parameters(), lr=lr, weight_decay=1e-6)
 
-            self.opt_c1 = optim.Adam(self.C1.parameters(), lr=lr, weight_decay=0.0005)
-            self.opt_c2 = optim.Adam(self.C2.parameters(), lr=lr, weight_decay=0.0005)
-            self.opt_dp = optim.Adam(self.DP.parameters(), lr=lr/self.args.lr_ratio, weight_decay=0.0005)
+            self.opt_c1 = optim.Adam(self.C1.parameters(), lr=lr*10, weight_decay=1e-6)
+            self.opt_c2 = optim.Adam(self.C2.parameters(), lr=lr*10, weight_decay=1e-6)
+            self.opt_dp = optim.Adam(self.DP.parameters(), lr=lr/self.args.lr_ratio, weight_decay=1e-6)
 
     def reset_grad(self):
         self.opt_g.zero_grad()
