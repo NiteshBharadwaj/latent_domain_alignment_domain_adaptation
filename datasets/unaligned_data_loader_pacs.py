@@ -153,7 +153,7 @@ class UnalignedDataLoader():
         start_center = (256 - 224 - 1) / 2
         start_last = 256 - 224 - 1
 
-        scale2 = 224
+        scale2 = 227
         if split == 'Train':
             transform_source = transforms.Compose([
                 # transforms.Resize(scale),

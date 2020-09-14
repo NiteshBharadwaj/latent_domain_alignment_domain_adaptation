@@ -39,9 +39,8 @@ class Feature(nn.Module):
         x = self.model.layer4(x)
 
         x = self.model.avgpool(x)
-
         x_feat = x.view(x.size(0), -1)
-        x = self.bn1(x)
+        x = self.bn1(x.view(x.size(0), -1))
         # x = self.drop(self.relu(self.bn1(self.fc1(x_feat))))
         # x = self.drop(self.relu(self.bn2(self.fc2(x))))
         # x = self.bn3(self.fc3(x))
