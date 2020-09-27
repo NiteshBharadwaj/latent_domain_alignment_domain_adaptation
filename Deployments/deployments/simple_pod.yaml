@@ -39,6 +39,8 @@ spec:
       mountPath: /data
     - name: shm
       mountPath: /dev/shm
+    - name: latent-pvc-pacs
+      mountPath: /data-pacs
 
   nodeSelector:
     ${NODE_HOSTNAME}
@@ -47,6 +49,9 @@ spec:
     - name: latent-pvc
       persistentVolumeClaim:
         claimName: latent-pvc
+    - name: latent-pvc-pacs
+      persistentVolumeClaim:
+        claimName: latent-pvc-pacs
     - name: ssh-secret-volume
       secret:
         ${SSH_KEY_NAME}
@@ -55,4 +60,3 @@ spec:
     - name: shm
       emptyDir:
         medium: Memory
-
