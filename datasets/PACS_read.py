@@ -9,10 +9,19 @@ def read_pacs_domain(domain, pacs_directory, is_target, seed_id):
     trainFile = pacs_directory + '/splits/' + domain + '_train_kfold.txt'
     testFile = pacs_directory + '/splits/' + domain + '_test_kfold.txt'
     validFile = pacs_directory + '/splits/' + domain + '_crossval_kfold.txt'
+    combinedFile = pacs_directory + '/splits/' + domain +"combined.txt"
 
-    trainReader = csv.reader(open(trainFile, 'r'))
-    testReader = csv.reader(open(testFile, 'r'))
-    validReader = csv.reader(open(validFile, 'r'))
+    with open(combinedFile, "wb") as outfile:
+        with open(trainFile, "rb") as infile:
+            outfile.write(infile.read())
+        with open(testFile, "rb") as infile:
+            outfile.write(infile.read())
+        with open(validFile, "rb") as infile:
+            outfile.write(infile.read())
+
+    trainReader = csv.reader(open(combinedFile, 'r'))
+    testReader = csv.reader(open(combinedFile, 'r'))
+    validReader = csv.reader(open(combinedFile, 'r'))
 
     paths_train, labels_train, paths_test, labels_test, paths_valid, labels_valid = [], [], [], [], [], []
 
