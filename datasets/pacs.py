@@ -42,15 +42,15 @@ def pacs_combined(target, batch_size, pacs_directory, seed_id, num_workers):
         target_domain, pacs_directory, True, seed_id)
 
     for i in range(len(domain_all)):
-        source_train, source_train_label, source_test, source_test_label, source_valid, source_valid_label = return_dataset(
-            domain_all[i], pacs_directory, False, seed_id)
+        source_train, source_train_label, source_test, source_test_label, source_valid, source_valid_label = return_dataset(domain_all[i], pacs_directory, False, seed_id)
 
         S[i]['imgs'] = source_train
         S[i]['labels'] = source_train_label
         # input target sample when test, source performance is not important
         S_test[i]['imgs'] = target_test
         S_test[i]['labels'] = target_test_label
-
+        print('Loading from', domain_all[i])
+        print('Train DataLoader Source of Size:', len(S[i]['labels']))
         S_valid[i]['imgs'] = target_valid
         S_valid[i]['labels'] = target_valid_label
 
@@ -75,7 +75,9 @@ def pacs_combined(target, batch_size, pacs_directory, seed_id, num_workers):
     test_loader = TestDataLoader()
     test_loader.initialize(S_test, T_test, batch_size, batch_size, num_workers, scale=scale, split='Test')
     dataset_test = test_loader.load_data()
-
+    print('Loading from', target_domain)
+    print('Test DataLoader of size:', len(T_test['labels']))
+    print('Train DataLoader Target of size:', len(T['labels']))
     print('Validation DataLoader of size:', len(T_valid['labels']))
     valid_loader = TestDataLoader()
     valid_loader.initialize(S_test, T_valid, batch_size, batch_size, num_workers, scale=scale, split='Test')
