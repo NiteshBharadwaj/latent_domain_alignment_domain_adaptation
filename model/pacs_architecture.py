@@ -14,8 +14,8 @@ class Feature(nn.Module):
     def __init__(self):
         super(Feature, self).__init__()
         self.model = models.resnet18(pretrained=True)
-        for param in self.model.parameters():
-            param.requires_grad = False
+        #for param in self.model.parameters():
+        #    param.requires_grad = False
 
         # self.relu = nn.ReLU()
         # self.drop = nn.Dropout(0.5)

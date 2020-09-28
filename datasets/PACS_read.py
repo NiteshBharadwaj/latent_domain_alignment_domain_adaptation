@@ -2,7 +2,7 @@ import csv
 import random
 import numpy as np
 
-num_valid_per_class = 5
+num_valid_per_class = 40
 
 def read_pacs_domain(domain, pacs_directory, is_target, seed_id):
     random.seed(seed_id)
@@ -11,13 +11,13 @@ def read_pacs_domain(domain, pacs_directory, is_target, seed_id):
     validFile = pacs_directory + '/splits/' + domain + '_crossval_kfold.txt'
     combinedFile = pacs_directory + '/splits/' + domain +"combined.txt"
 
-    with open(combinedFile, "wb") as outfile:
-        with open(trainFile, "rb") as infile:
-            outfile.write(infile.read())
-        with open(testFile, "rb") as infile:
-            outfile.write(infile.read())
-        with open(validFile, "rb") as infile:
-            outfile.write(infile.read())
+    #with open(combinedFile, "wb") as outfile:
+    #    with open(trainFile, "rb") as infile:
+    #        outfile.write(infile.read())
+    #    with open(testFile, "rb") as infile:
+    #        outfile.write(infile.read())
+    #    with open(validFile, "rb") as infile:
+    #        outfile.write(infile.read())
 
     trainReader = csv.reader(open(combinedFile, 'r'))
     testReader = csv.reader(open(combinedFile, 'r'))
@@ -41,7 +41,7 @@ def read_pacs_domain(domain, pacs_directory, is_target, seed_id):
         classwise_imgs = {}
 
         for row in validReader:
-            if int(row[1]) in classwise_imgs:
+            if int(row[0].split()[1])-1 in classwise_imgs:
                 classwise_imgs[int(row[0].split()[1])-1].append(pacs_directory + row[0].split()[0])
             else:
                 classwise_imgs[int(row[0].split()[1])-1] = [pacs_directory + row[0].split()[0]]
