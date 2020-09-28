@@ -98,7 +98,7 @@ def view_clusters(solver,clusters_file,probs_csv,epoch):
             #print(arrayOfClusterstorch[i].size())
             topImages = arrayOfClusterstorch[i][maxProbIndices.copy(),:,:,:]
             #torchvision.utils.save_image(arrayOfClusterstorch[i], clusters_file[i],nrow=7)
-            torchvision.utils.save_image(topImages, clusters_file[i][:-4] + '_probs_descending_'+str(epoch)+'.png',nrow=7)
+            torchvision.utils.save_image(topImages, clusters_file[i][:-4] + '_probs_descending_'+str(epoch)+'.png',nrow=7, normalize=True)
             print('images in this cluster : ', arrayOfClusterstorch[i].size()[0])
             print('bestProbs in this cluster : ', maxProbs[:min(topk,5)])
     try:

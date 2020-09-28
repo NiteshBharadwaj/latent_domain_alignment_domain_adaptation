@@ -2,7 +2,7 @@ import csv
 import random
 import numpy as np
 
-num_valid_per_class = 40
+num_valid_per_class = 0
 
 def read_pacs_domain(domain, pacs_directory, is_target, seed_id):
     random.seed(seed_id)
@@ -29,7 +29,7 @@ def read_pacs_domain(domain, pacs_directory, is_target, seed_id):
         paths_train.append(pacs_directory + row[0].split()[0])
         labels_train.append(int(row[0].split()[1])-1)
 
-    if not is_target:
+    if 1:#not is_target:
         for row in testReader:
             paths_test.append(pacs_directory + row[0].split()[0])
             labels_test.append(int(row[0].split()[1])-1)

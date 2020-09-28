@@ -29,7 +29,9 @@ from matplotlib import pyplot as plt
 parser = argparse.ArgumentParser(description='PyTorch MSDA Implementation')
 parser.add_argument('--all_use', type=str, default='no', metavar='N',
                     help='use all training data? in usps adaptation')
-parser.add_argument('--to_detach', type=str, default='yes', metavar='N',
+parser.add_argument('--model_selection_acc', type=int, default=1, metavar='n',
+                    help='model selection accuracy? 1/0?')
+parser.add_argument('--to_detach', type=str, default='yes', metavar='n',
                     help='classifier_discrepancy? yes/no')
 parser.add_argument('--class_disc', type=str, default='no', metavar='N',
                     help='classifier_discrepancy? yes/no')
@@ -177,7 +179,7 @@ def main():
         # train_MSDA_soft(solver,0,classifier_disc)
 
         test(solver, 0, 'test', record_file=None, save_model=False)
-        view_clusters(solver, clusters_file, probs_csv)
+        view_clusters(solver, clusters_file, probs_csv, 0)
         plot_tsne1(solver, plot_before_source, plot_before_target, plot_after_source, plot_after_target, all_plots,
                    plot_domains, args.data)
 
@@ -245,7 +247,8 @@ def main():
                 if best:
                     print('best epoch : ', t)
                     test(solver, t, 'test', record_file=record_test, save_model=args.save_model)
-                #view_clusters(solver, clusters_file, probs_csv, t)
+                #if t%1==0:
+                #    view_clusters(solver, clusters_file, probs_csv, t)
                 # print('clustering images saved in!')
 
         # generate_plots(solver, 0, 'test', plot_before_source, plot_before_target, plot_after_source, plot_after_target, False)

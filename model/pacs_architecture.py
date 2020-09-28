@@ -64,6 +64,9 @@ class DomainPredictor(nn.Module):
     def __init__(self, num_domains, prob=0.5):
         super(DomainPredictor, self).__init__()
         self.feature = Feature()
+        
+        for param in self.feature.model.parameters():
+            param.requires_grad = False
         self.fc1 = nn.Linear(512, 1024)
         self.bn1 = nn.BatchNorm1d(1024)
         self.fc2 = nn.Linear(1024, 512)
