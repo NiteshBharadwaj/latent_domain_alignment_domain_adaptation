@@ -118,6 +118,10 @@ def train_MSDA_soft(solver, epoch, graph_data, classifier_disc=True, record_file
         if solver.args.clustering_only and classwise_batch is None:
             classwise_batch = img_s_cl
 
+        torchvision.utils.save_image(classwise_batch, 'classwise_batch.png',nrow=7, normalize=True)
+        torchvision.utils.save_image(cluster_batch, 'cluster_batch.png', nrow=7, normalize=True)
+        assert False
+
         # print('BATCHES DONE!!', time.time()-tt)
         tot_dataloading_time += time.time() - tt
         tt = time.time()

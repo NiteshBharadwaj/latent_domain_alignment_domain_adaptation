@@ -153,7 +153,7 @@ class UnalignedDataLoader():
         start_center = (256 - 224 - 1) / 2
         start_last = 256 - 224 - 1
 
-        scale2 = 227
+        scale2 = 224
         if split == 'Train':
             transform_source = transforms.Compose([
                 # transforms.Resize(scale),
@@ -208,12 +208,11 @@ class UnalignedDataLoader():
         target_labels = []
         imgs = []
         labels = []
-        for j in range(5):
-            for i in range(len(source)):
-                imgs += source[i]['imgs']
-                labels += source[i]['labels']
-            target_imgs += target['imgs']
-            target_labels += target['labels']
+        for i in range(len(source)):
+            imgs += source[i]['imgs']
+            labels += source[i]['labels']
+        target_imgs += target['imgs']
+        target_labels += target['labels']
 
         dataset_source = Dataset(imgs, labels, transform=transform_source)
         data_loader_s = torch.utils.data.DataLoader(dataset_source, batch_size=batch_size1, shuffle=True,

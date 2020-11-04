@@ -89,16 +89,15 @@ class ClasswiseDataLoader():
         overall_images = []
         overall_labels = []
         self.max_len = 0
-        for i in range(31):
+        for i in range(345):
             allImages = []
             allLabels = []
-            for k in range(5):
-                for j in range(len(source)):
-                    imgs = source[j]['imgs']
-                    labels = source[j]['labels']
-                    indices = [k for k, x in enumerate(labels) if x == i]
-                    allImages += [imgs[index] for index in indices]
-                    allLabels += [labels[index] for index in indices]
+            for j in range(len(source)):
+                imgs = source[j]['imgs']
+                labels = source[j]['labels']
+                indices = [k for k, x in enumerate(labels) if x == i]
+                allImages += [imgs[index] for index in indices]
+                allLabels += [labels[index] for index in indices]
             overall_images.append(allImages)
             overall_labels.append(allLabels)
         dataset_source.append(Dataset(overall_images, overall_labels, batch_size, transform=transform))

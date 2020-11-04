@@ -207,7 +207,6 @@ class Solver(object):
 
         elif args.data == 'domainnet':
             if args.dl_type == 'soft_cluster':
-
                 self.datasets, self.dataset_test, self.dataset_valid, self.classwise_dataset = domainnet_combined(
                                                                                                     target,
                                                                                                     self.batch_size,
@@ -216,7 +215,6 @@ class Solver(object):
                                                                                                     args.num_workers)
 
             elif args.dl_type == 'source_target_only':
-
                 self.datasets, self.dataset_test, self.dataset_valid, self.classwise_dataset = domainnet_combined(
                                                                                                 target,
                                                                                                 self.batch_size,
@@ -226,7 +224,6 @@ class Solver(object):
 
 
             elif args.dl_type == 'source_only':
-
                 self.datasets, self.dataset_test, self.dataset_valid, self.classwise_dataset = domainnet_combined(
                                                                                                 target,
                                                                                                 self.batch_size,
