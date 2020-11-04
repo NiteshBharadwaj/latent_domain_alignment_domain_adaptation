@@ -36,7 +36,7 @@ def read_domainnet_domain(domain, domainnet_directory, is_target, seed_id):
 
     valid_size = 3*len(paths_train)//10
     paths_valid = paths_train[:valid_size]
-    labels_valid = labels_train[valid_size:]
+    labels_valid = labels_train[:valid_size]
 
     paths_train = paths_train[valid_size:]
     labels_train = labels_train[valid_size:]
