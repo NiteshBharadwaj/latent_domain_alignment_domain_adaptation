@@ -52,7 +52,7 @@ parser.add_argument('--office_caltech_directory', type=str, default='.', metavar
                     help='directory for office_caltech data')
 parser.add_argument('--pacs_directory', type=str, default='.', metavar='N',
                     help='directory for pacs data')
-parser.add_argument('--domain_directory', type=str, default='.', metavar='N',
+parser.add_argument('--domainnet_directory', type=str, default='.', metavar='N',
                     help='directory for pacs data')
 parser.add_argument('--batch-size', type=int, default=64, metavar='N',
                     help='input batch size for training (default: 64)')

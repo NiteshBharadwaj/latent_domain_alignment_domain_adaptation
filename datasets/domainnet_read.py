@@ -31,10 +31,8 @@ def read_domainnet_domain(domain, domainnet_directory, is_target, seed_id):
         paths_train.append(domainnet_directory + row[0].split()[0])
         labels_train.append(int(row[0].split()[1]))
 
-    np.random.seed(42)
-    permute = np.random.permutation(len(paths_train))
-    paths_train = paths_train[permute]
-    labels_train = labels_train[permute]
+    random.Random(42).shuffle(paths_train)
+    random.Random(42).shuffle(labels_train)
 
     valid_size = 3*len(paths_train)//10
     paths_valid = paths_train[:valid_size]
