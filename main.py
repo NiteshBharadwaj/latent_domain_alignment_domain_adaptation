@@ -7,7 +7,7 @@ import sys
 import os
 sys.path.append('./model')
 sys.path.append('./datasets')
-sys.path.append('./metric');
+sys.path.append('./metric')
 from solver_MSDA import Solver
 import os
 from train_msda_hard import train_MSDA as train_MSDA_hard
@@ -37,6 +37,8 @@ parser.add_argument('--record_folder', type=str, default='record', metavar='N',
                     help='record folder')
 parser.add_argument('--office_directory', type=str, default='.', metavar='N',
                     help='directory for office data')
+parser.add_argument('--domainnet_directory', type=str, default='.', metavar='N',
+                    help='directory for domainnet dataset')
 parser.add_argument('--batch-size', type=int, default=64, metavar='N',
                     help='input batch size for training (default: 64)')
 parser.add_argument('--checkpoint_dir', type=str, default='checkpoint', metavar='N',

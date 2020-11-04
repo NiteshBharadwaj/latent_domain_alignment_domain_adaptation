@@ -10,11 +10,17 @@ from model.build_gen_digits import Generator as Generator_digit, Classifier as C
 from model.build_gen import Generator as Generator_cars, Classifier as Classifier_cars, DomainPredictor as DP_cars
 from model.build_gen_office_caltech import Generator as Generator_office_caltech, Classifier as Classifier_office_caltech, DomainPredictor as DP_office_caltech
 from model.build_gen_pacs import Generator as Generator_pacs, Classifier as Classifier_pacs, DomainPredictor as DP_pacs
+from model.build_gen_domainnet import Generator as Generator_domainnet, Classifier as Classifier_domainnet, DomainPredictor as DP_domainnet
+
+
 from datasets.dataset_read_cluster_testing import dataset_read, dataset_hard_cluster, dataset_combined
 from datasets.cars import cars_combined
 from datasets.office import office_combined
 from datasets.office_caltech import office_caltech_combined
 from datasets.pacs import pacs_combined
+
+from datasets.domainnet import domainnet_combined
+
 import numpy as np
 import math
 from scipy.stats import entropy
@@ -199,6 +205,47 @@ class Solver(object):
             self.C2 = Classifier_pacs(num_classes)
             self.DP = DP_pacs(num_domains)
 
+        elif args.data == 'domainnet':
+            if args.dl_type == 'soft_cluster':
+
+                self.datasets, self.dataset_test, self.dataset_valid, self.classwise_dataset = domainnet_combined(
+                                                                                                    target,
+                                                                                                    self.batch_size,
+                                                                                                    args.domainnet_directory,
+                                                                                                    args.seed,
+                                                                                                    args.num_workers)
+
+            elif args.dl_type == 'source_target_only':
+
+                self.datasets, self.dataset_test, self.dataset_valid, self.classwise_dataset = domainnet_combined(
+                                                                                                target,
+                                                                                                self.batch_size,
+                                                                                                args.domainnet_directory,
+                                                                                                args.seed,
+                                                                                                args.num_workers)
+
+
+            elif args.dl_type == 'source_only':
+
+                self.datasets, self.dataset_test, self.dataset_valid, self.classwise_dataset = domainnet_combined(
+                                                                                                target,
+                                                                                                self.batch_size,
+                                                                                                args.domainnet_directory,
+                                                                                                args.seed,
+                                                                                                args.num_workers)
+
+            print('load finished!')
+            self.entropy_wt = args.entropy_wt
+            self.msda_wt = args.msda_wt
+            self.kl_wt = args.kl_wt
+            self.to_detach = args.to_detach
+            num_classes = 345
+            num_domains = args.num_domain
+            self.num_domains = num_domains
+            self.G = Generator_domainnet()
+            self.C1 = Classifier_domainnet(num_classes)
+            self.C2 = Classifier_domainnet(num_classes)
+            self.DP = DP_domainnet(num_domains)
 
         # print(self.dataset['S1'].shape)
         print('model_loaded')

@@ -8,7 +8,7 @@ import os
 
 sys.path.append('./model')
 sys.path.append('./datasets')
-sys.path.append('./metric');
+sys.path.append('./metric')
 from solver_MSDA_cluster_testing import Solver
 import os
 from train_msda_hard import train_MSDA as train_MSDA_hard
@@ -16,6 +16,7 @@ from train_msda_soft_cluster_testing import train_MSDA_soft
 from train_msda_soft_cluster_testing_office import train_MSDA_soft as train_MSDA_soft_office
 from train_msda_soft_cluster_testing_office_caltech import train_MSDA_soft as train_MSDA_soft_office_caltech
 from train_msda_soft_cluster_testing_pacs import train_MSDA_soft as train_MSDA_soft_pacs
+from train_msda_soft_cluster_testing_domain import train_MSDA_soft as train_MSDA_soft_domain
 from train_msda_single import train_MSDA_single
 from test import test
 from view_clusters import view_clusters
@@ -42,7 +43,7 @@ parser.add_argument('--dl_type', type=str, default='', metavar='N',
 parser.add_argument('--num_domain', type=int, default=4, metavar='N',
                     help='input latent domains')
 parser.add_argument('--data', type=str, default='', metavar='N',
-                    help='digits,cars,pacs')
+                    help='digits,cars,pacs,domainnet')
 parser.add_argument('--record_folder', type=str, default='record', metavar='N',
                     help='record folder')
 parser.add_argument('--office_directory', type=str, default='.', metavar='N',
@@ -218,6 +219,9 @@ def main():
                                                                          record_file=record_train)
                     elif args.data == 'pacs':
                         num, graph_data = train_MSDA_soft_pacs(solver, t, graph_data, classifier_disc,
+                                                                         record_file=record_train)
+                    elif args.data == 'domainnet':
+                        num, graph_data = train_MSDA_soft_domain(solver, t, graph_data, classifier_disc,
                                                                          record_file=record_train)
                     else:
                         print("WTF Noob")
