@@ -4,11 +4,13 @@ import numpy as np
 
 num_valid_per_class = 0
 
+#TODO - update the function 
+# How to divide the train test split
 def read_domainnet_domain(domain, domainnet_directory, is_target, seed_id):
     random.seed(seed_id)
     trainFile = domainnet_directory + '/txt/' + domain + '_train.txt'
     testFile = domainnet_directory + '/txt/' + domain + '_test.txt'
-    combinedFile = domainnet_directory + '/txt/' + domain +"_combined.txt"
+    #combinedFile = domainnet_directory + '/txt/' + domain +"_combined.txt"
 
     #with open(combinedFile, "wb") as outfile:
     #    with open(trainFile, "rb") as infile:
@@ -18,9 +20,9 @@ def read_domainnet_domain(domain, domainnet_directory, is_target, seed_id):
     #    with open(validFile, "rb") as infile:
     #        outfile.write(infile.read())
 
-    trainReader = csv.reader(open(combinedFile, 'r'))
-    testReader = csv.reader(open(combinedFile, 'r'))
-    validReader = csv.reader(open(combinedFile, 'r'))
+    trainReader = csv.reader(open(trainFile, 'r'))
+    testReader = csv.reader(open(testFile, 'r'))
+    validReader = csv.reader(open(testFile, 'r'))
 
     paths_train, labels_train, paths_test, labels_test, paths_valid, labels_valid = [], [], [], [], [], []
 
