@@ -19,3 +19,4 @@ record_variance*/
 *.tar
 *.swp
 clusters*
+clus/*

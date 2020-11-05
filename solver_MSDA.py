@@ -88,9 +88,9 @@ class Solver(object):
             elif args.dl_type == 'source_only':
                 self.datasets, self.dataset_test, self.dataset_valid, self.classwise_dataset = cars_combined(target,
                                                                                                              self.batch_size,
-                                                                                                             args.num_domain,
                                                                                                              args.cars_directory,
-                                                                                                             args.seed)
+                                                                                                             args.seed,
+                                                                                                             args.num_workers)
 
             print('load finished!')
             if args.dl_type=='source_target_only':

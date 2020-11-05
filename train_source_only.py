@@ -22,7 +22,7 @@ def train_source_only(solver, epoch, record_file=None):
 
         solver.reset_grad()
 
-        loss_s_c1, loss_s_c2, loss_msda, entropy_loss, kl_loss = solver.loss_soft_all_domain(img_s, img_t, label_s)
+        loss_s_c1, loss_s_c2, loss_msda_nc2, loss_msda_nc1, entropy_loss, kl_loss, aux_loss, _ = solver.loss_soft_all_domain(img_s, img_t, label_s,0,img_s)
 
         loss = loss_s_c1
 
@@ -31,7 +31,7 @@ def train_source_only(solver, epoch, record_file=None):
         solver.opt_g.step()
         solver.opt_c1.step()
 
-        if batch_idx % solver.interval == 0:
+        if batch_idx % solver.interval == 1:
             print(
                 'Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss1: {:.6f}\t Loss2: {:.6f}\t Loss_mmd: {:.6f}\t Loss_entropy: {:.6f}\t Discrepancy: {:.6f}'.format(
                     epoch, batch_idx, 100, 100. * batch_idx / 70000, loss_s_c1.data.item(), 0, 0, 0, 0))

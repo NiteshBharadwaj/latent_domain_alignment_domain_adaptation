@@ -110,11 +110,11 @@ def read_comp_cars(target, compcars_directory, is_target, seed_id):
         print("train_num_images {} ,{}".format(target, len(labels_train)))
 
         # -------------------------------------
-        aux_labels_train = get_aux_labels(train_file, test_file, label_dir)
-        assert(len(aux_labels_train) == len(labels_train))
+        #aux_labels_train = labels_train
+        #assert(len(aux_labels_train) == len(labels_train))
         labels_train_tmp = []
         for i in range(len(labels_train)):
-            labels_train_tmp.append([labels_train[i], aux_labels_train[i][0], aux_labels_train[i][1]])
+            labels_train_tmp.append([labels_train[i], -1, -1])
         labels_train = labels_train_tmp
          # -------------------------------------
         paths_train = [os.path.join(img_dir, x) for x in rel_paths_train]
@@ -126,11 +126,11 @@ def read_comp_cars(target, compcars_directory, is_target, seed_id):
         print("test_num_images {} ,{}".format(target, len(labels_test)))
 
          # -------------------------------------
-        aux_labels_test = get_aux_labels(train_file, test_file, label_dir)
-        assert(len(aux_labels_test) == len(labels_test))
+        #aux_labels_test = labels_test
+        #assert(len(aux_labels_test) == len(labels_test))
         labels_test_tmp = []
         for i in range(len(labels_test)):
-            labels_test_tmp.append([labels_test[i], aux_labels_test[i][0], aux_labels_test[i][1]])
+            labels_test_tmp.append([labels_test[i], -1, -1])
         labels_test = labels_test_tmp
          # -------------------------------------
         paths_test = [os.path.join(img_dir, x) for x in rel_paths_test]
@@ -139,6 +139,7 @@ def read_comp_cars(target, compcars_directory, is_target, seed_id):
         labels_valid = [labels_test[0]]
 
     if target == 'CCSurv':
+        print(compcars_directory)
         main_dir_tr = os.path.join(compcars_directory, 'CCWeb', 'data')
         img_dir_tr = os.path.join(main_dir_tr, 'image')
         model_num_to_car_name_map = model_num_to_car_name(img_dir_tr)
