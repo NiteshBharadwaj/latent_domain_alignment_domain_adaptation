@@ -25,7 +25,6 @@ from matplotlib import pyplot as plt
 
 # from plot_tsne import plot_tsne1,plot_tsne2
 
-
 # Training settings
 parser = argparse.ArgumentParser(description='PyTorch MSDA Implementation')
 parser.add_argument('--all_use', type=str, default='no', metavar='N',
@@ -42,6 +41,8 @@ parser.add_argument('--dl_type', type=str, default='', metavar='N',
                     help='original, hard_cluster, combined, soft_cluster')
 parser.add_argument('--num_domain', type=int, default=4, metavar='N',
                     help='input latent domains')
+parser.add_argument('--model_sel_acc', type=int, default=0, metavar='N',
+                    help='criteria for model selection')
 parser.add_argument('--data', type=str, default='', metavar='N',
                     help='digits,cars,pacs,domainnet')
 parser.add_argument('--record_folder', type=str, default='record', metavar='N',

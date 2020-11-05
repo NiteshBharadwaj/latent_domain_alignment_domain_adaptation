@@ -134,10 +134,11 @@ def train_MSDA_soft(solver, epoch, graph_data, classifier_disc=True, record_file
         if not classifier_disc:
             loss_s_c2 = loss_s_c1
 
-        if (epoch % 4 == 1):
-            loss = loss_s_c1 + loss_s_c2 + entropy_loss + 0.2 * loss_msda
-        else:
-            loss = loss_s_c1 + loss_s_c2 + loss_msda + kl_loss
+        loss = loss_s_c1 + loss_s_c2 + loss_msda + entropy_loss + kl_loss
+        # if (epoch % 4 == 1):
+        #     loss = loss_s_c1 + loss_s_c2 + entropy_loss + 0.2 * loss_msda
+        # else:
+        #     loss = loss_s_c1 + loss_s_c2 + loss_msda + kl_loss
 
         graph_data['entropy'].append(entropy_loss.data.item())
         graph_data['kl'].append(kl_loss.data.item())
