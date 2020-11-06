@@ -16,6 +16,7 @@ record_office_test/
 record_office*/
 record_pacs/
 record_variance*/
+record*/
 *.zip
 *.tar
 *.swp

@@ -5,6 +5,7 @@ import random
 import numpy as np
 import sys
 import os
+from time import time
 
 sys.path.append('./model')
 sys.path.append('./datasets')
@@ -204,6 +205,7 @@ def main():
             graph_data[k] = []
         total_it = 120000
         for t in range(args.max_epoch):
+            start = time()
             print(t)
             if (count>=total_it):
                 break
@@ -234,6 +236,8 @@ def main():
                     num = train_MSDA_hard(solver, t, classifier_disc, record_file=record_train)
             else:
                 raise Exception('One step solver not defined')
+            end = time()
+            print("Time taken for training epoch : ", end-start)
             if 0:#not solver.args.clustering_only:
                 solver.sche_g.step()
                 solver.sche_c1.step()
@@ -250,7 +254,10 @@ def main():
                 best = test(solver, t, 'val', record_file=record_val, save_model=args.save_model)
                 if best:
                     print('best epoch : ', t)
+                    start = time()
                     test(solver, t, 'test', record_file=record_test, save_model=args.save_model)
+                    end = time()
+                    print("Time taken for testing epoch : ", end-start)
                 #view_clusters(solver, clusters_file, probs_csv, t)
                 # print('clustering images saved in!')
 

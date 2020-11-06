@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 from torch.autograd import Variable
 import numpy as np
+import time
 
 def test(solver, epoch, split, record_file=None, save_model=False):
     solver.G.eval()
@@ -28,7 +29,7 @@ def test(solver, epoch, split, record_file=None, save_model=False):
 
     with torch.no_grad():
         for batch_idx, data in enumerate(which_dataset):
-
+            start = time.time()
             img = data[data_symbol]
             label = data[data_label_symbol]
 
@@ -55,6 +56,8 @@ def test(solver, epoch, split, record_file=None, save_model=False):
             k = label.data.size()[0]
             correct1 += pred1.eq(label.data).cpu().sum()
             size += k
+            end = time.time()
+            print("Time taken for testing batch : ", end-start)
     # np.savez('result_plot_sv_t', feature_all, label_all )
     test_loss = test_loss / (size + 1e-6)
     

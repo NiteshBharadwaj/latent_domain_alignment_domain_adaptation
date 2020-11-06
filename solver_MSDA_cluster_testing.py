@@ -226,7 +226,7 @@ class Solver(object):
         if args.data=='cars':
             milestones = [100]
         else:
-            milestones = [900]
+            milestones = [2000]
         self.sche_g = torch.optim.lr_scheduler.MultiStepLR(self.opt_g, milestones, gamma=0.1)
         self.sche_c1 = torch.optim.lr_scheduler.MultiStepLR(self.opt_c1, milestones, gamma=0.1)
         self.sche_c2 = torch.optim.lr_scheduler.MultiStepLR(self.opt_c2, milestones, gamma=0.1)
@@ -239,15 +239,15 @@ class Solver(object):
         if which_opt == 'momentum':
             self.opt_g = optim.SGD(self.G.parameters(),lr=lr, weight_decay=1e-6, momentum=momentum)
 
-            self.opt_c1 = optim.SGD(self.C1.parameters(), lr=lr*10, weight_decay=1e-6, momentum=momentum)
-            self.opt_c2 = optim.SGD(self.C2.parameters(), lr=lr*10, weight_decay=1e-6, momentum=momentum)
+            self.opt_c1 = optim.SGD(self.C1.parameters(), lr=lr, weight_decay=1e-6, momentum=momentum)
+            self.opt_c2 = optim.SGD(self.C2.parameters(), lr=lr, weight_decay=1e-6, momentum=momentum)
             self.opt_dp = optim.SGD(self.DP.parameters(), lr=lr/self.args.lr_ratio, weight_decay=1e-6, momentum=momentum)
 
         if which_opt == 'adam':
             self.opt_g = optim.Adam(self.G.parameters(), lr=lr, weight_decay=1e-6)
 
-            self.opt_c1 = optim.Adam(self.C1.parameters(), lr=lr*10, weight_decay=1e-6)
-            self.opt_c2 = optim.Adam(self.C2.parameters(), lr=lr*10, weight_decay=1e-6)
+            self.opt_c1 = optim.Adam(self.C1.parameters(), lr=lr, weight_decay=1e-6)
+            self.opt_c2 = optim.Adam(self.C2.parameters(), lr=lr, weight_decay=1e-6)
             self.opt_dp = optim.Adam(self.DP.parameters(), lr=lr/self.args.lr_ratio, weight_decay=1e-6)
 
     def reset_grad(self):
@@ -340,8 +340,16 @@ class Solver(object):
         loss_s_c1 = self.softmax_loss_all_domain_soft(output_s_c1, label_s)
         return loss_s_c1
         
+    def one_hot(self, y, num_dom):
+        batch_size = y.shape[0]
 
-    def loss_soft_all_domain(self, img_s, img_t, label_s, epoch, img_s_cl):
+        # One hot encoding buffer that you create out of the loop and just keep reusing
+        y_onehot = torch.zeros(batch_size, num_dom).cuda()
+        y_onehot[torch.arange(batch_size),y] = 1
+        # In your for loop
+        return y_onehot
+
+    def loss_soft_all_domain(self, img_s, img_t, label_s, epoch, img_s_cl, img_d_cl):
         # Takes source images, target images, source labels and returns classifier loss, domain adaptation loss and entropy loss
         feat_s_comb, feat_t_comb = self.feat_soft_all_domain(img_s, img_t)
         feat_s, conv_feat_s = feat_s_comb
