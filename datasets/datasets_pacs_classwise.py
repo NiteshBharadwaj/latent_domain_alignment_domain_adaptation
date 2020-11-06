@@ -109,6 +109,10 @@ class Dataset(data.Dataset):
         if self.batch_it[class_idx] >= self.blens[class_idx]:
             self.rndseqs[class_idx] = np.random.permutation(self.act_lens[class_idx])
             self.batch_it[class_idx] = 0
+        if(n_samples == 0):
+            self.rndseqs[class_idx] = np.random.permutation(self.act_lens[class_idx])
+            self.batch_it[class_idx] = 0
+            return self.__getitem__(np.random.randint(len(self.blens)))
         return final_images, final_labels
 
     def __len__(self):

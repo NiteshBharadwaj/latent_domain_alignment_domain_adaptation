@@ -226,7 +226,7 @@ class Solver(object):
         if args.data=='cars':
             milestones = [100]
         else:
-            milestones = [900]
+            milestones = [20000]
         self.sche_g = torch.optim.lr_scheduler.MultiStepLR(self.opt_g, milestones, gamma=0.1)
         self.sche_c1 = torch.optim.lr_scheduler.MultiStepLR(self.opt_c1, milestones, gamma=0.1)
         self.sche_c2 = torch.optim.lr_scheduler.MultiStepLR(self.opt_c2, milestones, gamma=0.1)
@@ -239,15 +239,15 @@ class Solver(object):
         if which_opt == 'momentum':
             self.opt_g = optim.SGD(self.G.parameters(),lr=lr, weight_decay=1e-6, momentum=momentum)
 
-            self.opt_c1 = optim.SGD(self.C1.parameters(), lr=lr*10, weight_decay=1e-6, momentum=momentum)
-            self.opt_c2 = optim.SGD(self.C2.parameters(), lr=lr*10, weight_decay=1e-6, momentum=momentum)
+            self.opt_c1 = optim.SGD(self.C1.parameters(), lr=lr, weight_decay=1e-6, momentum=momentum)
+            self.opt_c2 = optim.SGD(self.C2.parameters(), lr=lr, weight_decay=1e-6, momentum=momentum)
             self.opt_dp = optim.SGD(self.DP.parameters(), lr=lr/self.args.lr_ratio, weight_decay=1e-6, momentum=momentum)
 
         if which_opt == 'adam':
             self.opt_g = optim.Adam(self.G.parameters(), lr=lr, weight_decay=1e-6)
 
-            self.opt_c1 = optim.Adam(self.C1.parameters(), lr=lr*10, weight_decay=1e-6)
-            self.opt_c2 = optim.Adam(self.C2.parameters(), lr=lr*10, weight_decay=1e-6)
+            self.opt_c1 = optim.Adam(self.C1.parameters(), lr=lr, weight_decay=1e-6)
+            self.opt_c2 = optim.Adam(self.C2.parameters(), lr=lr, weight_decay=1e-6)
             self.opt_dp = optim.Adam(self.DP.parameters(), lr=lr/self.args.lr_ratio, weight_decay=1e-6)
 
     def reset_grad(self):
@@ -299,9 +299,12 @@ class Solver(object):
         loss_source_C2 = self.softmax_loss_all_domain(C2_feat_s, label_s)
         return loss_source_C1, loss_source_C2, loss_msda
 
-    def feat_soft_all_domain(self, img_s, img_t):
+    def feat_soft_all_domain(self,img_s, img_t,domain_prob,domain_labels_target):
         # Takes input source and target images returns the feature from feature extractor
-        return self.G(img_s), self.G(img_t)
+        img = torch.cat((img_s,img_t),dim=0)
+        domain_probs = torch.cat((domain_prob, domain_labels_target), dim=0)
+        feats, conv_feats = self.G(img, domain_probs)
+        return (feats[0:img_s.shape[0]], conv_feats[0:img_s.shape[0]]), (feats[img_s.shape[0]:], conv_feats[img_s.shape[0]:])
 
     def C1_all_domain_soft(self, feat1, feat_t):
         #Takes source and target features from feature extractor and returns classifier output features
@@ -329,8 +332,8 @@ class Solver(object):
     def get_domain_entropy(self, domain_probs):
         bs, num_domains = domain_probs.size()
         domain_prob_sum = domain_probs.sum(0)/bs
-        mask = domain_prob_sum.ge(0.000001)
-        domain_prob_sum = domain_prob_sum*mask + (1-mask.int())*1e-5
+        mask = domain_prob_sum.ge(0.000001).float()
+        domain_prob_sum = domain_prob_sum*mask + ((1-mask)*1e-5)
         return -(domain_prob_sum*(domain_prob_sum.log())).mean()
     
     def source_only_loss(self, img_s, label_s, epoch):
@@ -340,14 +343,17 @@ class Solver(object):
         loss_s_c1 = self.softmax_loss_all_domain_soft(output_s_c1, label_s)
         return loss_s_c1
         
+    def one_hot(self, y, num_dom):
+        batch_size = y.shape[0]
+        
+        # One hot encoding buffer that you create out of the loop and just keep reusing
+        y_onehot = torch.zeros(batch_size, num_dom).cuda()
+        y_onehot[torch.arange(batch_size),y] = 1
+        # In your for loop
+        return y_onehot
 
-    def loss_soft_all_domain(self, img_s, img_t, label_s, epoch, img_s_cl):
+    def loss_soft_all_domain(self, img_s, img_t, label_s, epoch, img_s_cl, img_s_dl):
         # Takes source images, target images, source labels and returns classifier loss, domain adaptation loss and entropy loss
-        feat_s_comb, feat_t_comb = self.feat_soft_all_domain(img_s, img_t)
-        feat_s, conv_feat_s = feat_s_comb
-        feat_t, conv_feat_t = feat_t_comb
-        #with torch.no_grad():
-        #    _, conv_feat_cl = self.G(img_s_cl)
         if self.to_detach:
             domain_logits, _ = self.DP(img_s)
             cl_s_logits,_ = self.DP(img_s_cl)
@@ -357,6 +363,18 @@ class Solver(object):
         entropy_loss, domain_prob = self.entropy_loss(domain_logits)
 
 
+        domain_prob_s = torch.cat((domain_prob, torch.zeros(domain_prob.shape[0],1,dtype=torch.float32).cuda()),1)
+        #domain_prob = torch.cat((domain_prob.detach(), torch.zeros((domain_prob.shape[0],1),dtype=torch.cuda.FloatTensor),1)
+        domain_labels_target = torch.zeros(img_t.shape[0],domain_prob.shape[1],dtype=torch.float32).cuda()
+        domain_labels_target = torch.cat((domain_labels_target,torch.ones(img_t.shape[0],1,dtype=torch.float32).cuda()),1)
+        domain_prob_s = domain_prob_s.detach()
+        domain_labels_target = domain_labels_target.detach()       
+        feat_s_comb, feat_t_comb = self.feat_soft_all_domain(img_s, img_t,domain_prob_s,domain_labels_target)
+        feat_s, conv_feat_s = feat_s_comb
+        feat_t, conv_feat_t = feat_t_comb
+        #with torch.no_grad():
+        #    _, conv_feat_cl = self.G(img_s_cl)
+                #domain_prob = self.one_hot(img_s_dl, 3)
         _,cl_s_prob = self.entropy_loss(cl_s_logits)
         kl_loss = -self.get_domain_entropy(cl_s_prob)
         kl_loss = kl_loss * self.kl_wt

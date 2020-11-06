@@ -20,3 +20,6 @@ record_variance*/
 *.tar
 *.swp
 clusters_*
+record_acsp/
+record_pasc/
+record_psca/
