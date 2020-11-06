@@ -26,7 +26,7 @@ def loss_single_domain(solver, img_s, img_t, label_s):
         raise Exception(' c2 loss is nan')
     return loss_s_c1, loss_s_c2, loss_msda
 
-def train_source_only(solver, epoch, record_file=None):
+def train_source_only(solver, epoch, record_file=None, max_it=100000):
     solver.G.train()
     solver.C1.train()
     solver.C2.train()
@@ -37,6 +37,8 @@ def train_source_only(solver, epoch, record_file=None):
 
     for batch_idx, data in enumerate(solver.datasets):
         batch_idx_g = batch_idx
+        if (batch_idx>max_it):
+            break
         img_t = Variable(data['T'].cuda())
         img_s = Variable(data['S'].cuda())
         label_s = Variable(data['S_label'].long().cuda())
@@ -53,6 +55,11 @@ def train_source_only(solver, epoch, record_file=None):
         solver.opt_g.step()
         solver.opt_c1.step()
 
+        if not solver.args.clustering_only:
+            solver.sche_g.step()
+            solver.sche_c1.step()
+            solver.sche_c2.step()
+            solver.sche_dp.step()
 #         if batch_idx % solver.interval == 0:
 #             print \
 #                 ('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss1: {:.6f}\t Loss2: {:.6f}\t Loss_mmd: {:.6f}\t Loss_entropy: {:.6f}\t kl_loss: {:.6f}'.format(

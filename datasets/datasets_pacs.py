@@ -35,12 +35,13 @@ class Dataset(data.Dataset):
             puts it in root directory. If dataset is already downloaded, it is not
             downloaded again.
     """
-    def __init__(self, data, label,
+    def __init__(self, data, label, domain_label,
                  transform=None,target_transform=None):
         self.transform = transform
         self.target_transform = target_transform
         self.data = data
         self.labels = label
+        self.domain_labels = domain_label
         self.hashmap = {}
 
     def __getitem__(self, index):
@@ -51,7 +52,7 @@ class Dataset(data.Dataset):
              tuple: (image, target) where target is index of the target class.
          """
 
-        img_path, target = self.data[index], self.labels[index]
+        img_path, target, domain_label = self.data[index], self.labels[index], self.domain_labels[index]
         if img_path in self.hashmap:
             img = self.hashmap[img_path]
         else:
@@ -69,6 +70,6 @@ class Dataset(data.Dataset):
         if self.transform is not None:
             img = self.transform(img)
             # return img, target
-        return img, target*1.0
+        return img, target*1.0, domain_label*1.0
     def __len__(self):
         return len(self.data)

@@ -2,7 +2,8 @@ import torch
 import torch.nn as nn
 from torch.autograd import Variable
 
-def train_MSDA_soft(solver, epoch, classifier_disc=True, record_file=None):
+def train_MSDA_soft(solver, epoch, classifier_disc=True, record_file=None, max_it = 10000):
+    if (max_it<=0) return
     solver.G.train()
     solver.C1.train()
     solver.C2.train()
@@ -13,6 +14,8 @@ def train_MSDA_soft(solver, epoch, classifier_disc=True, record_file=None):
     classwise_dataset_iterator = iter(solver.classwise_dataset)
     for batch_idx, data in enumerate(solver.datasets):
         batch_idx_g = batch_idx
+        if (batch_idx>max_it)
+            break
         img_t = Variable(data['T'].cuda())
         img_s = Variable(data['S'].cuda())
         label_s = Variable(data['S_label'].long().cuda())
