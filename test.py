@@ -34,7 +34,9 @@ def test(solver, epoch, split, record_file=None, save_model=False):
 
             img, label = img.cuda(), label.long().cuda()
             img, label = Variable(img, volatile=True), Variable(label)
-            feat, _ = solver.G(img)
+            domain_labels_target = torch.zeros(img.shape[0],solver.num_domains,dtype=torch.float32).cuda()
+            domain_labels_target = torch.cat((domain_labels_target,torch.ones(img.shape[0],1,dtype=torch.float32).cuda()),1) 
+            feat, _ = solver.G(img,domain_labels_target)
             # print('feature.shape:{}'.format(feat.shape))
 
             if batch_idx == 0:
