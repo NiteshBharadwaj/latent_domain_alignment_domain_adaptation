@@ -29,7 +29,9 @@ from matplotlib import pyplot as plt
 parser = argparse.ArgumentParser(description='PyTorch MSDA Implementation')
 parser.add_argument('--all_use', type=str, default='no', metavar='N',
                     help='use all training data? in usps adaptation')
-parser.add_argument('--to_detach', type=str, default='yes', metavar='N',
+parser.add_argument('--model_sel_acc', type=int, default=1, metavar='n',
+                    help='model selection accuracy? 1/0?')
+parser.add_argument('--to_detach', type=str, default='yes', metavar='n',
                     help='classifier_discrepancy? yes/no')
 parser.add_argument('--class_disc', type=str, default='no', metavar='N',
                     help='classifier_discrepancy? yes/no')
@@ -200,8 +202,11 @@ def main():
         keys = ['entropy', 'kl', 'c1', 'c2', 'h', 'total', 'msda']
         for k in keys:
             graph_data[k] = []
+        total_it = 120000
         for t in range(args.max_epoch):
             print(t)
+            if (count>=total_it):
+                break
             if not args.one_step:
                 # num = solver.train_merge_baseline(t, record_file=record_train)
                 if args.dl_type == 'soft_cluster':
@@ -216,26 +221,27 @@ def main():
                                                                          record_file=record_train)
                     elif args.data == 'pacs':
                         num, graph_data = train_MSDA_soft_pacs(solver, t, graph_data, classifier_disc,
-                                                                         record_file=record_train)
+                                                                         record_file=record_train, max_it=total_it-count)
                     else:
                         print("WTF Noob")
                 elif args.dl_type == 'source_only':
                     torch.cuda.empty_cache()
-                    num = train_source_only(solver, t, record_file=record_train)
+                    num = train_source_only(solver, t, record_file=record_train, max_it = total_it-count)
                 elif args.dl_type == 'source_target_only':
                     torch.cuda.empty_cache()
-                    num = train_MSDA_single(solver, t, classifier_disc, record_file=record_train)
+                    num = train_MSDA_single(solver, t, classifier_disc, record_file=record_train, max_it=total_it-count)
                 else:
                     num = train_MSDA_hard(solver, t, classifier_disc, record_file=record_train)
             else:
                 raise Exception('One step solver not defined')
-            if not solver.args.clustering_only:
+            if 0:#not solver.args.clustering_only:
                 solver.sche_g.step()
                 solver.sche_c1.step()
                 solver.sche_c2.step()
-            solver.sche_dp.step()
+            if 0:
+                solver.sche_dp.step()
             count += num
-            if t % 1 == 0:
+            if t % 1 == 0 or count>=total_it:
                 # print('testing now')
                 if (args.dl_type == 'soft_cluster'):
                     plot_data(graph_data, loss_plot)

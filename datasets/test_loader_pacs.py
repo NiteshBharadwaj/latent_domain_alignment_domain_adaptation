@@ -104,7 +104,7 @@ class Data(Dataset):
     def __getitem__(self, index):
         t, t_paths = None, None
         try:
-            t, t_paths = next(self.data_loader_t_iter)
+            t, t_paths, td_labels = next(self.data_loader_t_iter)
         except StopIteration:
             if t is None or t_paths is None:
                 self.data_loader_t_iter = iter(self.data_loader_t)
@@ -112,8 +112,8 @@ class Data(Dataset):
                 raise StopIteration()
 
         self.iter += 1
-        return {'S': t, 'S_label': t_paths,
-                'T': t, 'T_label': t_paths}
+        return {'S': t, 'S_label': t_paths, 'SD_label': td_labels,
+                'T': t, 'T_label': t_paths, 'TD_label': td_labels}
 
     def __len__(self):
         return self.max_dataset_size * self.num_datasets
@@ -189,14 +189,14 @@ class TestDataLoader():
         data_loader_s = []
         max_size = 0
         for i in range(len(source)):
-            data_sources.append(Dataset(source[i]['imgs'], source[i]['labels'], transform=transform_source))
+            data_sources.append(Dataset(source[i]['imgs'], source[i]['labels'], [-1]*len(source[i]['labels']), transform=transform_source))
             data_loader_s.append(
                 torch.utils.data.DataLoader(data_sources[i], batch_size=batch_size1, shuffle=(split == 'Train'),
                                             num_workers=num_workers_, worker_init_fn=worker_init_fn))
             max_size = max(max_size, len(data_sources[i]))
         self.dataset_s = data_loader_s
 
-        dataset_target = Dataset(target['imgs'], target['labels'], transform=transform_target)
+        dataset_target = Dataset(target['imgs'], target['labels'], [-1]*len(target['labels']), transform=transform_target)
         data_loader_t = torch.utils.data.DataLoader(dataset_target, batch_size=batch_size2, shuffle=(split == 'Train'),
                                                     num_workers=num_workers_, worker_init_fn=worker_init_fn)
 

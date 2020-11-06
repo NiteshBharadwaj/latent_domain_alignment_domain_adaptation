@@ -5,6 +5,7 @@ from torch.autograd import Variable
 import sys
 import csv
 import os
+from collections import Counter
 
 def view_clusters(solver,clusters_file,probs_csv,epoch):
     if(solver.dl_type != 'soft_cluster'):
@@ -27,6 +28,9 @@ def view_clusters(solver,clusters_file,probs_csv,epoch):
     arrayOfClustersprobs = []
     for i in range(solver.num_domains):
         arrayOfClustersprobs.append(0)
+    arrayOfClustersDomains = []
+    for i in range(solver.num_domains):
+        arrayOfClustersDomains.append(0)
     
     
     for batch_idx, data in enumerate(solver.datasets):
@@ -36,6 +40,8 @@ def view_clusters(solver,clusters_file,probs_csv,epoch):
         img_t = data['T'].cuda()
         img_s = data['S'].cuda()
         label_s = data['S_label'].long().cuda()
+        actual_domain_s = data['SD_label'].long()
+
 #         if img_s.size()[0] < solver.batch_size or img_t.size()[0] < solver.batch_size:
 #             break
         if(img_s.size()[0] > prev):
@@ -62,20 +68,24 @@ def view_clusters(solver,clusters_file,probs_csv,epoch):
             #print(i_index)
             img_s_i = img_s[i_index,:,:,:]
             cur_probs = best_domain_probs[i_index]
+            cur_real_domains = actual_domain_s[i_index]
             if(img_s_i.size()[0] > 0):
                 try:
                     a = img_s_i.size()[3]
                 except:
                     img_s_i = torch.unsqueeze(img_s_i, 0)
                     cur_probs = torch.unsqueeze(cur_probs, 0)
+                    cur_real_domains = torch.unsqueeze(cur_real_domains, 0)
                 if(arrayOfClustersbool[i] == False):
                     arrayOfClusterstorch[i] = img_s_i
                     arrayOfClustersbool[i] = True
                     arrayOfClustersprobs[i] = cur_probs
+                    arrayOfClustersDomains[i] = cur_real_domains
                 else:
                     #print(arrayOfClusterstorch[i].size())
                     arrayOfClusterstorch[i] = torch.cat((arrayOfClusterstorch[i], img_s_i), 0)
                     arrayOfClustersprobs[i] = torch.cat((arrayOfClustersprobs[i], cur_probs), 0)
+                    arrayOfClustersDomains[i] = torch.cat((arrayOfClustersDomains[i], cur_real_domains), 0)
                     
     topk = 100
     arrayOfProbs = []
@@ -98,8 +108,11 @@ def view_clusters(solver,clusters_file,probs_csv,epoch):
             #print(arrayOfClusterstorch[i].size())
             topImages = arrayOfClusterstorch[i][maxProbIndices.copy(),:,:,:]
             #torchvision.utils.save_image(arrayOfClusterstorch[i], clusters_file[i],nrow=7)
-            torchvision.utils.save_image(topImages, clusters_file[i][:-4] + '_probs_descending_'+str(epoch)+'.png',nrow=7)
-            print('images in this cluster : ', arrayOfClusterstorch[i].size()[0])
+            torchvision.utils.save_image(topImages, clusters_file[i][:-4] + '_probs_descending_'+str(epoch)+'.png',nrow=7, normalize=True)
+            print('Total Num images in this cluster : ', arrayOfClusterstorch[i].size()[0])
+            cc = Counter(arrayOfClustersDomains[i].cpu().tolist())
+            for key in cc:
+                print('Num images of domain', key, '----', cc[key])
             print('bestProbs in this cluster : ', maxProbs[:min(topk,5)])
     try:
         os.remove(probs_csv)
@@ -109,3 +122,4 @@ def view_clusters(solver,clusters_file,probs_csv,epoch):
         wr = csv.writer(myfile)
         wr.writerows(arrayOfProbs)
             
+

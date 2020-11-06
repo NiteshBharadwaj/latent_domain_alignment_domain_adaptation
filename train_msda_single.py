@@ -26,7 +26,7 @@ def loss_single_domain(solver, img_s, img_t, label_s):
         raise Exception(' c2 loss is nan')
     return loss_s_c1, loss_s_c2, loss_msda
 
-def train_MSDA_single(solver, epoch, classifier_disc=True, record_file=None):
+def train_MSDA_single(solver, epoch, classifier_disc=True, record_file=None, max_it=10000):
     solver.G.train()
     solver.C1.train()
     solver.C2.train()
@@ -37,6 +37,8 @@ def train_MSDA_single(solver, epoch, classifier_disc=True, record_file=None):
 
     for batch_idx, data in enumerate(solver.datasets):
         batch_idx_g = batch_idx
+        if (batch_idx>max_it):
+            break
         img_t = Variable(data['T'].cuda())
         img_s = Variable(data['S'].cuda())
         label_s = Variable(data['S_label'].long().cuda())
@@ -92,4 +94,9 @@ def train_MSDA_single(solver, epoch, classifier_disc=True, record_file=None):
                 record.write('%s %s %s %s %s %s\n' %
                 (0, loss_s_c1.data.item(), loss_s_c2.data.item(), loss_msda.data.item(), 0, 0))
                 record.close()
+        if not solver.args.clustering_only:
+            solver.sche_g.step()
+            solver.sche_c1.step()
+            solver.sche_c2.step()
+            solver.sche_dp.step()
     return batch_idx_g

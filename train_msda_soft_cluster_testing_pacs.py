@@ -27,7 +27,7 @@ def switch_bn(model, on):
 import time
 
 
-def train_MSDA_soft(solver, epoch, graph_data, classifier_disc=True, record_file=None):
+def train_MSDA_soft(solver, epoch, graph_data, classifier_disc=True, record_file=None, max_it=10000):
     #print('inside function', time.time())
     global cluster_batch
     global art_painting_batch
@@ -71,11 +71,14 @@ def train_MSDA_soft(solver, epoch, graph_data, classifier_disc=True, record_file
             print('End of epoch')
             break
         batch_idx_g += 1
+        if (batch_idx_g>max_it): 
+            break
         batch_idx = batch_idx_g
         # print('batch no : ', batch_idx)
         ct1 = time.time()
         img_t = Variable(data['T'].cuda())
         img_s = Variable(data['S'].cuda())
+        img_s_dl = Variable(data['SD_label'].long().cuda())
         ct2 = time.time()
         # print('batch size : ', img_s.size()[0])
         #         if(batch_idx > 50):
@@ -122,14 +125,11 @@ def train_MSDA_soft(solver, epoch, graph_data, classifier_disc=True, record_file
         loss_s_c1, loss_s_c2, loss_msda, entropy_loss, kl_loss, domain_prob = solver.loss_soft_all_domain(img_s, img_t,
                                                                                                           label_s,
                                                                                                           epoch,
-                                                                                                          img_s_cl)
+                                                                                                          img_s_cl, img_s_dl)
         if not classifier_disc:
             loss_s_c2 = loss_s_c1
 
-        if (epoch % 4 == 1):
-            loss = loss_s_c1 + loss_s_c2 + entropy_loss + 0.2 * loss_msda
-        else:
-            loss = loss_s_c1 + loss_s_c2 + loss_msda + kl_loss
+        loss = loss_s_c1 + loss_s_c2 + entropy_loss + loss_msda + kl_loss
 
         graph_data['entropy'].append(entropy_loss.data.item())
         graph_data['kl'].append(kl_loss.data.item())
@@ -160,6 +160,11 @@ def train_MSDA_soft(solver, epoch, graph_data, classifier_disc=True, record_file
         tot_updates_time += time.time() - tt
         tt = time.time()
 
+        if not solver.args.clustering_only:
+            solver.sche_g.step()
+            solver.sche_c1.step()
+            solver.sche_c2.step()
+            solver.sche_dp.step()
         if classifier_disc:
             solver.reset_grad()
             loss_s_c1, loss_s_c2, loss_msda, entropy_loss, kl_loss, domain_prob = solver.loss_soft_all_domain(img_s,
