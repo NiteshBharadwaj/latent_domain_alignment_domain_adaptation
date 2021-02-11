@@ -181,17 +181,15 @@ def main():
             print(t)
             if not args.one_step:
                 # num = solver.train_merge_baseline(t, record_file=record_train)
+                torch.cuda.empty_cache()
                 if args.dl_type=='soft_cluster':
-                    torch.cuda.empty_cache()
-                    num= train_MSDA_soft(solver,t,classifier_disc,record_file=record_train, summary_writer=summary_writer, epoch_start_idx=count)
+                    num = train_MSDA_soft(solver,t,classifier_disc,record_file=record_train, summary_writer=summary_writer, epoch_start_idx=count)
                 elif args.dl_type=='source_only':
-                    torch.cuda.empty_cache()
-                    num= train_source_only(solver,t,record_file=record_train)
+                    num = train_source_only(solver,t,record_file=record_train)
                 elif args.dl_type=='source_target_only':
-                    torch.cuda.empty_cache()
-                    num= train_MSDA_soft(solver,t,classifier_disc,record_file=record_train, single_domain_mode=True)
+                    num = train_MSDA_soft(solver,t,classifier_disc,record_file=record_train, single_domain_mode=True)
                 else:
-                    num = train_MSDA_hard(solver,t, classifier_disc, record_file=record_train)
+                    raise NotImplementedError
             else:
                 raise Exception('One step solver not defined')
             solver.sche_g.step()
@@ -199,15 +197,13 @@ def main():
             solver.sche_c2.step()
             solver.sche_dp.step()
             count += num
-            if t % 1 == 0:
-                if args.data=='cars':
-                    test(solver, t, 'train', record_file=record_test, save_model=args.save_model)
-                best = test(solver, t, 'val', record_file=record_val, save_model=args.save_model, summary_writer=summary_writer)
-                #best = test(solver, t, 'test', record_file=record_val, save_model=args.save_model)
-                if best:
-                    test(solver, t, 'test', record_file=record_test, save_model=args.save_model, summary_writer=summary_writer)
-                    #view_clusters(solver, clusters_file, probs_csv)
-                    #print('clustering images saved in!')
+            if args.data=='cars':
+                test(solver, t, 'train', record_file=record_test, save_model=args.save_model)
+            best = test(solver, t, 'val', record_file=record_val, save_model=args.save_model, summary_writer=summary_writer)
+            if best:
+                test(solver, t, 'test', record_file=record_test, save_model=args.save_model, summary_writer=summary_writer)
+                #view_clusters(solver, clusters_file, probs_csv)
+                #print('clustering images saved in!')
                 
         #generate_plots(solver, 0, 'test', plot_before_source, plot_before_target, plot_after_source, plot_after_target, False)
 
