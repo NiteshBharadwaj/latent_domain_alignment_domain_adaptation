@@ -59,7 +59,7 @@ class Solver(object):
                 raise Exception('Type of experiment undefined')
 
             print('load finished!')
-            num_classes = 10
+            self.num_classes = 10
             #if args.dl_type=='source_target_only':
             #    args.num_domain = 4 # To maintain reproducibility for a seed. Num domains is not used but can introduce a bit of randomness
             num_domains = args.num_domain
@@ -83,12 +83,12 @@ class Solver(object):
             self.entropy_wt = args.entropy_wt
             self.msda_wt = args.msda_wt
             self.to_detach = args.to_detach
-            num_classes = 163
+            self.num_classes = 163
             num_domains = args.num_domain
             self.num_domains = num_domains
             self.G = Generator_cars()
-            self.C1 = Classifier_cars(num_classes)
-            self.C2 = Classifier_cars(num_classes)
+            self.C1 = Classifier_cars(self.num_classes)
+            self.C2 = Classifier_cars(self.num_classes)
             self.DP = DP_cars(num_domains)
         elif args.data == 'office':
             if args.dl_type == 'soft_cluster':
@@ -103,12 +103,12 @@ class Solver(object):
             self.msda_wt = args.msda_wt
             self.kl_wt = args.kl_wt
             self.to_detach = args.to_detach
-            num_classes = 31
+            self.num_classes = 31
             num_domains = args.num_domain
             self.num_domains = num_domains
             self.G = Generator_office()
-            self.C1 = Classifier_office(num_classes)
-            self.C2 = Classifier_office(num_classes)
+            self.C1 = Classifier_office(self.num_classes)
+            self.C2 = Classifier_office(self.num_classes)
             self.DP = DP_office(num_domains)
         # print(self.dataset['S1'].shape)
         print('model_loaded')
@@ -317,9 +317,9 @@ class Solver(object):
         _, class_prob_t = self.entropy_loss(output_t_c1)
 
         if self.to_detach and not force_attach:
-            loss_classwise_da = classwise_da.class_da_regulizer_soft(feat_da_s, feat_da_t, 5, label_s, class_prob_t.detach())
+            loss_classwise_da = classwise_da.class_da_regulizer_soft(feat_da_s, feat_da_t, 5, self.get_one_hot_encoding(label_s, self.num_classes), class_prob_t.detach())
         else:
-            loss_classwise_da = classwise_da.class_da_regulizer_soft(feat_da_s, feat_da_t, 5, label_s, class_prob_t)
+            loss_classwise_da = classwise_da.class_da_regulizer_soft(feat_da_s, feat_da_t, 5, self.get_one_hot_encoding(label_s, self.num_classes), class_prob_t)
         loss_classwise_da = loss_classwise_da*self.msda_wt
 
         if (math.isnan(loss_classwise_da.data.item())):
@@ -334,6 +334,10 @@ class Solver(object):
             raise Exception(' c2 loss is nan')
 
         return loss_s_c1, loss_s_c2, loss_classwise_da, 0, 0, 0, class_prob_t
+    
+    def get_one_hot_encoding(self, labels, num_classes):
+        y = torch.eye(num_classes)
+        return y[labels]
 
 
 class HLoss(nn.Module):
