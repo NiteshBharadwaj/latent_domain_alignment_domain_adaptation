@@ -4,6 +4,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 import mmd
 import msda
+import classwise_da
 from torch.autograd import Variable
 from model.build_gen_digits import Generator as Generator_digit, Classifier as Classifier_digit, \
     DomainPredictor as DP_Digit
@@ -49,6 +50,9 @@ class Solver(object):
                 self.datasets, self.dataset_test, self.dataset_valid, self.classwise_dataset, self.is_multi, self.usps_only = dataset_combined(target, self.batch_size,args.num_domain, args.office_directory, args.seed,
                         usps_less_data_protocol = args.usps_less_data_protocol)
             elif args.dl_type == 'source_target_only':
+                self.datasets, self.dataset_test, self.dataset_valid, self.classwise_dataset, self.is_multi, self.usps_only = dataset_combined(target, self.batch_size,args.num_domain, args.office_directory, args.seed,
+                        usps_less_data_protocol = args.usps_less_data_protocol)
+            elif args.dl_type=='classwise_ssda':
                 self.datasets, self.dataset_test, self.dataset_valid, self.classwise_dataset, self.is_multi, self.usps_only = dataset_combined(target, self.batch_size,args.num_domain, args.office_directory, args.seed,
                         usps_less_data_protocol = args.usps_less_data_protocol)
             else:
@@ -111,6 +115,19 @@ class Solver(object):
 
         self.set_optimizer(which_opt=optimizer, lr=learning_rate)
         print('ARGS EVAL ONLY : ', args.eval_only)
+        if args.saved_model_dir != 'na':
+            print('Loading model from: ','%s' % (args.saved_model_dir))
+            checkpoint = torch.load('%s' % (args.saved_model_dir))
+            self.G.load_state_dict(checkpoint['G_state_dict'])
+            self.C1.load_state_dict(checkpoint['C1_state_dict'])
+            self.C2.load_state_dict(checkpoint['C2_state_dict'])
+            self.DP.load_state_dict(checkpoint['DP_state_dict'])
+
+            self.opt_g.load_state_dict(checkpoint['G_state_dict_opt'])
+            self.opt_c1.load_state_dict(checkpoint['C1_state_dict_opt'])
+            self.opt_c2.load_state_dict(checkpoint['C2_state_dict_opt'])
+            self.opt_dp.load_state_dict(checkpoint['DP_state_dict_opt'])
+
         if args.eval_only:
             print('Loading state from: ','%s/%s_model_best.pth' % (self.checkpoint_dir, self.target))
             checkpoint = torch.load('%s/%s_model_best.pth' % (self.checkpoint_dir, self.target))
@@ -244,14 +261,7 @@ class Solver(object):
         feat_s_comb, feat_t_comb = self.feat_soft_all_domain(img_s, img_t)
         feat_s, conv_feat_s, feat_da_s = feat_s_comb
         feat_t, conv_feat_t, feat_da_t = feat_t_comb
-        #_, conv_s_cl = self.G(img_s_cl)
-        #if self.to_detach:
-        #    domain_logits, _ = self.DP(conv_feat_s.detach())
-        #    cl_s_logits,_ = self.DP(conv_s_cl.detach())
-        #else:
-        #    domain_logits, _ = self.DP(conv_feat_s)
-        #    cl_s_logits,_ = self.DP(conv_s_cl)
-        #_, conv_s_cl = self.G(img_s_cl)
+
         if self.to_detach:
             domain_logits, _ = self.DP(img_s)
             cl_s_logits,_ = self.DP(img_s_cl)
@@ -262,48 +272,9 @@ class Solver(object):
 
         _,cl_s_prob = self.entropy_loss(cl_s_logits)
 
-#        if self.args.eval_only:
-#            print("domain_prob", domain_prob)
-#            print("cl_s_prob", cl_s_prob)
-#            return 0, 0, 0, 0, 0, 0
-
         kl_loss = -self.get_domain_entropy(cl_s_prob)
         kl_loss = kl_loss * self.kl_wt
         
-        
-#         kl_loss = self.get_kl_loss(domain_prob)
-#         kl_loss = kl_loss * self.kl_wt
-        
-#        kl_loss = torch.zeros(1).cuda()
-
-#         total_domains = domain_prob.size()[1]
-#         domains = domain_prob.data.max(1)[1]
-#         print(domains)
-#         if(epoch % 100 == 0):
-#             for i in range(total_domains):
-#                 i_index = ((domains == i).nonzero()).squeeze()
-#                 img_s_i = img_s[i_index,:,:]
-#                 for k in range(img_s_i.size()[0]):
-#                     img_ = img_s_i[k, :, :, :].squeeze().permute(1,2,0)
-#                     img_ = img_.cpu().detach().numpy()
-#                     #print(img_.shape)
-#                     #print(img_.size())
-#                     index = i_index[k]
-#                     plt.imshow(img_) 
-#                     plt.savefig(str(i)+'/'+str(index.item())+'.png')
-#                 im = Image.fromarray(img_.sum().item())
-#                 im.save()
-#                 matplotlib.image.imsave(str(i)+'/'+str(index), img_.cpu().sum().item())
-#        if (feat_s!=feat_s).any():
-#           import pdb
-#           pdb.set_trace()
-#       if (conv_feat_s!=conv_feat_s).any():
-#           import pdb
-#           pdb.set_trace()
-#   
-#       if (domain_prob!=domain_prob).any():
-#           import pdb
-#           pdb.set_trace()
         if (math.isnan(entropy_loss.data.item())):
             raise Exception('entropy loss is nan')
         entropy_loss = entropy_loss * self.entropy_wt
@@ -333,6 +304,37 @@ class Solver(object):
 #        print("loss_s_c1", loss_s_c1, "loss_s_c2", loss_s_c2, "loss_msda", loss_msda, "entropy_loss", entropy_loss, "kl_loss", kl_loss)
         return loss_s_c1, loss_s_c2, loss_msda_nc2, loss_msda_nc1, entropy_loss, kl_loss, domain_prob
 
+    def loss_class_mmd(self, img_s, img_t, label_s, epoch, img_s_cl, force_attach = False, single_domain_mode=False):
+        # NOTE: This function right now is written keeping in mind single source UDA
+        feat_s_comb, feat_t_comb = self.feat_soft_all_domain(img_s, img_t)
+        feat_s, _, feat_da_s = feat_s_comb
+        feat_t, _, feat_da_t = feat_t_comb
+
+        output_s_c1, output_t_c1 = self.C1_all_domain_soft(feat_s, feat_t)
+        output_s_c2, output_t_c2 = self.C2_all_domain_soft(feat_s, feat_t)
+
+        # _, class_prob_s = self.entropy_loss(output_s_c1)
+        _, class_prob_t = self.entropy_loss(output_t_c1)
+
+        if self.to_detach and not force_attach:
+            loss_classwise_da = classwise_da.class_da_regulizer_soft(feat_da_s, feat_da_t, 5, label_s, class_prob_t.detach())
+        else:
+            loss_classwise_da = classwise_da.class_da_regulizer_soft(feat_da_s, feat_da_t, 5, label_s, class_prob_t)
+        loss_classwise_da = loss_classwise_da*self.msda_wt
+
+        if (math.isnan(loss_classwise_da.data.item())):
+            raise Exception('loss_classwise_da is nan')
+        loss_s_c1 = \
+            self.softmax_loss_all_domain_soft(output_s_c1, label_s)
+        if (math.isnan(loss_s_c1.data.item())):
+            raise Exception(' c1 loss is nan')
+        loss_s_c2 = \
+            self.softmax_loss_all_domain_soft(output_s_c2, label_s)
+        if (math.isnan(loss_s_c2.data.item())):
+            raise Exception(' c2 loss is nan')
+
+        return loss_s_c1, loss_s_c2, loss_classwise_da, 0, 0, 0, class_prob_t
+
 
 class HLoss(nn.Module):
     def __init__(self):
@@ -343,16 +345,3 @@ class HLoss(nn.Module):
         b = F.softmax(x, dim=1) * F.log_softmax(x, dim=1)
         b = -1.0 * b.mean()
         return b, domain_prob + 1e-5
-
-# Takes input tensor of shape (N x num_domains) and computes the entropy loss sum(p * logp)
-#class HLoss(nn.Module):
-#    def __init__(self):
-#        super(HLoss, self).__init__()
-
-#    def forward(self, x):
-#        input_ = F.softmax(x, dim=1)
-#        mask = input_.ge(0.000001)
-#        mask_out = input_*mask + (1-mask.int())*1e-5
-#        entropy = -(torch.sum(mask_out * torch.log(mask_out)))
-#        loss = entropy/ float(input_.size(0))
-#        return loss, mask_out

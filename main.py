@@ -13,6 +13,7 @@ import os
 from train_msda_hard import train_MSDA as train_MSDA_hard
 from train_msda_soft import train_MSDA_soft
 from train_msda_single import train_MSDA_single
+from train_ssda_classwise import train_SSDA_classwise
 from test import test
 from view_clusters import view_clusters
 from train_source_only import train_source_only
@@ -44,6 +45,8 @@ parser.add_argument('--batch-size', type=int, default=64, metavar='N',
                     help='input batch size for training (default: 64)')
 parser.add_argument('--checkpoint_dir', type=str, default='checkpoint', metavar='N',
                     help='source only or not')
+parser.add_argument('--saved_model_dir', type=str, default='na', metavar='N',
+                    help='model dir from which to load')
 # parser.add_argument('--eval_only', action='store_true', default=False,
 #                     help='evaluation only option')
 parser.add_argument('--eval_only', type=str, default='no', metavar='N',
@@ -188,6 +191,9 @@ def main():
                     num = train_source_only(solver,t,record_file=record_train)
                 elif args.dl_type=='source_target_only':
                     num = train_MSDA_soft(solver,t,classifier_disc,record_file=record_train, single_domain_mode=True)
+                elif args.dl_type=='classwise_ssda':
+                    assert(len(args.target.split('_')) == 2)
+                    num = train_SSDA_classwise(solver,t,classifier_disc,record_file=record_train, single_domain_mode=True)
                 else:
                     raise NotImplementedError
             else:
