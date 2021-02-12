@@ -17,7 +17,7 @@ spec:
       imagePullPolicy: Always
       command: ["/bin/sh","-c"]
       # Pip cmds are hardcoded in deploy.py. Add over there.
-      args: ["${PIP_CMD}; ${UNZIP_CMD}; cd /data/code_MSDA_digit/; ${CMD}" ]
+      args: ["${PIP_CMD}; ${UNZIP_CMD}; cd /data/code_MSDA_digit2/code_MSDA_digit/; ${CMD}" ]
       #args: ["/hooks/startup.sh" ]
       lifecycle:
         #postStart:
