@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 from torch.autograd import Variable
 
-def train_SSDA_classwise(solver, epoch, classifier_disc=True, record_file=None, single_domain_mode=False, summary_writer=None, epoch_start_idx=0):
+def train_MSDA_classwise(solver, epoch, classifier_disc=True, record_file=None, single_domain_mode=False, summary_writer=None, epoch_start_idx=0):
     solver.G.train()
     solver.C1.train()
     solver.C2.train()
@@ -22,7 +22,7 @@ def train_SSDA_classwise(solver, epoch, classifier_disc=True, record_file=None, 
 
         solver.reset_grad()
         
-        loss_s_c1, loss_s_c2, intra_domain_mmd_loss, inter_domain_mmd_loss, entropy_loss, kl_loss, domain_prob = solver.loss_class_mmd(img_s, img_t, label_s, epoch, img_s_cl, single_domain_mode=single_domain_mode)
+        loss_s_c1, loss_s_c2, intra_domain_mmd_loss, inter_domain_mmd_loss, entropy_loss, kl_loss, domain_prob = solver.loss_domain_class_mmd(img_s, img_t, label_s, epoch, img_s_cl, single_domain_mode=single_domain_mode)
         if not classifier_disc:
             loss_s_c2 = loss_s_c1
 

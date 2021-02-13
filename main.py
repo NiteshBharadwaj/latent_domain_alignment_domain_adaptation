@@ -13,7 +13,7 @@ import os
 from train_msda_hard import train_MSDA as train_MSDA_hard
 from train_msda_soft import train_MSDA_soft
 from train_msda_single import train_MSDA_single
-from train_ssda_classwise import train_SSDA_classwise
+from train_ssda_classwise import train_MSDA_classwise
 from test import test
 from view_clusters import view_clusters
 from train_source_only import train_source_only
@@ -191,8 +191,8 @@ def main():
                     num = train_source_only(solver,t,record_file=record_train)
                 elif args.dl_type=='source_target_only':
                     num = train_MSDA_soft(solver,t,classifier_disc,record_file=record_train, single_domain_mode=True)
-                elif args.dl_type=='classwise_ssda':
-                    num = train_SSDA_classwise(solver,t,classifier_disc,record_file=record_train, single_domain_mode=True)
+                elif args.dl_type=='classwise_msda':
+                    num = train_MSDA_classwise(solver,t,classifier_disc,record_file=record_train, single_domain_mode=True)
                 else:
                     raise NotImplementedError
             else:

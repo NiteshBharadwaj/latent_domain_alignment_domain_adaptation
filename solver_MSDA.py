@@ -52,7 +52,7 @@ class Solver(object):
             elif args.dl_type == 'source_target_only':
                 self.datasets, self.dataset_test, self.dataset_valid, self.classwise_dataset, self.is_multi, self.usps_only = dataset_combined(target, self.batch_size,args.num_domain, args.office_directory, args.seed,
                         usps_less_data_protocol = args.usps_less_data_protocol)
-            elif args.dl_type=='classwise_ssda':
+            elif args.dl_type=='classwise_msda':
                 self.datasets, self.dataset_test, self.dataset_valid, self.classwise_dataset, self.is_multi, self.usps_only = dataset_combined(target, self.batch_size,args.num_domain, args.office_directory, args.seed,
                         usps_less_data_protocol = args.usps_less_data_protocol)
             else:
