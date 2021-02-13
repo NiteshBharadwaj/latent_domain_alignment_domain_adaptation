@@ -310,6 +310,7 @@ class Solver(object):
         feat_s, _, feat_da_s = feat_s_comb
         feat_t, _, feat_da_t = feat_t_comb
 
+
         output_s_c1, output_t_c1 = self.C1_all_domain_soft(feat_s, feat_t)
         output_s_c2, output_t_c2 = self.C2_all_domain_soft(feat_s, feat_t)
 
@@ -317,9 +318,9 @@ class Solver(object):
         _, class_prob_t = self.entropy_loss(output_t_c1)
 
         if self.to_detach and not force_attach:
-            loss_classwise_da = classwise_da.class_da_regulizer_soft(feat_da_s, feat_da_t, 5, self.get_one_hot_encoding(label_s, self.num_classes), class_prob_t.detach())
+            loss_classwise_da = classwise_da.class_da_regulizer_soft(feat_da_s, feat_da_t, 5, self.get_one_hot_encoding(label_s, self.num_classes).cuda(), class_prob_t.detach())
         else:
-            loss_classwise_da = classwise_da.class_da_regulizer_soft(feat_da_s, feat_da_t, 5, self.get_one_hot_encoding(label_s, self.num_classes), class_prob_t)
+            loss_classwise_da = classwise_da.class_da_regulizer_soft(feat_da_s, feat_da_t, 5, self.get_one_hot_encoding(label_s, self.num_classes).cuda(), class_prob_t)
         loss_classwise_da = loss_classwise_da*self.msda_wt
 
         if (math.isnan(loss_classwise_da.data.item())):
