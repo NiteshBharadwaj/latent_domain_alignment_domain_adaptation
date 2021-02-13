@@ -5,6 +5,7 @@ import torch.optim as optim
 import mmd
 import msda
 import classwise_da
+import class_domain_da
 from torch.autograd import Variable
 from model.build_gen_digits import Generator as Generator_digit, Classifier as Classifier_digit, \
     DomainPredictor as DP_Digit
@@ -52,7 +53,7 @@ class Solver(object):
             elif args.dl_type == 'source_target_only':
                 self.datasets, self.dataset_test, self.dataset_valid, self.classwise_dataset, self.is_multi, self.usps_only = dataset_combined(target, self.batch_size,args.num_domain, args.office_directory, args.seed,
                         usps_less_data_protocol = args.usps_less_data_protocol)
-            elif args.dl_type=='classwise_msda':
+            elif args.dl_type=='classwise_msda' or args.dl_type=='classwise_ssda':
                 self.datasets, self.dataset_test, self.dataset_valid, self.classwise_dataset, self.is_multi, self.usps_only = dataset_combined(target, self.batch_size,args.num_domain, args.office_directory, args.seed,
                         usps_less_data_protocol = args.usps_less_data_protocol)
             else:
@@ -330,9 +331,9 @@ class Solver(object):
         _, class_prob_t = self.entropy_loss(output_t_c1)
 
         if self.to_detach and not force_attach:
-            intra_domain_mmd_loss, inter_domain_mmd_loss = classwise_da.class_da_regulizer_soft(feat_da_s, feat_da_t, 5, self.get_one_hot_encoding(label_s, self.num_classes).cuda(), class_prob_t.detach(), domain_prob_s.detach())
+            intra_domain_mmd_loss, inter_domain_mmd_loss = class_domain_da.class_da_regulizer_soft(feat_da_s, feat_da_t, 5, self.get_one_hot_encoding(label_s, self.num_classes).cuda(), class_prob_t.detach(), domain_prob_s.detach())
         else:
-            intra_domain_mmd_loss, inter_domain_mmd_loss = classwise_da.class_da_regulizer_soft(feat_da_s, feat_da_t, 5, self.get_one_hot_encoding(label_s, self.num_classes).cuda(), class_prob_t, domain_prob_s)
+            intra_domain_mmd_loss, inter_domain_mmd_loss = class_domain_da.class_da_regulizer_soft(feat_da_s, feat_da_t, 5, self.get_one_hot_encoding(label_s, self.num_classes).cuda(), class_prob_t, domain_prob_s)
         intra_domain_mmd_loss = intra_domain_mmd_loss*self.msda_wt
         inter_domain_mmd_loss = inter_domain_mmd_loss*self.msda_wt
 
@@ -350,6 +351,36 @@ class Solver(object):
             raise Exception(' kl loss is nan')
 
         return loss_s_c1, loss_s_c2, intra_domain_mmd_loss, inter_domain_mmd_loss, entropy_loss, kl_loss, domain_prob_s
+    
+    def loss_class_mmd(self, img_s, img_t, label_s, epoch, img_s_cl, force_attach = False, single_domain_mode=False):
+        feat_s_comb, feat_t_comb = self.feat_soft_all_domain(img_s, img_t)
+        feat_s, _, feat_da_s = feat_s_comb
+        feat_t, _, feat_da_t = feat_t_comb
+
+        output_s_c1, output_t_c1 = self.C1_all_domain_soft(feat_s, feat_t)
+        output_s_c2, output_t_c2 = self.C2_all_domain_soft(feat_s, feat_t)
+
+        # _, class_prob_s = self.entropy_loss(output_s_c1)
+        _, class_prob_t = self.entropy_loss(output_t_c1)
+
+        if self.to_detach and not force_attach:
+            classwise_da_loss = classwise_da.class_da_regulizer_soft(feat_da_s, feat_da_t, 5, self.get_one_hot_encoding(label_s, self.num_classes).cuda(), class_prob_t.detach())
+        else:
+            classwise_da_loss = classwise_da.class_da_regulizer_soft(feat_da_s, feat_da_t, 5, self.get_one_hot_encoding(label_s, self.num_classes).cuda(), class_prob_t)
+        classwise_da_loss = classwise_da_loss*self.msda_wt
+
+        if (math.isnan(classwise_da_loss.data.item())):
+            raise Exception('classwise_da_loss is nan')
+        loss_s_c1 = \
+            self.softmax_loss_all_domain_soft(output_s_c1, label_s)
+        if (math.isnan(loss_s_c1.data.item())):
+            raise Exception(' c1 loss is nan')
+        loss_s_c2 = \
+            self.softmax_loss_all_domain_soft(output_s_c2, label_s)
+        if (math.isnan(loss_s_c2.data.item())):
+            raise Exception(' c2 loss is nan')
+
+        return loss_s_c1, loss_s_c2, classwise_da_loss, -999999, -999999, -999999, class_prob_t
     
     def get_one_hot_encoding(self, labels, num_classes):
         y = torch.eye(num_classes)
