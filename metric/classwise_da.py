@@ -30,7 +30,7 @@ def moment_soft(output_s, output_t, class_prob_s, class_prob_t, domain_prob_s):
     class_prob_s = class_prob_s.reshape(class_prob_s.shape[0], 1, class_prob_s.shape[1]) # SHAPE -> N x 1 x c
     domain_prob_s = domain_prob_s.reshape(domain_prob_s.shape[0], 1, 1, domain_prob_s.shape[1]) #SHAPE -> N x 1 x 1 x d
     output_s_times_cp = torch.matmul(output_s, class_prob_s) #SHAPE -> N x e x c
-    output_s_times_cp = output_s_times_cp.reshape(output_s_times_cp[0], output_s_times_cp[1], output_s_times_cp[2], 1) #SHAPE -> N x e x c x 1
+    output_s_times_cp = output_s_times_cp.reshape(output_s_times_cp.shape[0], output_s_times_cp.shape[1], output_s_times_cp.shape[2], 1) #SHAPE -> N x e x c x 1
     output_prob_s = torch.matmul(output_s_times_cp, domain_prob_s) #SHAPE -> N x e x c x d
 
     class_prob_sum_s = class_prob_s.sum(0) + 1e-6

@@ -349,7 +349,7 @@ class Solver(object):
         if (math.isnan(kl_loss.data.item())):
             raise Exception(' kl loss is nan')
 
-        return loss_s_c1, loss_s_c2, intra_domain_mmd_loss, inter_domain_mmd_loss, entropy_loss, kl_loss, domain_prob
+        return loss_s_c1, loss_s_c2, intra_domain_mmd_loss, inter_domain_mmd_loss, entropy_loss, kl_loss, domain_prob_s
     
     def get_one_hot_encoding(self, labels, num_classes):
         y = torch.eye(num_classes)
