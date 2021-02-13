@@ -192,7 +192,6 @@ def main():
                 elif args.dl_type=='source_target_only':
                     num = train_MSDA_soft(solver,t,classifier_disc,record_file=record_train, single_domain_mode=True)
                 elif args.dl_type=='classwise_ssda':
-                    assert(len(args.target.split('_')) == 2)
                     num = train_SSDA_classwise(solver,t,classifier_disc,record_file=record_train, single_domain_mode=True)
                 else:
                     raise NotImplementedError

@@ -22,11 +22,11 @@ def train_SSDA_classwise(solver, epoch, classifier_disc=True, record_file=None, 
 
         solver.reset_grad()
         
-        loss_s_c1, loss_s_c2, loss_classwise_da, _, _, _, class_prob_t = solver.loss_class_mmd(img_s, img_t, label_s, epoch, img_s_cl, single_domain_mode=single_domain_mode)
+        loss_s_c1, loss_s_c2, intra_domain_mmd_loss, inter_domain_mmd_loss, entropy_loss, kl_loss, domain_prob = solver.loss_class_mmd(img_s, img_t, label_s, epoch, img_s_cl, single_domain_mode=single_domain_mode)
         if not classifier_disc:
             loss_s_c2 = loss_s_c1
 
-        loss = loss_s_c1 + loss_classwise_da + loss_s_c2
+        loss = loss_s_c1 + intra_domain_mmd_loss + inter_domain_mmd_loss + loss_s_c2 + entropy_loss + kl_loss
         loss.backward()
         clip_value = 1.0
 
@@ -47,17 +47,19 @@ def train_SSDA_classwise(solver, epoch, classifier_disc=True, record_file=None, 
         solver.opt_g.step()
         solver.opt_c1.step()
         solver.opt_c2.step()
+        solver.opt_dp.step()
         if summary_writer is not None:
-            summary_writer.add_scalar('Loss/loss_classwise_da', loss_classwise_da/(solver.args.msda_wt + 1e-8), epoch_start_idx + batch_idx_g)
+            summary_writer.add_scalar('Loss/intra_domain_mmd_loss', intra_domain_mmd_loss/(solver.args.msda_wt + 1e-8), epoch_start_idx + batch_idx_g)
+            summary_writer.add_scalar('Loss/inter_domain_mmd_loss', inter_domain_mmd_loss/(solver.args.msda_wt + 1e-8), epoch_start_idx + batch_idx_g)
             summary_writer.add_scalar('Loss/loss_s_c1', loss_s_c1, epoch_start_idx + batch_idx_g)
             summary_writer.add_scalar('Loss/loss_s_c2', loss_s_c2, epoch_start_idx + batch_idx_g)
-        
-        solver.opt_dp.step()
+            summary_writer.add_scalar('Loss/loss_entropy', entropy_loss/solver.args.entropy_wt, epoch_start_idx + batch_idx_g)
+            summary_writer.add_scalar('Loss/loss_kl', kl_loss/solver.args.kl_wt, epoch_start_idx + batch_idx_g)
 
         assert not classifier_disc
 
         if batch_idx % solver.interval == 0:
             print \
-                    ('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss1: {:.6f}\t Loss2: {:.6f}\t Loss_classwise_da NC1: {:.6f}\t Loss_mmd NC2: {:6f} \t Loss_entropy: {:.6f}\t kl_loss: {:.6f}'.format(
-                epoch, batch_idx, 100, 100. * batch_idx / 70000, loss_s_c1.data.item(), loss_s_c2.data.item(), loss_classwise_da.data.item(), -9999999, -9999999, -9999999))
+                    ('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss1: {:.6f}\t Loss2: {:.6f}\t inter_domain_mmd_loss NC1: {:.6f}\t intra_domain_mmd_loss NC2: {:6f} \t Loss_entropy: {:.6f}\t kl_loss: {:.6f}'.format(
+                epoch, batch_idx, 100, 100. * batch_idx / 70000, loss_s_c1.data.item(), loss_s_c2.data.item(), inter_domain_mmd_loss.data.item(), intra_domain_mmd_loss.data.item(), entropy_loss.data.item(), kl_loss.data.item()))
     return batch_idx_g

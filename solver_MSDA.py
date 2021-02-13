@@ -304,12 +304,24 @@ class Solver(object):
 #        print("loss_s_c1", loss_s_c1, "loss_s_c2", loss_s_c2, "loss_msda", loss_msda, "entropy_loss", entropy_loss, "kl_loss", kl_loss)
         return loss_s_c1, loss_s_c2, loss_msda_nc2, loss_msda_nc1, entropy_loss, kl_loss, domain_prob
 
-    def loss_class_mmd(self, img_s, img_t, label_s, epoch, img_s_cl, force_attach = False, single_domain_mode=False):
-        # NOTE: This function right now is written keeping in mind single source UDA
+    def loss_domain_class_mmd(self, img_s, img_t, label_s, epoch, img_s_cl, force_attach = False, single_domain_mode=False):
         feat_s_comb, feat_t_comb = self.feat_soft_all_domain(img_s, img_t)
         feat_s, _, feat_da_s = feat_s_comb
         feat_t, _, feat_da_t = feat_t_comb
 
+        domain_logits, _ = self.DP(img_s)
+        cl_s_logits,_ = self.DP(img_s_cl)
+
+        entropy_loss, domain_prob_s = self.entropy_loss(domain_logits)
+
+        _,cl_s_prob = self.entropy_loss(cl_s_logits)
+
+        kl_loss = -self.get_domain_entropy(cl_s_prob)
+        kl_loss = kl_loss * self.kl_wt
+
+        if (math.isnan(entropy_loss.data.item())):
+            raise Exception('entropy loss is nan')
+        entropy_loss = entropy_loss * self.entropy_wt
 
         output_s_c1, output_t_c1 = self.C1_all_domain_soft(feat_s, feat_t)
         output_s_c2, output_t_c2 = self.C2_all_domain_soft(feat_s, feat_t)
@@ -318,13 +330,14 @@ class Solver(object):
         _, class_prob_t = self.entropy_loss(output_t_c1)
 
         if self.to_detach and not force_attach:
-            loss_classwise_da = classwise_da.class_da_regulizer_soft(feat_da_s, feat_da_t, 5, self.get_one_hot_encoding(label_s, self.num_classes).cuda(), class_prob_t.detach())
+            intra_domain_mmd_loss, inter_domain_mmd_loss = classwise_da.class_da_regulizer_soft(feat_da_s, feat_da_t, 5, self.get_one_hot_encoding(label_s, self.num_classes).cuda(), class_prob_t.detach(), domain_prob_s.detach())
         else:
-            loss_classwise_da = classwise_da.class_da_regulizer_soft(feat_da_s, feat_da_t, 5, self.get_one_hot_encoding(label_s, self.num_classes).cuda(), class_prob_t)
-        loss_classwise_da = loss_classwise_da*self.msda_wt
+            intra_domain_mmd_loss, inter_domain_mmd_loss = classwise_da.class_da_regulizer_soft(feat_da_s, feat_da_t, 5, self.get_one_hot_encoding(label_s, self.num_classes).cuda(), class_prob_t, domain_prob_s)
+        intra_domain_mmd_loss = intra_domain_mmd_loss*self.msda_wt
+        inter_domain_mmd_loss = inter_domain_mmd_loss*self.msda_wt
 
-        if (math.isnan(loss_classwise_da.data.item())):
-            raise Exception('loss_classwise_da is nan')
+        if (math.isnan(intra_domain_mmd_loss.data.item())):
+            raise Exception('intra_domain_mmd_loss is nan')
         loss_s_c1 = \
             self.softmax_loss_all_domain_soft(output_s_c1, label_s)
         if (math.isnan(loss_s_c1.data.item())):
@@ -333,8 +346,10 @@ class Solver(object):
             self.softmax_loss_all_domain_soft(output_s_c2, label_s)
         if (math.isnan(loss_s_c2.data.item())):
             raise Exception(' c2 loss is nan')
+        if (math.isnan(kl_loss.data.item())):
+            raise Exception(' kl loss is nan')
 
-        return loss_s_c1, loss_s_c2, loss_classwise_da, 0, 0, 0, class_prob_t
+        return loss_s_c1, loss_s_c2, intra_domain_mmd_loss, inter_domain_mmd_loss, entropy_loss, kl_loss, domain_prob
     
     def get_one_hot_encoding(self, labels, num_classes):
         y = torch.eye(num_classes)
