@@ -205,19 +205,34 @@ class Solver(object):
 
         self.set_optimizer(which_opt=optimizer, lr=learning_rate)
         print('ARGS EVAL ONLY : ', args.eval_only)
-        if args.eval_only:
-            print('Loading state from: ','%s/%s_model_best.pth' % (self.checkpoint_dir, self.target))
-            checkpoint = torch.load('%s/%s_model_best.pth' % (self.checkpoint_dir, self.target))
-            self.G.load_state_dict(checkpoint['G_state_dict'])
-            self.C1.load_state_dict(checkpoint['C1_state_dict'])
-            self.C2.load_state_dict(checkpoint['C2_state_dict'])
-            self.DP.load_state_dict(checkpoint['DP_state_dict'])
+        if args.eval_only or args.load_ckpt !="":
+            if not args.load_ckpt=="":
+                print('Loading state from args.load_ckpt')
+                checkpoint = torch.load(args.load_ckpt)
+            else:
+                print('Loading state from: ','%s/%s_model_best.pth' % (self.checkpoint_dir, self.target))
+                checkpoint = torch.load('%s/%s_model_best.pth' % (self.checkpoint_dir, self.target))
+            if args.pretrained_clustering=="yes":
+                self.DP.load_state_dict(checkpoint['DP_state_dict'])
+            elif args.pretrained_source=="yes":
+                import copy
+                state_dict = checkpoint['G_state_dict']
+                state_dict_v2 = copy.deepcopy(state_dict)
+                for key in state_dict:
+                    if 'model' in key:
+                        re_key = key.replace('model','dp_model')
+                        state_dict_v2[re_key] = state_dict_v2.pop(key)
+                self.DP.load_state_dict(state_dict_v2, strict=False)
+            else:
+                self.G.load_state_dict(checkpoint['G_state_dict'])
+                self.C1.load_state_dict(checkpoint['C1_state_dict'])
+                self.C2.load_state_dict(checkpoint['C2_state_dict'])
+                self.DP.load_state_dict(checkpoint['DP_state_dict'])
 
-            self.opt_g.load_state_dict(checkpoint['G_state_dict_opt'])
-            self.opt_c1.load_state_dict(checkpoint['C1_state_dict_opt'])
-            self.opt_c2.load_state_dict(checkpoint['C2_state_dict_opt'])
-            self.opt_dp.load_state_dict(checkpoint['DP_state_dict_opt'])
-
+            #self.opt_g.load_state_dict(checkpoint['G_state_dict_opt'])
+            #self.opt_c1.load_state_dict(checkpoint['C1_state_dict_opt'])
+            #self.opt_c2.load_state_dict(checkpoint['C2_state_dict_opt'])
+            #self.opt_dp.load_state_dict(checkpoint['DP_state_dict_opt'])
         self.G.cuda()
         self.C1.cuda()
         self.C2.cuda()

@@ -29,7 +29,10 @@ def train_MSDA_soft(solver, epoch, classifier_disc=True, record_file=None):
     solver.G.train()
     solver.C1.train()
     solver.C2.train()
-    solver.DP.train()
+    if solver.args.pretrained_clustering=="yes":
+        solver.DP.eval()
+    else:
+        solver.DP.train()
     #torch.cuda.manual_seed(1)
 
     batch_idx_g = 0
@@ -60,7 +63,10 @@ def train_MSDA_soft(solver, epoch, classifier_disc=True, record_file=None):
         loss_s_c1, loss_s_c2, loss_msda, entropy_loss, kl_loss, domain_prob = solver.loss_soft_all_domain(img_s, img_t, label_s, epoch, img_s_cl)
         if not classifier_disc:
             loss_s_c2 = loss_s_c1
-        loss = loss_s_c1 + loss_s_c2 + loss_msda + entropy_loss + kl_loss
+        if solver.args.pretrained_clustering=="yes":
+            loss = loss_s_c1 + loss_s_c2 + loss_msda #+ entropy_loss + kl_loss
+        else:
+            loss = loss_s_c1 + loss_s_c2 + loss_msda + entropy_loss + kl_loss
 
         loss.backward()
         clip_value = 1.0
@@ -76,7 +82,8 @@ def train_MSDA_soft(solver, epoch, classifier_disc=True, record_file=None):
             solver.opt_g.step()
             solver.opt_c1.step()
             solver.opt_c2.step()
-        solver.opt_dp.step()
+        if not solver.args.pretrained_clustering=="yes":
+            solver.opt_dp.step()
 
  #       switch_bn(solver.DP,False)
  #       solver.reset_grad()
@@ -95,7 +102,7 @@ def train_MSDA_soft(solver, epoch, classifier_disc=True, record_file=None):
             output_t1 = solver.C1(feat_t)
             output_t2 = solver.C2(feat_t)
 
-            loss_s = loss_s_c1 + loss_msda + loss_s_c2 + entropy_loss + kl_loss
+            loss_s = loss_s_c1 + loss_msda + loss_s_c2 #+ entropy_loss + kl_loss
             loss_dis = solver.discrepancy(output_t1, output_t2)
             loss = loss_s - loss_dis
             loss.backward()

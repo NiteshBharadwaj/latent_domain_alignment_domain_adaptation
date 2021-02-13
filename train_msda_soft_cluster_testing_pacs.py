@@ -40,7 +40,10 @@ def train_MSDA_soft(solver, epoch, graph_data, classifier_disc=True, record_file
     solver.G.train()
     solver.C1.train()
     solver.C2.train()
-    solver.DP.train()
+    if solver.args.pretrained_clustering=="yes":
+        solver.DP.eval()
+    else:
+        solver.DP.train()
     # torch.cuda.manual_seed(1)
 
     batch_idx_g = 0
@@ -128,11 +131,15 @@ def train_MSDA_soft(solver, epoch, graph_data, classifier_disc=True, record_file
                                                                                                           epoch,
                                                                                                           img_s_cl, img_s_dl)
         end = time.time()
-        print("Time taken in training batch : ", end-start)
+        #print("Time taken in training batch : ", end-start)
         if not classifier_disc:
             loss_s_c2 = loss_s_c1
-
-        loss = loss_s_c1 + loss_s_c2 + entropy_loss + loss_msda + kl_loss
+        if solver.args.pretrained_clustering=="yes":
+            loss = loss_s_c1 + loss_s_c2 + loss_msda
+        elif solver.args.pretrained_source=="yes":
+            loss = entropy_loss + kl_loss
+        else:
+            loss = loss_s_c1 + loss_s_c2 + entropy_loss + loss_msda + kl_loss
 
         graph_data['entropy'].append(entropy_loss.data.item())
         graph_data['kl'].append(kl_loss.data.item())
@@ -153,20 +160,22 @@ def train_MSDA_soft(solver, epoch, graph_data, classifier_disc=True, record_file
         #         torch.nn.utils.clip_grad_norm(solver.DP.parameters(), clip_value)
 
         # solver.opt_g.step()
-        if not solver.args.clustering_only:
+        if not solver.args.clustering_only and not solver.args.pretrained_source=="yes":
             solver.opt_g.step()
             solver.opt_c1.step()
             solver.opt_c2.step()
-        solver.opt_dp.step()
+        if not solver.args.pretrained_clustering=="yes":
+            solver.opt_dp.step()
 
         # print('GRADIENT UPDATES DONE!!!', time.time()-tt)
         tot_updates_time += time.time() - tt
         tt = time.time()
 
-        if not solver.args.clustering_only:
+        if not solver.args.clustering_only and not solver.args.pretrained_source=="yes":
             solver.sche_g.step()
             solver.sche_c1.step()
             solver.sche_c2.step()
+        if not solver.args.pretrained_clustering=="yes":
             solver.sche_dp.step()
         if classifier_disc:
             solver.reset_grad()

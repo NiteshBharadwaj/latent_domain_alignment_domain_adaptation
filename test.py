@@ -57,7 +57,7 @@ def test(solver, epoch, split, record_file=None, save_model=False):
             correct1 += pred1.eq(label.data).cpu().sum()
             size += k
             end = time.time()
-            print("Time taken for testing batch : ", end-start)
+            #print("Time taken for testing batch : ", end-start)
     # np.savez('result_plot_sv_t', feature_all, label_all )
     test_loss = test_loss / (size + 1e-6)
     

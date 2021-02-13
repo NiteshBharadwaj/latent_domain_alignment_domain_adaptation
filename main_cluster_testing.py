@@ -38,6 +38,13 @@ parser.add_argument('--class_disc', type=str, default='no', metavar='N',
                     help='classifier_discrepancy? yes/no')
 parser.add_argument('--clustering_only', type=int, default=1, metavar='N',
                     help='only kl/entropy loss? 1/0')
+parser.add_argument('--load_ckpt', type=str, default="", metavar='N',
+                    help='load checkpoint')
+
+parser.add_argument('--pretrained_clustering', type=str, default="no", metavar='N',
+                    help='pretrained_clustering')
+parser.add_argument('--pretrained_source', type=str, default="no", metavar='N',
+                    help='pretrained_source')
 parser.add_argument('--dl_type', type=str, default='', metavar='N',
                     help='original, hard_cluster, combined, soft_cluster')
 parser.add_argument('--num_domain', type=int, default=4, metavar='N',

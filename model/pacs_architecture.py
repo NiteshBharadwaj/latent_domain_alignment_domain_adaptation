@@ -131,9 +131,9 @@ class DomainPredictor(nn.Module):
         return dp_pred, None
 
 
-class DomainPredictor(nn.Module):
+class DomainPredictorOLD(nn.Module):
     def __init__(self, num_domains, prob=0.5):
-        super(DomainPredictor, self).__init__()
+        super(DomainPredictorOLD, self).__init__()
 
         self.feature = Feature()
         self.fc1 = nn.Linear(512, 1024)
