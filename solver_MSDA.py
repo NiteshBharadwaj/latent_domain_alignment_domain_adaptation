@@ -124,10 +124,10 @@ class Solver(object):
             self.C2.load_state_dict(checkpoint['C2_state_dict'])
             self.DP.load_state_dict(checkpoint['DP_state_dict'])
 
-            self.opt_g.load_state_dict(checkpoint['G_state_dict_opt'])
-            self.opt_c1.load_state_dict(checkpoint['C1_state_dict_opt'])
-            self.opt_c2.load_state_dict(checkpoint['C2_state_dict_opt'])
-            self.opt_dp.load_state_dict(checkpoint['DP_state_dict_opt'])
+            #self.opt_g.load_state_dict(checkpoint['G_state_dict_opt'])
+            #self.opt_c1.load_state_dict(checkpoint['C1_state_dict_opt'])
+            #self.opt_c2.load_state_dict(checkpoint['C2_state_dict_opt'])
+            #self.opt_dp.load_state_dict(checkpoint['DP_state_dict_opt'])
 
         if args.eval_only:
             print('Loading state from: ','%s/%s_model_best.pth' % (self.checkpoint_dir, self.target))
