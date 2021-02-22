@@ -66,11 +66,10 @@ def test(solver, epoch, split, record_file=None, save_model=False):
                                                                                                        size + 1e-6)))
     test_acc =  100. * correct1 / (size + 1e-6)
     best = False
-
     bool_to_check = (test_loss < solver.best_loss)
-#     if solver.args.model_sel_acc == 1:
-#         bool_to_check = (test_acc > solver.best_acc)
-
+    if solver.args.model_sel_acc == 1:
+        bool_to_check = (test_acc > solver.best_acc)
+    
     if split=='val' and size!=0:
 #         if save_model and epoch % solver.save_epoch == 0 and test_acc > solver.best_acc:
         if save_model and epoch % solver.save_epoch == 0 and bool_to_check:
@@ -95,11 +94,11 @@ def test(solver, epoch, split, record_file=None, save_model=False):
 #            best = True
 
         if bool_to_check and size!=0:
-#             if solver.args.model_sel_acc == 1:
-#                 solver.best_acc = test_acc
-#             else:
-#                 solver.best_loss = test_loss
-            solver.best_loss = test_loss
+            if solver.args.model_sel_acc == 1:
+                solver.best_acc = test_acc
+            else:
+                solver.best_loss = test_loss
+            #solver.best_loss = test_loss
             best = True
 
         if record_file:

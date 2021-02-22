@@ -20,7 +20,8 @@ import math
 from scipy.stats import entropy
 from matplotlib import pyplot as plt
 from PIL import Image
-
+import classwise_da
+import class_domain_da
 # Training settings
 class Solver(object):
     def __init__(self, args, batch_size=64,
@@ -158,7 +159,7 @@ class Solver(object):
             self.DP = DP_office_caltech(num_domains)
 
         elif args.data == 'pacs':
-            if args.dl_type == 'soft_cluster':
+            if args.dl_type == 'soft_cluster' or args.dl_type=='classwise_msda' or args.dl_type=='classwise_ssda':
 
                     self.datasets, self.dataset_test, self.dataset_valid, self.classwise_dataset = pacs_combined(
                                                                                                     target,
@@ -192,6 +193,7 @@ class Solver(object):
             self.kl_wt = args.kl_wt
             self.to_detach = args.to_detach
             num_classes = 7
+            self.num_classes = num_classes
             num_domains = args.num_domain
             self.num_domains = num_domains
             self.G = Generator_pacs()
@@ -227,7 +229,14 @@ class Solver(object):
                 self.G.load_state_dict(checkpoint['G_state_dict'])
                 self.C1.load_state_dict(checkpoint['C1_state_dict'])
                 self.C2.load_state_dict(checkpoint['C2_state_dict'])
-                self.DP.load_state_dict(checkpoint['DP_state_dict'])
+                import copy
+                state_dict = checkpoint['DP_state_dict']
+                state_dict_v2 = copy.deepcopy(state_dict)
+                for key in state_dict:
+                    if 'feature' in key:
+                        re_key = key.replace('feature.model','dp_model')
+                        state_dict_v2[re_key] = state_dict_v2.pop(key)
+                self.DP.load_state_dict(state_dict_v2, strict=False)
 
             #self.opt_g.load_state_dict(checkpoint['G_state_dict_opt'])
             #self.opt_c1.load_state_dict(checkpoint['C1_state_dict_opt'])
@@ -405,6 +414,88 @@ class Solver(object):
 #        print("loss_s_c1", loss_s_c1, "loss_s_c2", loss_s_c2, "loss_msda", loss_msda, "entropy_loss", entropy_loss, "kl_loss", kl_loss)
         return loss_s_c1, loss_s_c2, loss_msda, entropy_loss, kl_loss, domain_prob
 
+    def loss_domain_class_mmd(self, img_s, img_t, label_s, epoch, img_s_cl, img_s_dl, force_attach = False, single_domain_mode=False):
+        feat_s_comb, feat_t_comb = self.feat_soft_all_domain(img_s, img_t)
+        feat_s, _ = feat_s_comb
+        feat_t, _ = feat_t_comb
+        img_s_dl = self.get_one_hot_encoding(img_s_dl, self.num_domains).cuda()
+        domain_logits, _ = self.DP(img_s)
+        cl_s_logits,_ = self.DP(img_s_cl)
+
+        entropy_loss, domain_prob_s = self.entropy_loss(domain_logits)
+        domain_prob_s = img_s_dl
+
+        _,cl_s_prob = self.entropy_loss(cl_s_logits)
+        
+
+        kl_loss = -self.get_domain_entropy(cl_s_prob)
+        kl_loss = kl_loss * self.kl_wt
+
+        if (math.isnan(entropy_loss.data.item())):
+            raise Exception('entropy loss is nan')
+        entropy_loss = entropy_loss * self.entropy_wt
+
+        output_s_c1, output_t_c1 = self.C1_all_domain_soft(feat_s, feat_t)
+        output_s_c2, output_t_c2 = self.C2_all_domain_soft(feat_s, feat_t)
+
+        # _, class_prob_s = self.entropy_loss(output_s_c1)
+        entropy_t, class_prob_t = self.entropy_loss(output_t_c1)
+        entropy_t = entropy_t*self.entropy_wt
+        if self.to_detach and not force_attach:
+            intra_domain_mmd_loss, inter_domain_mmd_loss = class_domain_da.class_da_regulizer_soft(feat_s, feat_t, 5, self.get_one_hot_encoding(label_s, self.num_classes).cuda(), class_prob_t.detach(), domain_prob_s.detach())
+        else:
+            intra_domain_mmd_loss, inter_domain_mmd_loss = class_domain_da.class_da_regulizer_soft(feat_s, feat_t, 5, self.get_one_hot_encoding(label_s, self.num_classes).cuda(), class_prob_t, domain_prob_s)
+        intra_domain_mmd_loss = intra_domain_mmd_loss*self.msda_wt
+        inter_domain_mmd_loss = inter_domain_mmd_loss*self.msda_wt
+
+        if (math.isnan(intra_domain_mmd_loss.data.item())):
+            raise Exception('intra_domain_mmd_loss is nan')
+        loss_s_c1 = \
+            self.softmax_loss_all_domain_soft(output_s_c1, label_s)
+        if (math.isnan(loss_s_c1.data.item())):
+            raise Exception(' c1 loss is nan')
+        loss_s_c2 = \
+            self.softmax_loss_all_domain_soft(output_s_c2, label_s)
+        if (math.isnan(loss_s_c2.data.item())):
+            raise Exception(' c2 loss is nan')
+        if (math.isnan(kl_loss.data.item())):
+            raise Exception(' kl loss is nan')
+        #loss_s_c1+=entropy_t
+        return loss_s_c1, loss_s_c2, intra_domain_mmd_loss, inter_domain_mmd_loss, entropy_loss, kl_loss, domain_prob_s
+
+    def loss_class_mmd(self, img_s, img_t, label_s, epoch, img_s_cl, force_attach = False, single_domain_mode=False):
+        feat_s_comb, feat_t_comb = self.feat_soft_all_domain(img_s, img_t)
+        feat_s, _ = feat_s_comb
+        feat_t, _ = feat_t_comb
+
+        output_s_c1, output_t_c1 = self.C1_all_domain_soft(feat_s, feat_t)
+        output_s_c2, output_t_c2 = self.C2_all_domain_soft(feat_s, feat_t)
+
+        # _, class_prob_s = self.entropy_loss(output_s_c1)
+        _, class_prob_t = self.entropy_loss(output_t_c1)
+
+        if self.to_detach and not force_attach:
+            classwise_da_loss = classwise_da.class_da_regulizer_soft(feat_s, feat_t, 5, self.get_one_hot_encoding(label_s, self.num_classes).cuda(), class_prob_t.detach())
+        else:
+            classwise_da_loss = classwise_da.class_da_regulizer_soft(feat_s, feat_t, 5, self.get_one_hot_encoding(label_s, self.num_classes).cuda(), class_prob_t)
+        classwise_da_loss = classwise_da_loss*self.msda_wt
+
+        if (math.isnan(classwise_da_loss.data.item())):
+            raise Exception('classwise_da_loss is nan')
+        loss_s_c1 = \
+            self.softmax_loss_all_domain_soft(output_s_c1, label_s)
+        if (math.isnan(loss_s_c1.data.item())):
+            raise Exception(' c1 loss is nan')
+        loss_s_c2 = \
+            self.softmax_loss_all_domain_soft(output_s_c2, label_s)
+        if (math.isnan(loss_s_c2.data.item())):
+            raise Exception(' c2 loss is nan')
+
+        return loss_s_c1, loss_s_c2, classwise_da_loss, -999999, -999999, -999999, class_prob_t
+
+    def get_one_hot_encoding(self, labels, num_classes):
+        y = torch.eye(num_classes)
+        return y[labels]
 
 class HLoss(nn.Module):
     def __init__(self):

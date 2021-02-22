@@ -18,6 +18,8 @@ from train_msda_soft_cluster_testing_office import train_MSDA_soft as train_MSDA
 from train_msda_soft_cluster_testing_office_caltech import train_MSDA_soft as train_MSDA_soft_office_caltech
 from train_msda_soft_cluster_testing_pacs import train_MSDA_soft as train_MSDA_soft_pacs
 from train_msda_single import train_MSDA_single
+from train_msda_classwise import train_MSDA_classwise
+from train_ssda_classwise import train_SSDA_classwise
 from test import test
 from view_clusters import view_clusters
 from train_source_only import train_source_only
@@ -236,6 +238,10 @@ def main():
                 elif args.dl_type == 'source_only':
                     torch.cuda.empty_cache()
                     num = train_source_only(solver, t, record_file=record_train, max_it = total_it-count)
+                elif args.dl_type=='classwise_msda':
+                    num, graph_data = train_MSDA_classwise(solver,t, graph_data,classifier_disc,record_file=record_train, single_domain_mode=True, max_it=total_it-count)
+                elif args.dl_type=='classwise_ssda':
+                    num, graph_data = train_SSDA_classwise(solver,t,graph_data, classifier_disc,record_file=record_train, single_domain_mode=True, max_it=total_it-count)
                 elif args.dl_type == 'source_target_only':
                     torch.cuda.empty_cache()
                     num = train_MSDA_single(solver, t, classifier_disc, record_file=record_train, max_it=total_it-count)
