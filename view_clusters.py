@@ -41,7 +41,7 @@ def view_clusters(solver,clusters_file,probs_csv):
         prev = img_s.size()[0]
         #solver.reset_grad()
 
-        loss_s_c1, loss_s_c2, loss_msda_nc2, loss_msda_nc1, entropy_loss, kl_loss, domain_prob = solver.loss_soft_all_domain(img_s, img_t, label_s, 0, img_s)
+        loss_s_c1, loss_s_c2, loss_msda_nc2, loss_msda_nc1, entropy_loss, kl_loss, domain_prob = solver.loss_domain_class_mmd(img_s, img_t, label_s, 0, img_s)
         import pdb
         pdb.set_trace()
 #         print(domain_prob.size())

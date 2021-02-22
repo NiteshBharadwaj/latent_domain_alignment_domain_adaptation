@@ -64,6 +64,7 @@ class Solver(object):
             #if args.dl_type=='source_target_only':
             #    args.num_domain = 4 # To maintain reproducibility for a seed. Num domains is not used but can introduce a bit of randomness
             num_domains = args.num_domain
+            self.is_classwise = args.dl_type=='classwise_msda' or args.dl_type=='classwise_ssda'
             self.num_domains = num_domains
             self.entropy_wt = args.entropy_wt
             self.msda_wt = args.msda_wt
@@ -72,7 +73,7 @@ class Solver(object):
             self.G = Generator_digit(cd=class_disc, usps_only=self.usps_only)
             self.C1 = Classifier_digit(cd=class_disc, usps_only=self.usps_only)
             self.C2 = Classifier_digit(cd=class_disc, usps_only=self.usps_only)
-            self.DP = DP_Digit(num_domains,cd=class_disc, usps_only=self.usps_only)
+            self.DP = DP_Digit(num_domains,cd=class_disc, usps_only=self.usps_only, classwise=self.is_classwise, num_classes=self.num_classes)
         elif args.data == 'cars':
             if args.dl_type == 'soft_cluster':
                 self.datasets, self.dataset_test, self.dataset_valid = cars_combined(target, self.batch_size)
@@ -122,7 +123,7 @@ class Solver(object):
             self.G.load_state_dict(checkpoint['G_state_dict'])
             self.C1.load_state_dict(checkpoint['C1_state_dict'])
             self.C2.load_state_dict(checkpoint['C2_state_dict'])
-            self.DP.load_state_dict(checkpoint['DP_state_dict'])
+            #self.DP.load_state_dict(checkpoint['DP_state_dict'], strict=False)
 
             #self.opt_g.load_state_dict(checkpoint['G_state_dict_opt'])
             #self.opt_c1.load_state_dict(checkpoint['C1_state_dict_opt'])
@@ -165,14 +166,20 @@ class Solver(object):
 
             self.opt_c1 = optim.SGD(self.C1.parameters(), lr=lr, weight_decay=0.0005, momentum=momentum)
             self.opt_c2 = optim.SGD(self.C2.parameters(), lr=lr, weight_decay=0.0005, momentum=momentum)
-            self.opt_dp = optim.SGD(self.DP.parameters(), lr=lr/100.0, weight_decay=0.0005, momentum=momentum)
+            if self.args.saved_model_dir!='na':
+                self.opt_dp = optim.SGD(self.DP.parameters(), lr=1e-6, weight_decay=0.0005, momentum=momentum)
+            else:
+                self.opt_dp = optim.SGD(self.DP.parameters(), lr=lr/100.0, weight_decay=0.0005, momentum=momentum)
 
         if which_opt == 'adam':
             self.opt_g = optim.Adam(self.G.parameters(), lr=lr, weight_decay=0.0005)
 
             self.opt_c1 = optim.Adam(self.C1.parameters(), lr=lr, weight_decay=0.0005)
             self.opt_c2 = optim.Adam(self.C2.parameters(), lr=lr, weight_decay=0.0005)
-            self.opt_dp = optim.Adam(self.DP.parameters(), lr=lr/100.0, weight_decay=0.0005)
+            if self.args.saved_model_dir!='na':
+                self.opt_dp = optim.Adam(self.DP.parameters(), lr=1e-6, weight_decay=0.0005)
+            else:
+                self.opt_dp = optim.Adam(self.DP.parameters(), lr=lr/100.0, weight_decay=0.0005)
 
     def reset_grad(self):
         self.opt_g.zero_grad()
@@ -311,18 +318,32 @@ class Solver(object):
         feat_t, _, feat_da_t = feat_t_comb
 
         domain_logits, _ = self.DP(img_s)
-        cl_s_logits,_ = self.DP(img_s_cl)
+        domain_logits = domain_logits.reshape(domain_logits.shape[0],self.num_classes,self.num_domains)
+        #cl_s_logits,_ = self.DP(img_s_cl)
+        
+        domain_prob_s = torch.zeros(domain_logits.shape,dtype=torch.float32).cuda()
+        entropy_loss = 0
+        kl_loss = 0
+        num_active_classes = 0
+        for i in range(self.num_classes):
+            indexes = label_s == i
+            if indexes.sum()==0:
+                continue
+            entropy_loss_cl, domain_prob_s_cl = self.entropy_loss(domain_logits[indexes,i])
+            kl_loss += -self.get_domain_entropy(domain_prob_s_cl)
+            entropy_loss += entropy_loss_cl
+            domain_prob_s[indexes,i] = domain_prob_s_cl
+            num_active_classes+=1
+        #kl_loss = torch.zeros(1, dtype=torch.float32).cuda()
+        #kl_loss.requires_grad = True
+        #_,cl_s_prob = self.entropy_loss(cl_s_logits)
 
-        entropy_loss, domain_prob_s = self.entropy_loss(domain_logits)
-
-        _,cl_s_prob = self.entropy_loss(cl_s_logits)
-
-        kl_loss = -self.get_domain_entropy(cl_s_prob)
-        kl_loss = kl_loss * self.kl_wt
+        #kl_loss = -self.get_domain_entropy(cl_s_prob)
+        kl_loss = kl_loss * self.kl_wt / num_active_classes
 
         if (math.isnan(entropy_loss.data.item())):
             raise Exception('entropy loss is nan')
-        entropy_loss = entropy_loss * self.entropy_wt
+        entropy_loss = entropy_loss * self.entropy_wt / num_active_classes
 
         output_s_c1, output_t_c1 = self.C1_all_domain_soft(feat_s, feat_t)
         output_s_c2, output_t_c2 = self.C2_all_domain_soft(feat_s, feat_t)
@@ -331,9 +352,9 @@ class Solver(object):
         _, class_prob_t = self.entropy_loss(output_t_c1)
 
         if self.to_detach and not force_attach:
-            intra_domain_mmd_loss, inter_domain_mmd_loss = class_domain_da.class_da_regulizer_soft(feat_da_s, feat_da_t, 5, self.get_one_hot_encoding(label_s, self.num_classes).cuda(), class_prob_t.detach(), domain_prob_s.detach())
+            intra_domain_mmd_loss, inter_domain_mmd_loss = class_domain_da.class_da_regulizer_soft(feat_da_s, feat_da_t, 5, self.get_one_hot_encoding(label_s, self.num_classes).cuda(), class_prob_t.detach(), domain_prob_s.detach(), label_s)
         else:
-            intra_domain_mmd_loss, inter_domain_mmd_loss = class_domain_da.class_da_regulizer_soft(feat_da_s, feat_da_t, 5, self.get_one_hot_encoding(label_s, self.num_classes).cuda(), class_prob_t, domain_prob_s)
+            intra_domain_mmd_loss, inter_domain_mmd_loss = class_domain_da.class_da_regulizer_soft(feat_da_s, feat_da_t, 5, self.get_one_hot_encoding(label_s, self.num_classes).cuda(), class_prob_t, domain_prob_s, label_s)
         intra_domain_mmd_loss = intra_domain_mmd_loss*self.msda_wt
         inter_domain_mmd_loss = inter_domain_mmd_loss*self.msda_wt
 
