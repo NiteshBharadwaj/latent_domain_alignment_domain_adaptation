@@ -50,6 +50,8 @@ parser.add_argument('--checkpoint_dir', type=str, default='checkpoint', metavar=
                     help='source only or not')
 parser.add_argument('--saved_model_dir', type=str, default='na', metavar='N',
                     help='model dir from which to load')
+parser.add_argument('--alternate_optimization', type=int, default=-1, metavar='N',
+                    help='Number of batches for clustering for every batch of alignment')
 # parser.add_argument('--eval_only', action='store_true', default=False,
 #                     help='evaluation only option')
 parser.add_argument('--eval_only', type=str, default='no', metavar='N',
