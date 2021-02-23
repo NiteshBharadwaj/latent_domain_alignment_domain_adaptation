@@ -36,6 +36,8 @@ parser.add_argument('--num_domain', type=int, default=4, metavar='N',
                     help='input latent domains')
 parser.add_argument('--data', type=str, default='', metavar='N',
                     help='digits,cars')
+parser.add_argument('--classaware_dp', type=str, default='no', metavar='N',
+                    help='yes/no')
 parser.add_argument('--usps_less_data_protocol', type=int, default=0, metavar='N',
                     help='usps less data protocol? usps=1800, mnist=2000')
 parser.add_argument('--record_folder', type=str, default='record', metavar='N',

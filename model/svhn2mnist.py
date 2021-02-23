@@ -117,7 +117,7 @@ class Predictor(nn.Module):
 
 
 class DomainPredictor(nn.Module):
-    def __init__(self, num_domains, prob=0.5):
+    def __init__(self, num_domains, prob=0.5, classaware_dp=False):
         super(DomainPredictor, self).__init__()
         self.feat = Feature()
         self.fc1 = nn.Linear(8192, 3072)
@@ -129,12 +129,14 @@ class DomainPredictor(nn.Module):
         self.prob = prob
         self.num_domains = num_domains
         self.lrelu = nn.ReLU()
+        self.classaware_dp = classaware_dp
 
     def set_lambda(self, lambd):
         self.lambd = lambd
 
     def forward(self, x_feat, reverse=False):
-        _,x_feat,_ = self.feat(x_feat)
+        if not self.classaware_dp:
+            _,x_feat,_ = self.feat(x_feat)
         x = self.lrelu(self.bn1_fc(self.fc1(x_feat)))
         x = F.dropout(x, training=self.training)
         if reverse:

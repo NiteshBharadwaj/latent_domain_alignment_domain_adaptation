@@ -73,7 +73,8 @@ class Solver(object):
             self.G = Generator_digit(cd=class_disc, usps_only=self.usps_only)
             self.C1 = Classifier_digit(cd=class_disc, usps_only=self.usps_only)
             self.C2 = Classifier_digit(cd=class_disc, usps_only=self.usps_only)
-            self.DP = DP_Digit(num_domains,cd=class_disc, usps_only=self.usps_only, classwise=self.is_classwise, num_classes=self.num_classes)
+            self.classaware_dp = self.args.classaware_dp=='yes'
+            self.DP = DP_Digit(num_domains,cd=class_disc, usps_only=self.usps_only, classwise=self.is_classwise, num_classes=self.num_classes, classaware=self.classaware_dp)
         elif args.data == 'cars':
             if args.dl_type == 'soft_cluster':
                 self.datasets, self.dataset_test, self.dataset_valid = cars_combined(target, self.batch_size)
@@ -314,10 +315,12 @@ class Solver(object):
 
     def loss_domain_class_mmd(self, img_s, img_t, label_s, epoch, img_s_cl, force_attach = False, single_domain_mode=False):
         feat_s_comb, feat_t_comb = self.feat_soft_all_domain(img_s, img_t)
-        feat_s, _, feat_da_s = feat_s_comb
+        feat_s, feat_int_s, feat_da_s = feat_s_comb
         feat_t, _, feat_da_t = feat_t_comb
-
-        domain_logits, _ = self.DP(img_s)
+        if self.classaware_dp:
+            domain_logits, _ = self.DP(feat_int_s.detach())
+        else:
+            domain_logits,_ = self.DP(img_s)
         domain_logits = domain_logits.reshape(domain_logits.shape[0],self.num_classes,self.num_domains)
         #cl_s_logits,_ = self.DP(img_s_cl)
         
