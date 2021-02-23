@@ -74,7 +74,7 @@ class Solver(object):
             self.C1 = Classifier_digit(cd=class_disc, usps_only=self.usps_only)
             self.C2 = Classifier_digit(cd=class_disc, usps_only=self.usps_only)
             self.classaware_dp = self.args.classaware_dp=='yes'
-            self.DP = DP_Digit(num_domains,cd=class_disc, usps_only=self.usps_only, classwise=self.is_classwise, num_classes=self.num_classes, classaware=self.classaware_dp)
+            self.DP = DP_Digit(num_domains,cd=class_disc, usps_only=self.usps_only, classwise=self.is_classwise, num_classes=self.num_classes, classaware_dp=self.classaware_dp)
         elif args.data == 'cars':
             if args.dl_type == 'soft_cluster':
                 self.datasets, self.dataset_test, self.dataset_valid = cars_combined(target, self.batch_size)
