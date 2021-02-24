@@ -41,7 +41,7 @@ def moment_soft(output_s, output_t, class_prob_s, class_prob_t, domain_prob_s, l
     output_prob_s = (output_prob_s.sum(0)/domain_prob_sum_s) #SHAPE -> e x c x d
     output_t = output_t.reshape(output_t.shape[0], output_t.shape[1],1)
     class_prob_argmax = class_prob_t.argmax(1)
-    class_prob_max = class_prob_t.max(1)
+    class_prob_max, _ = class_prob_t.max(1)
     confident_targets = class_prob_max>0.8
     output_t = output_t[confident_targets]
     class_prob_t = class_prob_t[confident_targets]
