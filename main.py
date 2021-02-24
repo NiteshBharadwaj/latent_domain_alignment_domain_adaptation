@@ -78,6 +78,8 @@ parser.add_argument('--num_k', type=int, default=4, metavar='N',
                     help='hyper paremeter for generator update')
 parser.add_argument('--one_step', action='store_true', default=False,
                     help='one step training with gradient reversal layer')
+parser.add_argument('--class_tear_apart', action='store_true', default=False,
+                    help='want class_tear_apart loss ?')
 parser.add_argument('--optimizer', type=str, default='adam', metavar='N', help='which optimizer')
 parser.add_argument('--resume_epoch', type=int, default=100, metavar='N',
                     help='epoch to resume')
@@ -89,6 +91,8 @@ parser.add_argument('--seed', type=int, default=1, metavar='S',
                     help='random seed (default: 1)')
 parser.add_argument('--source', type=str, default='svhn', metavar='N',
                     help='source dataset')
+parser.add_argument('--moment_order', type=int, default=5, metavar='N',
+                    help='till what moment order do you want to align ?')
 parser.add_argument('--target', type=str, default='mnist', metavar='N', help='target dataset')
 parser.add_argument('--use_abs_diff', action='store_true', default=False,
                     help='use absolute difference value as a measurement')
@@ -197,7 +201,7 @@ def main():
                 elif args.dl_type=='source_target_only':
                     num = train_MSDA_soft(solver,t,classifier_disc,record_file=record_train, single_domain_mode=True)
                 elif args.dl_type=='classwise_msda':
-                    num = train_MSDA_classwise(solver,t,classifier_disc,record_file=record_train, single_domain_mode=True)
+                    num = train_MSDA_classwise(args.class_tear_apart,solver,t,classifier_disc,record_file=record_train, single_domain_mode=True)
                 elif args.dl_type=='classwise_ssda':
                     num = train_SSDA_classwise(solver,t,classifier_disc,record_file=record_train, single_domain_mode=True)
                 else:

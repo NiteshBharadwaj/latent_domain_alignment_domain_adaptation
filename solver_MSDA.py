@@ -291,9 +291,9 @@ class Solver(object):
         output_s_c1, output_t_c1 = self.C1_all_domain_soft(feat_s, feat_t)
         output_s_c2, output_t_c2 = self.C2_all_domain_soft(feat_s, feat_t)
         if self.to_detach and not force_attach:
-            loss_msda_nc2, loss_msda_nc1 = msda.msda_regulizer_soft(feat_da_s, feat_da_t, 5, domain_prob.detach(), single_domain_mode=single_domain_mode)
+            loss_msda_nc2, loss_msda_nc1 = msda.msda_regulizer_soft(feat_da_s, feat_da_t, self.args.moment_order, domain_prob.detach(), single_domain_mode=single_domain_mode)
         else:
-            loss_msda_nc2, loss_msda_nc1 = msda.msda_regulizer_soft(feat_da_s, feat_da_t, 5, domain_prob, single_domain_mode=single_domain_mode)
+            loss_msda_nc2, loss_msda_nc1 = msda.msda_regulizer_soft(feat_da_s, feat_da_t, self.args.moment_order, domain_prob, single_domain_mode=single_domain_mode)
         loss_msda_nc2 = loss_msda_nc2*self.msda_wt
         loss_msda_nc1 = loss_msda_nc1*self.msda_wt
         if (math.isnan(loss_msda_nc2.data.item())):
@@ -355,11 +355,12 @@ class Solver(object):
         _, class_prob_t = self.entropy_loss(output_t_c1)
 
         if self.to_detach and not force_attach:
-            intra_domain_mmd_loss, inter_domain_mmd_loss = class_domain_da.class_da_regulizer_soft(feat_da_s, feat_da_t, 5, self.get_one_hot_encoding(label_s, self.num_classes).cuda(), class_prob_t.detach(), domain_prob_s.detach(), label_s)
+            intra_domain_mmd_loss, inter_domain_mmd_loss, class_tear_apart_loss = class_domain_da.class_da_regulizer_soft(feat_da_s, feat_da_t, self.args.moment_order, self.get_one_hot_encoding(label_s, self.num_classes).cuda(), class_prob_t.detach(), domain_prob_s.detach(), label_s)
         else:
-            intra_domain_mmd_loss, inter_domain_mmd_loss = class_domain_da.class_da_regulizer_soft(feat_da_s, feat_da_t, 5, self.get_one_hot_encoding(label_s, self.num_classes).cuda(), class_prob_t, domain_prob_s, label_s)
+            intra_domain_mmd_loss, inter_domain_mmd_loss, class_tear_apart_loss = class_domain_da.class_da_regulizer_soft(feat_da_s, feat_da_t, self.args.moment_order, self.get_one_hot_encoding(label_s, self.num_classes).cuda(), class_prob_t, domain_prob_s, label_s)
         intra_domain_mmd_loss = intra_domain_mmd_loss*self.msda_wt
         inter_domain_mmd_loss = inter_domain_mmd_loss*self.msda_wt
+        class_tear_apart_loss = class_tear_apart_loss*self.msda_wt
 
         if (math.isnan(intra_domain_mmd_loss.data.item())):
             raise Exception('intra_domain_mmd_loss is nan')
@@ -374,7 +375,7 @@ class Solver(object):
         if (math.isnan(kl_loss.data.item())):
             raise Exception(' kl loss is nan')
 
-        return loss_s_c1, loss_s_c2, intra_domain_mmd_loss, inter_domain_mmd_loss, entropy_loss, kl_loss, domain_prob_s
+        return loss_s_c1, loss_s_c2, intra_domain_mmd_loss, inter_domain_mmd_loss, class_tear_apart_loss, entropy_loss, kl_loss
     
     def loss_class_mmd(self, img_s, img_t, label_s, epoch, img_s_cl, force_attach = False, single_domain_mode=False):
         feat_s_comb, feat_t_comb = self.feat_soft_all_domain(img_s, img_t)
@@ -388,9 +389,9 @@ class Solver(object):
         _, class_prob_t = self.entropy_loss(output_t_c1)
 
         if self.to_detach and not force_attach:
-            classwise_da_loss = classwise_da.class_da_regulizer_soft(feat_da_s, feat_da_t, 5, self.get_one_hot_encoding(label_s, self.num_classes).cuda(), class_prob_t.detach())
+            classwise_da_loss = classwise_da.class_da_regulizer_soft(feat_da_s, feat_da_t, self.args.moment_order, self.get_one_hot_encoding(label_s, self.num_classes).cuda(), class_prob_t.detach())
         else:
-            classwise_da_loss = classwise_da.class_da_regulizer_soft(feat_da_s, feat_da_t, 5, self.get_one_hot_encoding(label_s, self.num_classes).cuda(), class_prob_t)
+            classwise_da_loss = classwise_da.class_da_regulizer_soft(feat_da_s, feat_da_t, self.args.moment_order, self.get_one_hot_encoding(label_s, self.num_classes).cuda(), class_prob_t)
         classwise_da_loss = classwise_da_loss*self.msda_wt
 
         if (math.isnan(classwise_da_loss.data.item())):
