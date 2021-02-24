@@ -170,7 +170,7 @@ class Solver(object):
             if self.args.saved_model_dir!='na':
                 self.opt_dp = optim.SGD(self.DP.parameters(), lr=1e-6, weight_decay=0.0005, momentum=momentum)
             else:
-                self.opt_dp = optim.SGD(self.DP.parameters(), lr=lr/100.0, weight_decay=0.0005, momentum=momentum)
+                self.opt_dp = optim.SGD(self.DP.parameters(), lr=lr, weight_decay=0.0005, momentum=momentum)
 
         if which_opt == 'adam':
             self.opt_g = optim.Adam(self.G.parameters(), lr=lr, weight_decay=0.0005)
@@ -180,7 +180,7 @@ class Solver(object):
             if self.args.saved_model_dir!='na':
                 self.opt_dp = optim.Adam(self.DP.parameters(), lr=1e-6, weight_decay=0.0005)
             else:
-                self.opt_dp = optim.Adam(self.DP.parameters(), lr=lr/100.0, weight_decay=0.0005)
+                self.opt_dp = optim.Adam(self.DP.parameters(), lr=lr, weight_decay=0.0005)
 
     def reset_grad(self):
         self.opt_g.zero_grad()

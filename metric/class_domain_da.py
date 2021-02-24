@@ -55,7 +55,7 @@ def moment_soft(output_s, output_t, class_prob_s, class_prob_t, domain_prob_s, l
             inter_domain_loss += domain_prob_sum_s[0,cc,dd]*class_prob_sum_t[0,cc]*euclidean(output_prob_s[:, cc, dd], output_prob_t[:, cc])/(output_s.shape[0]**2)
             for dd2 in range(dd+1, output_prob_s.shape[2]):
                 intra_domain_loss += domain_prob_sum_s[0,cc,dd]*domain_prob_sum_s[0,cc,dd2]*euclidean(output_prob_s[:, cc, dd], output_prob_s[:, cc, dd2])/(output_s.shape[0]**2)
-    if moment == 0:
+    if moment == 1:
         for cc1 in range(output_prob_s.shape[1]):
             for cc2 in range(cc1+1, output_prob_s.shape[1]):
                 for dd in range(output_prob_s.shape[2]):

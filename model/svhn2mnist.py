@@ -26,7 +26,6 @@ class Feature(nn.Module):
         x = F.max_pool2d(self.lrelu(self.bn2(self.conv2(x))), stride=2, kernel_size=3, padding=1)
         x = self.lrelu(self.bn3(self.conv3(x)))
         x_feat = x.view(x.size(0), 8192)
-        x_early_align = 
         x = self.lrelu(self.bn1_fc(self.fc1(x_feat)))
         x = F.dropout(x, training=self.training)
         if reverse:

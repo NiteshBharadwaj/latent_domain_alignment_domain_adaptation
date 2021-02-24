@@ -27,15 +27,27 @@ def train_MSDA_classwise(class_tear_apart, solver, epoch, classifier_disc=True, 
             loss_s_c2 = loss_s_c1
         if solver.args.saved_model_dir!='na' and epoch < 20:
             loss = entropy_loss + kl_loss
+            loss.backward()
+            solver.opt_dp.step()
         else:
             if solver.args.alternate_optimization!=-1:
-                if batch_idx%solver.args.alternate_optimization==0:
-                    loss = loss_s_c1 + intra_domain_mmd_loss + inter_domain_mmd_loss + (1*class_tear_apart)*class_tear_apart_loss + loss_s_c2
+                if epoch%solver.args.alternate_optimization==0:
+                    loss = loss_s_c1 + intra_domain_mmd_loss + inter_domain_mmd_loss + (1*class_tear_apart)*class_tear_apart_loss + loss_s_c2 
+                    loss.backward()
+                    solver.opt_g.step()
+                    solver.opt_c1.step()
+                    solver.opt_c2.step()
                 else:
                     loss = entropy_loss + kl_loss
+                    loss.backward()
+                    solver.opt_dp.step()
             else:
                 loss = loss_s_c1 + intra_domain_mmd_loss + inter_domain_mmd_loss + (1*class_tear_apart)*class_tear_apart_loss + loss_s_c2 + entropy_loss + kl_loss
-        loss.backward()
+                loss.backward()
+                solver.opt_g.step()
+                solver.opt_c1.step()
+                solver.opt_c2.step()
+                solver.opt_dp.step()
         clip_value = 1.0
 
 #        for param_group in solver.G.param_groups:
@@ -52,10 +64,6 @@ def train_MSDA_classwise(class_tear_apart, solver, epoch, classifier_disc=True, 
         #if classifier_disc:
         #    torch.nn.utils.clip_grad_norm(solver.C2.parameters(), clip_value)
         #torch.nn.utils.clip_grad_norm(solver.DP.parameters(), clip_value)
-        solver.opt_g.step()
-        solver.opt_c1.step()
-        solver.opt_c2.step()
-        solver.opt_dp.step()
         if summary_writer is not None:
             summary_writer.add_scalar('Loss/intra_domain_mmd_loss', intra_domain_mmd_loss/(solver.args.msda_wt + 1e-8), epoch_start_idx + batch_idx_g)
             summary_writer.add_scalar('Loss/inter_domain_mmd_loss', inter_domain_mmd_loss/(solver.args.msda_wt + 1e-8), epoch_start_idx + batch_idx_g)
