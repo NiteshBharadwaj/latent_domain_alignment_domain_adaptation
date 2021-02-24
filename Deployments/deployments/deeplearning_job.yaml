@@ -47,6 +47,8 @@ spec:
         mountPath: /localdata/
       - name: latent-pvc
         mountPath: /data
+      - name: latent-pvc-classwise
+        mountPath: /data-classwise
       - name: shm
         mountPath: /dev/shm
 
@@ -57,6 +59,9 @@ spec:
       - name: latent-pvc
         persistentVolumeClaim:
           claimName: latent-pvc
+      - name: latent-pvc-classwise
+        persistentVolumeClaim:
+          claimName: latent-pvc-classwise
       - name: ssh-secret-volume
         secret:
           ${SSH_KEY_NAME}
