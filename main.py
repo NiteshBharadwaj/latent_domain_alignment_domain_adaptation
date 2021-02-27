@@ -153,7 +153,7 @@ def main():
         #train_MSDA_soft(solver,0,classifier_disc)
 
         test(solver, 0, 'test', record_file=None, save_model=False)
-        view_clusters(solver, clusters_file, probs_csv)
+        view_clusters(solver, clusters_file, probs_csv,0)
         plot_tsne1(solver, plot_before_source, plot_before_target, plot_after_source, plot_after_target, all_plots, plot_domains, args.data)
 
         solver = Solver(args, target=args.target, learning_rate=args.lr, batch_size=args.batch_size,

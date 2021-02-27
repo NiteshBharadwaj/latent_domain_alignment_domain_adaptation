@@ -160,10 +160,15 @@ def main():
     plot_domain3 = '%s/%s_%s_latent_domain_plots.png' % (args.record_folder, args.target, record_num)
     plot_domains = [plot_domain1, plot_domain2, plot_domain3]
     loss_plot = '%s/%s_%s_loss_plots.png' % (args.record_folder, args.target, record_num)
-    clusters_file = []
-    for i in range(args.num_domain):
-        clusters_file.append('%s/cluster_%s.png' % (args.record_folder, str(i)))
-    probs_csv = '%s/best_%s.csv' % (args.record_folder, 'probs')
+    clusters_file_class = []
+    probs_csv_class = []
+    for c in range(7):
+        clusters_file = []
+        for i in range(args.num_domain):
+            clusters_file.append('%s/cluster_cl%s_d%s.png' % (args.record_folder, str(c), str(i)))
+        clusters_file_class.append(clusters_file)
+        probs_csv = '%s/class_%s_best_%s.csv' % (args.record_folder,str(c),'probs')
+        probs_csv_class.append(probs_csv)
     while os.path.exists(record_train):
         record_num += 1
         record_train = '%s/%s_%s.txt' % (args.record_folder, args.target, record_num)
@@ -189,17 +194,17 @@ def main():
         # train_MSDA_soft(solver,0,classifier_disc)
 
         test(solver, 0, 'test', record_file=None, save_model=False)
-        view_clusters(solver, clusters_file, probs_csv)
-        plot_tsne1(solver, plot_before_source, plot_before_target, plot_after_source, plot_after_target, all_plots,
-                   plot_domains, args.data)
-
-        solver = Solver(args, target=args.target, learning_rate=args.lr, batch_size=args.batch_size,
-                        optimizer=args.optimizer,
-                        checkpoint_dir=args.checkpoint_dir,
-                        save_epoch=args.save_epoch)
-
-        plot_tsne2(solver, plot_before_source, plot_before_target, plot_after_source, plot_after_target, all_plots,
-                   plot_domains, args.data)
+        view_clusters(solver, clusters_file_class, probs_csv_class,0)
+        # plot_tsne1(solver, plot_before_source, plot_before_target, plot_after_source, plot_after_target, all_plots,
+        #            plot_domains, args.data)
+        #
+        # solver = Solver(args, target=args.target, learning_rate=args.lr, batch_size=args.batch_size,
+        #                 optimizer=args.optimizer,
+        #                 checkpoint_dir=args.checkpoint_dir,
+        #                 save_epoch=args.save_epoch)
+        #
+        # plot_tsne2(solver, plot_before_source, plot_before_target, plot_after_source, plot_after_target, all_plots,
+        #            plot_domains, args.data)
 
     else:
 
@@ -260,8 +265,9 @@ def main():
             count += num
             if t % 1 == 0 or count>=total_it:
                 # print('testing now')
-                if (args.dl_type == 'soft_cluster'):
+                if (args.dl_type == 'soft_cluster' or args.dl_type == 'classwise_ssda' or args.dl_type == 'classwise_msda'):
                     plot_data(graph_data, loss_plot)
+                    view_clusters(solver, clusters_file_class, probs_csv_class, t)
                 if args.data == 'cars':
                     test(solver, t, 'train', record_file=record_test, save_model=args.save_model)
                 best = test(solver, t, 'val', record_file=record_val, save_model=args.save_model)
