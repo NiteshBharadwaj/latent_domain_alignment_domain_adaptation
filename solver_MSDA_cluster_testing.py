@@ -196,10 +196,11 @@ class Solver(object):
             self.num_classes = num_classes
             num_domains = args.num_domain
             self.num_domains = num_domains
+            self.is_classwise = args.dl_type=='classwise_msda' or args.dl_type=='classwise_ssda'
             self.G = Generator_pacs()
             self.C1 = Classifier_pacs(num_classes)
             self.C2 = Classifier_pacs(num_classes)
-            self.DP = DP_pacs(num_domains)
+            self.DP = DP_pacs(num_domains, classwise=self.is_classwise, num_classes=self.num_classes)
 
 
         # print(self.dataset['S1'].shape)
@@ -236,7 +237,7 @@ class Solver(object):
                     if 'feature' in key:
                         re_key = key.replace('feature.model','dp_model')
                         state_dict_v2[re_key] = state_dict_v2.pop(key)
-                self.DP.load_state_dict(state_dict_v2, strict=False)
+                #self.DP.load_state_dict(state_dict_v2, strict=False)
 
             #self.opt_g.load_state_dict(checkpoint['G_state_dict_opt'])
             #self.opt_c1.load_state_dict(checkpoint['C1_state_dict_opt'])
@@ -265,15 +266,19 @@ class Solver(object):
 
             self.opt_c1 = optim.SGD(self.C1.parameters(), lr=lr, weight_decay=1e-6, momentum=momentum)
             self.opt_c2 = optim.SGD(self.C2.parameters(), lr=lr, weight_decay=1e-6, momentum=momentum)
-            self.opt_dp = optim.SGD(self.DP.parameters(), lr=lr/self.args.lr_ratio, weight_decay=1e-6, momentum=momentum)
-
+            if self.args.load_ckpt !='':
+                self.opt_dp = optim.SGD(self.DP.parameters(), lr=1e-6, weight_decay=1e-6, momentum=momentum)
+            else:
+                self.opt_dp = optim.SGD(self.DP.parameters(), lr=lr/self.args.lr_ratio, weight_decay=1e-6, momentum=momentum)
         if which_opt == 'adam':
             self.opt_g = optim.Adam(self.G.parameters(), lr=lr, weight_decay=1e-6)
 
             self.opt_c1 = optim.Adam(self.C1.parameters(), lr=lr, weight_decay=1e-6)
             self.opt_c2 = optim.Adam(self.C2.parameters(), lr=lr, weight_decay=1e-6)
-            self.opt_dp = optim.Adam(self.DP.parameters(), lr=lr/self.args.lr_ratio, weight_decay=1e-6)
-
+            if self.args.load_ckpt !='':
+                self.opt_dp = optim.Adam(self.DP.parameters(), lr=1e-6, weight_decay=1e-6)
+            else:
+                self.opt_dp = optim.Adam(self.DP.parameters(), lr=lr/self.args.lr_ratio, weight_decay=1e-6)
     def reset_grad(self):
         self.opt_g.zero_grad()
         self.opt_c1.zero_grad()
@@ -420,21 +425,26 @@ class Solver(object):
         feat_t, _ = feat_t_comb
         img_s_dl = self.get_one_hot_encoding(img_s_dl, self.num_domains).cuda()
         domain_logits, _ = self.DP(img_s)
-        cl_s_logits,_ = self.DP(img_s_cl)
-
-        entropy_loss, domain_prob_s = self.entropy_loss(domain_logits)
-        domain_prob_s = img_s_dl
-
-        _,cl_s_prob = self.entropy_loss(cl_s_logits)
-        
-
-        kl_loss = -self.get_domain_entropy(cl_s_prob)
-        kl_loss = kl_loss * self.kl_wt
+        domain_logits = domain_logits.reshape(domain_logits.shape[0],self.num_classes,self.num_domains)
+        domain_prob_s = torch.zeros(domain_logits.shape,dtype=torch.float32).cuda()
+        entropy_loss = 0
+        kl_loss = 0
+        num_active_classes = 0
+        for i in range(self.num_classes):
+            indexes = label_s == i
+            if indexes.sum()==0:
+                continue
+            entropy_loss_cl, domain_prob_s_cl = self.entropy_loss(domain_logits[indexes,i])
+            kl_loss += -self.get_domain_entropy(domain_prob_s_cl)
+            entropy_loss += entropy_loss_cl
+            domain_prob_s[indexes,i] = domain_prob_s_cl
+            num_active_classes+=1
 
         if (math.isnan(entropy_loss.data.item())):
             raise Exception('entropy loss is nan')
-        entropy_loss = entropy_loss * self.entropy_wt
-
+        entropy_loss = entropy_loss * self.entropy_wt / num_active_classes
+        kl_loss = kl_loss * self.kl_wt / num_active_classes
+        
         output_s_c1, output_t_c1 = self.C1_all_domain_soft(feat_s, feat_t)
         output_s_c2, output_t_c2 = self.C2_all_domain_soft(feat_s, feat_t)
 
@@ -442,9 +452,9 @@ class Solver(object):
         entropy_t, class_prob_t = self.entropy_loss(output_t_c1)
         entropy_t = entropy_t*self.entropy_wt
         if self.to_detach and not force_attach:
-            intra_domain_mmd_loss, inter_domain_mmd_loss = class_domain_da.class_da_regulizer_soft(feat_s, feat_t, 5, self.get_one_hot_encoding(label_s, self.num_classes).cuda(), class_prob_t.detach(), domain_prob_s.detach())
+            intra_domain_mmd_loss, inter_domain_mmd_loss = class_domain_da.class_da_regulizer_soft(feat_s, feat_t, 5, self.get_one_hot_encoding(label_s, self.num_classes).cuda(), class_prob_t.detach(), domain_prob_s.detach(), label_s)
         else:
-            intra_domain_mmd_loss, inter_domain_mmd_loss = class_domain_da.class_da_regulizer_soft(feat_s, feat_t, 5, self.get_one_hot_encoding(label_s, self.num_classes).cuda(), class_prob_t, domain_prob_s)
+            intra_domain_mmd_loss, inter_domain_mmd_loss = class_domain_da.class_da_regulizer_soft(feat_s, feat_t, 5, self.get_one_hot_encoding(label_s, self.num_classes).cuda(), class_prob_t, domain_prob_s, label_s)
         intra_domain_mmd_loss = intra_domain_mmd_loss*self.msda_wt
         inter_domain_mmd_loss = inter_domain_mmd_loss*self.msda_wt
 

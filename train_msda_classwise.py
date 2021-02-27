@@ -137,7 +137,10 @@ def train_MSDA_classwise(solver, epoch, graph_data, classifier_disc=True, record
         elif solver.args.pretrained_source=="yes":
             loss = entropy_loss + kl_loss
         else:
-            loss = loss_s_c1 + loss_s_c2 + entropy_loss + loss_msda + kl_loss
+            if solver.args.load_ckpt!='' and epoch < 20:
+                loss = entropy_loss + kl_loss
+            else:
+                loss = loss_s_c1 + loss_s_c2 + entropy_loss + loss_msda + kl_loss
 
         graph_data['entropy'].append(entropy_loss.data.item())
         graph_data['kl'].append(kl_loss.data.item())
