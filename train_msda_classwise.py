@@ -126,9 +126,9 @@ def train_MSDA_classwise(solver, epoch, graph_data, classifier_disc=True, record
         #        switch_bn(solver.DP,True)
         solver.reset_grad()
         start = time.time()
-        loss_s_c1, loss_s_c2, intra_domain_mmd_loss, inter_domain_mmd_loss, entropy_loss, kl_loss, domain_prob = solver.loss_domain_class_mmd(img_s, img_t, label_s, epoch, img_s_cl, img_s_dl, single_domain_mode=single_domain_mode) 
+        loss_s_c1, loss_s_c2, intra_domain_mmd_loss, inter_domain_mmd_loss, entropy_loss, kl_loss, class_tear_apart_loss = solver.loss_domain_class_mmd(img_s, img_t, label_s, epoch, img_s_cl, img_s_dl, single_domain_mode=single_domain_mode) 
         end = time.time()
-        loss_msda = intra_domain_mmd_loss + inter_domain_mmd_loss
+        loss_msda = intra_domain_mmd_loss + inter_domain_mmd_loss + class_tear_apart_loss
         #print("Time taken in training batch : ", end-start)
         if not classifier_disc:
             loss_s_c2 = loss_s_c1
@@ -181,9 +181,9 @@ def train_MSDA_classwise(solver, epoch, graph_data, classifier_disc=True, record
             solver.sche_dp.step()
         if batch_idx % 10 == 0:
             print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss1: {:.6f}\t Loss2: {:.6f}\t'
-                  ' Loss_mmd_inter: {:.6f}\t Loss_mmd_intra: {:.6f}\t Loss_entropy: {:.6f}\t kl_loss: {:.6f}\t Combined Entropy: {:.6f}'.format(
+                  ' Loss_mmd_inter: {:.6f}\t Loss_mmd_intra: {:.6f}\t Loss_entropy: {:.6f}\t class_tear_apart_loss: {:.6f}\t kl_loss: {:.6f}\t Combined Entropy: {:.6f}'.format(
                         epoch, batch_idx, 100, 100. * batch_idx / 70000, loss_s_c1.data.item(), loss_s_c2.data.item(),
-                        inter_domain_mmd_loss.data.item(), intra_domain_mmd_loss.data.item(),entropy_loss.data.item(), kl_loss.data.item(),
+                        inter_domain_mmd_loss.data.item(), intra_domain_mmd_loss.data.item(),entropy_loss.data.item(), class_tear_apart_loss.data.item(), kl_loss.data.item(),
                         entropy_loss.data.item() + kl_loss.data.item()))
 
     return batch_idx_g, graph_data

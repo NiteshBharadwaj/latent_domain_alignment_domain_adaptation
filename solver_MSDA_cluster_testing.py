@@ -456,11 +456,12 @@ class Solver(object):
         entropy_t, class_prob_t = self.entropy_loss(output_t_c1)
         entropy_t = entropy_t*self.entropy_wt
         if self.to_detach and not force_attach:
-            intra_domain_mmd_loss, inter_domain_mmd_loss = class_domain_da.class_da_regulizer_soft(feat_s, feat_t, 5, self.get_one_hot_encoding(label_s, self.num_classes).cuda(), class_prob_t.detach(), domain_prob_s.detach(), label_s)
+            intra_domain_mmd_loss, inter_domain_mmd_loss, class_tear_apart_loss = class_domain_da.class_da_regulizer_soft(self.args.class_tear_apart, feat_s, feat_t, 5, self.get_one_hot_encoding(label_s, self.num_classes).cuda(), class_prob_t.detach(), domain_prob_s.detach(), label_s)
         else:
-            intra_domain_mmd_loss, inter_domain_mmd_loss = class_domain_da.class_da_regulizer_soft(feat_s, feat_t, 5, self.get_one_hot_encoding(label_s, self.num_classes).cuda(), class_prob_t, domain_prob_s, label_s)
+            intra_domain_mmd_loss, inter_domain_mmd_loss, class_tear_apart_loss = class_domain_da.class_da_regulizer_soft(self.args.class_tear_apart, feat_s, feat_t, 5, self.get_one_hot_encoding(label_s, self.num_classes).cuda(), class_prob_t, domain_prob_s, label_s)
         intra_domain_mmd_loss = intra_domain_mmd_loss*self.msda_wt
         inter_domain_mmd_loss = inter_domain_mmd_loss*self.msda_wt
+        class_tear_apart_loss = class_tear_apart_loss*self.msda_wt
 
         if (math.isnan(intra_domain_mmd_loss.data.item())):
             raise Exception('intra_domain_mmd_loss is nan')
@@ -475,7 +476,7 @@ class Solver(object):
         if (math.isnan(kl_loss.data.item())):
             raise Exception(' kl loss is nan')
         #loss_s_c1+=entropy_t
-        return loss_s_c1, loss_s_c2, intra_domain_mmd_loss, inter_domain_mmd_loss, entropy_loss, kl_loss, domain_prob_s
+        return loss_s_c1, loss_s_c2, intra_domain_mmd_loss, inter_domain_mmd_loss, entropy_loss, kl_loss, class_tear_apart_loss
 
     def loss_class_mmd(self, img_s, img_t, label_s, epoch, img_s_cl, force_attach = False, single_domain_mode=False):
         feat_s_comb, feat_t_comb = self.feat_soft_all_domain(img_s, img_t)

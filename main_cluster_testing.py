@@ -83,6 +83,8 @@ parser.add_argument('--lr', type=float, default=0.001, metavar='LR',
                     help='learning rate (default: 0.0002)')
 parser.add_argument('--max_epoch', type=int, default=200, metavar='N',
                     help='how many epochs')
+parser.add_argument('--class_tear_apart', action='store_true', default=False,
+                     help='want class_tear_apart loss ?')
 parser.add_argument('--no-cuda', action='store_true', default=False,
                     help='disables CUDA training')
 parser.add_argument('--num_k', type=int, default=4, metavar='N',

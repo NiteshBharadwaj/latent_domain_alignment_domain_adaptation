@@ -25,7 +25,7 @@ def k_moment(source_output, target_output, k):
     return kth_moment
 
 
-def moment_soft(output_s, output_t, class_prob_s, class_prob_t, domain_prob_s, label_s):
+def moment_soft(want_class_tear_apart, output_s, output_t, class_prob_s, class_prob_t, domain_prob_s, label_s, moment):
     output_s = output_s.reshape(output_s.shape[0], output_s.shape[1],1) # N x e x 1
     class_prob_s = class_prob_s.reshape(class_prob_s.shape[0], 1, class_prob_s.shape[1]) # SHAPE -> N x 1 x c
     output_s_times_cp = torch.matmul(output_s, class_prob_s) #SHAPE -> N x e x c
@@ -39,37 +39,57 @@ def moment_soft(output_s, output_t, class_prob_s, class_prob_t, domain_prob_s, l
     domain_prob_sum_s = domain_prob_sum_s.reshape(1, c, d) # SHAPE -> 1 x c x d
 
     output_prob_s = (output_prob_s.sum(0)/domain_prob_sum_s) #SHAPE -> e x c x d
-
     output_t = output_t.reshape(output_t.shape[0], output_t.shape[1],1)
-    class_prob_t = class_prob_t.reshape(class_prob_t.shape[0], 1, class_prob_t.shape[1])
-    output_prob_t = torch.matmul(output_t, class_prob_t) # SHAPE -> N x e x c
-    class_prob_sum_t = class_prob_t.sum(0) + 1e-6
-    class_prob_sum_t = class_prob_sum_t.reshape(1, -1) #SHAPE -> 1 x c
-    output_prob_t = output_prob_t.sum(0)/class_prob_sum_t # SHAPE -> e x c
+    class_prob_argmax = class_prob_t.argmax(1)
+    class_prob_max, _ = class_prob_t.max(1)
+    confident_targets = class_prob_max>0.8
+    output_t = output_t[confident_targets]
+    class_prob_t = class_prob_t[confident_targets]
+    class_prob_argmax = class_prob_argmax[confident_targets]
+    useful_classes, counts = torch.unique(class_prob_argmax, return_counts=True)
+    useful_classes = useful_classes[counts>5].detach()
 
-    intra_domain_loss = 0
-    inter_domain_loss = 0
+    class_prob_t = class_prob_t.reshape(class_prob_t.shape[0], 1, class_prob_t.shape[1])
+    if class_prob_t.shape[0]!=0:
+        output_prob_t = torch.matmul(output_t, class_prob_t) # SHAPE -> N x e x c
+        class_prob_sum_t = class_prob_t.sum(0) + 1e-6
+        class_prob_sum_t = class_prob_sum_t.reshape(1, -1) #SHAPE -> 1 x c
+        output_prob_t = output_prob_t.sum(0)/class_prob_sum_t # SHAPE -> e x c
+
+    intra_domain_loss = torch.zeros(1).cuda()
+    inter_domain_loss = torch.zeros(1).cuda()
+    class_tear_apart_loss = torch.zeros(1).cuda()
     for cc in range(output_prob_s.shape[1]):
         for dd in range(output_prob_s.shape[2]):
-            inter_domain_loss += domain_prob_sum_s[0,cc,dd]*class_prob_sum_t[0,cc]*euclidean(output_prob_s[:, cc, dd], output_prob_t[:, cc])/(output_s.shape[0]**2)
+            if cc in useful_classes:
+                inter_domain_loss += domain_prob_sum_s[0,cc,dd]*class_prob_sum_t[0,cc]*euclidean(output_prob_s[:, cc, dd], output_prob_t[:, cc])/(output_s.shape[0]**2)
             for dd2 in range(dd+1, output_prob_s.shape[2]):
                 intra_domain_loss += domain_prob_sum_s[0,cc,dd]*domain_prob_sum_s[0,cc,dd2]*euclidean(output_prob_s[:, cc, dd], output_prob_s[:, cc, dd2])/(output_s.shape[0]**2)
-    return intra_domain_loss, inter_domain_loss
+    if moment == 1 and want_class_tear_apart:
+        for cc1 in range(output_prob_s.shape[1]):
+            for cc2 in range(cc1+1, output_prob_s.shape[1]):
+                for dd in range(output_prob_s.shape[2]):
+                    for dd2 in range(dd, output_prob_s.shape[2]):
+                        class_tear_apart_loss += domain_prob_sum_s[0,cc1,dd]*domain_prob_sum_s[0,cc2,dd2]*euclidean(output_prob_s[:, cc1, dd], output_prob_s[:, cc2, dd2])/(output_s.shape[0]**2)
+    
+    return intra_domain_loss, inter_domain_loss, -class_tear_apart_loss
 
 
-def k_moment_soft(output_s, output_t, k, class_prob_s, class_prob_t, domain_prob_s, label_s):
+def k_moment_soft(want_class_tear_apart, output_s, output_t, k, class_prob_s, class_prob_t, domain_prob_s, label_s):
     output_s_k = output_s**k
     output_t_k = output_t**k
-    return moment_soft(output_s_k, output_t_k, class_prob_s, class_prob_t, domain_prob_s, label_s)
+    return moment_soft(want_class_tear_apart, output_s_k, output_t_k, class_prob_s, class_prob_t, domain_prob_s, label_s, k)
 
-def class_da_regulizer_soft(output_s, output_t, belta_moment, class_prob_s, class_prob_t, domain_prob_s, label_s):
+def class_da_regulizer_soft(want_class_tear_apart, output_s, output_t, belta_moment, class_prob_s, class_prob_t, domain_prob_s, label_s):
     # print('s1:{}, s2:{}, s3:{}, s4:{}'.format(output_s1.shape, output_s2.shape, output_s3.shape, output_t.shape))        
-    intra_domain_loss = 0
-    inter_domain_loss = 0
+    intra_domain_loss = torch.zeros(1).cuda()
+    inter_domain_loss = torch.zeros(1).cuda()
+    class_tear_apart_loss = torch.zeros(1).cuda()
     for i in range(0,belta_moment):
-        klosses = k_moment_soft(output_s, output_t, i + 1, class_prob_s, class_prob_t, domain_prob_s, label_s)
+        klosses = k_moment_soft(want_class_tear_apart, output_s, output_t, i + 1, class_prob_s, class_prob_t, domain_prob_s, label_s)
         intra_domain_loss += klosses[0]
         inter_domain_loss += klosses[1]
+        class_tear_apart_loss += klosses[2]
 
-    return intra_domain_loss, inter_domain_loss
+    return intra_domain_loss, inter_domain_loss, class_tear_apart_loss
 
