@@ -73,6 +73,7 @@ class Solver(object):
             self.C1 = Classifier_digit(cd=class_disc, usps_only=self.usps_only)
             self.C2 = Classifier_digit(cd=class_disc, usps_only=self.usps_only)
             self.DP = DP_Digit(num_domains,cd=class_disc, usps_only=self.usps_only)
+            self.joint_probability_estimator = FixedMatrixEstimator(self.num_classes, self.num_domains)
         elif args.data == 'cars':
             if args.dl_type == 'soft_cluster':
                 self.datasets, self.dataset_test, self.dataset_valid = cars_combined(target, self.batch_size)
@@ -305,6 +306,101 @@ class Solver(object):
 #        print("loss_s_c1", loss_s_c1, "loss_s_c2", loss_s_c2, "loss_msda", loss_msda, "entropy_loss", entropy_loss, "kl_loss", kl_loss)
         return loss_s_c1, loss_s_c2, loss_msda_nc2, loss_msda_nc1, entropy_loss, kl_loss, domain_prob
 
+    # def loss_domain_class_mmd(self, img_s, img_t, label_s, epoch, img_s_cl, force_attach = False, single_domain_mode=False):
+    #     feat_s_comb, feat_t_comb = self.feat_soft_all_domain(img_s, img_t)
+    #     feat_s, _, feat_da_s = feat_s_comb
+    #     feat_t, _, feat_da_t = feat_t_comb
+
+    #     domain_logits, _ = self.DP(img_s)
+    #     cl_s_logits,_ = self.DP(img_s_cl)
+
+    #     entropy_loss, domain_prob_s = self.entropy_loss(domain_logits)
+
+    #     _,cl_s_prob = self.entropy_loss(cl_s_logits)
+
+    #     kl_loss = -self.get_domain_entropy(cl_s_prob)
+    #     kl_loss = kl_loss * self.kl_wt
+
+    #     if (math.isnan(entropy_loss.data.item())):
+    #         raise Exception('entropy loss is nan')
+    #     entropy_loss = entropy_loss * self.entropy_wt
+
+    #     output_s_c1, output_t_c1 = self.C1_all_domain_soft(feat_s, feat_t)
+    #     output_s_c2, output_t_c2 = self.C2_all_domain_soft(feat_s, feat_t)
+
+    #     # _, class_prob_s = self.entropy_loss(output_s_c1)
+    #     _, class_prob_t = self.entropy_loss(output_t_c1)
+
+    #     if self.to_detach and not force_attach:
+    #         intra_domain_mmd_loss, inter_domain_mmd_loss = class_domain_da.class_da_regulizer_soft(feat_da_s, feat_da_t, 5, self.get_one_hot_encoding(label_s, self.num_classes).cuda(), class_prob_t.detach(), domain_prob_s.detach())
+    #     else:
+    #         intra_domain_mmd_loss, inter_domain_mmd_loss = class_domain_da.class_da_regulizer_soft(feat_da_s, feat_da_t, 5, self.get_one_hot_encoding(label_s, self.num_classes).cuda(), class_prob_t, domain_prob_s)
+    #     intra_domain_mmd_loss = intra_domain_mmd_loss*self.msda_wt
+    #     inter_domain_mmd_loss = inter_domain_mmd_loss*self.msda_wt
+
+    #     if (math.isnan(intra_domain_mmd_loss.data.item())):
+    #         raise Exception('intra_domain_mmd_loss is nan')
+    #     loss_s_c1 = \
+    #         self.softmax_loss_all_domain_soft(output_s_c1, label_s)
+    #     if (math.isnan(loss_s_c1.data.item())):
+    #         raise Exception(' c1 loss is nan')
+    #     loss_s_c2 = \
+    #         self.softmax_loss_all_domain_soft(output_s_c2, label_s)
+    #     if (math.isnan(loss_s_c2.data.item())):
+    #         raise Exception(' c2 loss is nan')
+    #     if (math.isnan(kl_loss.data.item())):
+    #         raise Exception(' kl loss is nan')
+
+    #     return loss_s_c1, loss_s_c2, intra_domain_mmd_loss, inter_domain_mmd_loss, entropy_loss, kl_loss, domain_prob_s
+
+    def compute_domain_cluster_joint(self, class_assignments, domain_probabilities):
+        '''
+        Computes the joint probability matrix between domain and cluster assignments
+        :param class_assignments: (batch_size, 1) integer tensor representing the class of each sample
+        :param domain_probabilities: (batch_size, cluster number) tensor representing cluster assignemnt probabilities
+        :return: (class count, cluster number) tensor joint probability matrix
+        '''
+
+        batch_size_classes = class_assignments.size()[0]
+        batch_size, cluster_number = domain_probabilities.size()
+
+        assert(batch_size_classes == batch_size)
+
+        class_probabilities = torch.cuda.FloatTensor(batch_size, self.num_classes).zero_()
+        class_probabilities.scatter_(1, class_assignments.type(torch.LongTensor).cuda(), 1)
+
+        # Computes and normalizes the joint matrix
+        joint_matrix = torch.t(class_probabilities).matmul(domain_probabilities)
+        joint_matrix = joint_matrix / joint_matrix.sum()
+
+        return joint_matrix
+
+    def mutual_information(self, joint_probability_matrix, lamb, EPS=sys.float_info.epsilon):
+        '''
+        Computes the mutual information of the joint probability matrix
+        :param joint_probability_matrix:  probability matrix tensor for which to compute mutual information
+        :param EPS:
+        :return: the mutual information
+        '''
+
+        rows, columns = joint_probability_matrix.size()
+
+        marginal_rows = joint_probability_matrix.sum(dim=1).view(rows, 1).expand(rows, columns)
+        marginal_columns = joint_probability_matrix.sum(dim=0).view(1, columns).expand(rows, columns)  # but should be same, symmetric
+
+        # avoid NaN losses. Effect will get cancelled out by p_i_j tiny anyway
+        joint_probability_matrix[(joint_probability_matrix < EPS).data] = EPS
+        marginal_rows[(marginal_rows < EPS).data] = EPS
+        marginal_columns[(marginal_columns < EPS).data] = EPS
+
+        mutual_information = joint_probability_matrix * (torch.log(joint_probability_matrix) \
+                                             - lamb * torch.log(marginal_rows) \
+                                             - lamb * torch.log(marginal_columns))
+
+        mutual_information = mutual_information.sum()
+
+        return mutual_information
+
     def loss_domain_class_mmd(self, img_s, img_t, label_s, epoch, img_s_cl, force_attach = False, single_domain_mode=False):
         feat_s_comb, feat_t_comb = self.feat_soft_all_domain(img_s, img_t)
         feat_s, _, feat_da_s = feat_s_comb
@@ -315,10 +411,10 @@ class Solver(object):
 
         entropy_loss, domain_prob_s = self.entropy_loss(domain_logits)
 
-        _,cl_s_prob = self.entropy_loss(cl_s_logits)
-
-        kl_loss = -self.get_domain_entropy(cl_s_prob)
-        kl_loss = kl_loss * self.kl_wt
+        curr_joint_prob = self.compute_domain_cluster_joint(label_s, domain_prob_s)
+        joint_prob_estimator = self.joint_probability_estimator(curr_joint_prob)
+        class_domain_mi_loss = self.mutual_information(joint_prob_estimator, 1.0)
+        class_domain_mi_loss = class_domain_mi_loss * self.kl_wt
 
         if (math.isnan(entropy_loss.data.item())):
             raise Exception('entropy loss is nan')
@@ -350,7 +446,7 @@ class Solver(object):
         if (math.isnan(kl_loss.data.item())):
             raise Exception(' kl loss is nan')
 
-        return loss_s_c1, loss_s_c2, intra_domain_mmd_loss, inter_domain_mmd_loss, entropy_loss, kl_loss, domain_prob_s
+        return loss_s_c1, loss_s_c2, intra_domain_mmd_loss, inter_domain_mmd_loss, entropy_loss, class_domain_mi_loss, domain_prob_s
     
     def loss_class_mmd(self, img_s, img_t, label_s, epoch, img_s_cl, force_attach = False, single_domain_mode=False):
         feat_s_comb, feat_t_comb = self.feat_soft_all_domain(img_s, img_t)
@@ -396,3 +492,28 @@ class HLoss(nn.Module):
         b = F.softmax(x, dim=1) * F.log_softmax(x, dim=1)
         b = -1.0 * b.mean()
         return b, domain_prob + 1e-5
+
+class FixedMatrixEstimator(nn.Module):
+
+    def __init__(self, rows, columns, initial_alpha=0.9, initial_value=None):
+        '''
+        Initializes the joint probability estimator for a (rows, columns) matrix with the given fixed alpha factor
+        :param rows, columns: Dimension of the probability matrix to estimate
+        :param initial_alpha: Value to use assign for alpha
+        '''
+        super(FixedMatrixEstimator, self).__init__()
+
+        self.alpha = initial_alpha
+
+        # Initializes the joint matrix as a uniform, independent distribution. Does not allow backpropagation to this parameter
+        if initial_value is None:
+            initial_value = torch.tensor([[1.0 / (rows * columns)] * columns] * rows, dtype=torch.float32)
+        self.estimated_matrix = nn.Parameter(initial_value, requires_grad=False)
+
+    def forward(self, latest_probability_matrix):
+        return_matrix = self.estimated_matrix * self.alpha + latest_probability_matrix * (1 - self.alpha)
+
+        # The estimated matrix must be detached from the backpropagation graph to avoid exhaustion of GPU memory
+        self.estimated_matrix.data = return_matrix.detach()
+
+        return return_matrix
