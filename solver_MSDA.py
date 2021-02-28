@@ -19,7 +19,7 @@ import math
 from scipy.stats import entropy
 from matplotlib import pyplot as plt
 from PIL import Image
-
+import sys
 import random
 
 # Training settings
@@ -73,7 +73,7 @@ class Solver(object):
             self.C1 = Classifier_digit(cd=class_disc, usps_only=self.usps_only)
             self.C2 = Classifier_digit(cd=class_disc, usps_only=self.usps_only)
             self.DP = DP_Digit(num_domains,cd=class_disc, usps_only=self.usps_only)
-            self.joint_probability_estimator = FixedMatrixEstimator(self.num_classes, self.num_domains)
+            self.joint_probability_estimator = FixedMatrixEstimator(self.num_classes, self.num_domains).cuda()
         elif args.data == 'cars':
             if args.dl_type == 'soft_cluster':
                 self.datasets, self.dataset_test, self.dataset_valid = cars_combined(target, self.batch_size)
@@ -411,7 +411,7 @@ class Solver(object):
 
         entropy_loss, domain_prob_s = self.entropy_loss(domain_logits)
 
-        curr_joint_prob = self.compute_domain_cluster_joint(label_s, domain_prob_s)
+        curr_joint_prob = self.compute_domain_cluster_joint(label_s.unsqueeze(1), domain_prob_s)
         joint_prob_estimator = self.joint_probability_estimator(curr_joint_prob)
         class_domain_mi_loss = self.mutual_information(joint_prob_estimator, 1.0)
         class_domain_mi_loss = class_domain_mi_loss * self.kl_wt
@@ -443,8 +443,8 @@ class Solver(object):
             self.softmax_loss_all_domain_soft(output_s_c2, label_s)
         if (math.isnan(loss_s_c2.data.item())):
             raise Exception(' c2 loss is nan')
-        if (math.isnan(kl_loss.data.item())):
-            raise Exception(' kl loss is nan')
+        if (math.isnan(class_domain_mi_loss.data.item())):
+            raise Exception(' class_domain_mi_loss is nan')
 
         return loss_s_c1, loss_s_c2, intra_domain_mmd_loss, inter_domain_mmd_loss, entropy_loss, class_domain_mi_loss, domain_prob_s
     
