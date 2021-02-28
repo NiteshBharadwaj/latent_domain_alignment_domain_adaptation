@@ -233,11 +233,11 @@ class Solver(object):
                 import copy
                 state_dict = checkpoint['DP_state_dict']
                 state_dict_v2 = copy.deepcopy(state_dict)
-                for key in state_dict:
-                    if 'feature' in key:
-                        re_key = key.replace('feature.model','dp_model')
-                        state_dict_v2[re_key] = state_dict_v2.pop(key)
-                #self.DP.load_state_dict(state_dict_v2, strict=False)
+                #for key in state_dict:
+                #    if 'feature' in key:
+                #        re_key = key.replace('feature.model','dp_model')
+                #        state_dict_v2[re_key] = state_dict_v2.pop(key)
+                self.DP.load_state_dict(state_dict_v2, strict=False)
 
             #self.opt_g.load_state_dict(checkpoint['G_state_dict_opt'])
             #self.opt_c1.load_state_dict(checkpoint['C1_state_dict_opt'])
@@ -438,6 +438,10 @@ class Solver(object):
             kl_loss += -self.get_domain_entropy(domain_prob_s_cl)
             entropy_loss += entropy_loss_cl
             domain_prob_s[indexes,i] = domain_prob_s_cl
+            if self.args.known_domains>0:
+                domain_prob_s[indexes,i] = img_s_dl[indexes]
+                entropy_loss = entropy_loss*0
+                kl_loss = kl_loss*0
             num_active_classes+=1
 
         if (math.isnan(entropy_loss.data.item())):

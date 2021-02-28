@@ -146,8 +146,8 @@ def train_MSDA_classwise(solver, epoch, graph_data, classifier_disc=True, record
         graph_data['kl'].append(kl_loss.data.item())
         graph_data['c1'].append(loss_s_c1.data.item())
         graph_data['c2'].append(loss_s_c2.data.item())
-        graph_data['inter_domain_mmd_loss'].append(inter_domain_mmd_loss.data.item())
-        graph_data['intra_domain_mmd_loss'].append(intra_domain_mmd_loss.data.item())
+        #graph_data['inter_domain_mmd_loss'].append(inter_domain_mmd_loss.data.item())
+        #graph_data['intra_domain_mmd_loss'].append(intra_domain_mmd_loss.data.item())
         graph_data['h'].append(entropy_loss.data.item() + kl_loss.data.item())
         graph_data['total'].append(
             entropy_loss.data.item() + kl_loss.data.item() + loss_s_c1.data.item() + loss_msda.data.item())

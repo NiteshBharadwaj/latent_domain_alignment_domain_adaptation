@@ -43,6 +43,8 @@ parser.add_argument('--clustering_only', type=int, default=1, metavar='N',
 parser.add_argument('--load_ckpt', type=str, default="", metavar='N',
                     help='load checkpoint')
 
+parser.add_argument('--known_domains', type=int, default=-1, metavar='N',
+                    help='Domains known?')
 parser.add_argument('--pretrained_clustering', type=str, default="no", metavar='N',
                     help='pretrained_clustering')
 parser.add_argument('--pretrained_source', type=str, default="no", metavar='N',
@@ -265,9 +267,9 @@ def main():
             count += num
             if t % 1 == 0 or count>=total_it:
                 # print('testing now')
-                if (args.dl_type == 'soft_cluster' or args.dl_type == 'classwise_ssda' or args.dl_type == 'classwise_msda'):
-                    plot_data(graph_data, loss_plot)
-                    view_clusters(solver, clusters_file_class, probs_csv_class, t)
+                #if (args.dl_type == 'soft_cluster' or args.dl_type == 'classwise_ssda' or args.dl_type == 'classwise_msda'):
+                    #plot_data(graph_data, loss_plot)
+                    #view_clusters(solver, clusters_file_class, probs_csv_class, t)
                 if args.data == 'cars':
                     test(solver, t, 'train', record_file=record_test, save_model=args.save_model)
                 best = test(solver, t, 'val', record_file=record_val, save_model=args.save_model)

@@ -8,9 +8,9 @@ import os
 from collections import Counter
 
 def view_clusters(solver,clusters_file_class,probs_csv_class,epoch):
-    if(solver.dl_type != 'soft_cluster'):
-        print('no clusters for dl type : ', solver.dl_type)
-        return
+    #if(solver.dl_type != 'soft_cluster'):
+    #    print('no clusters for dl type : ', solver.dl_type)
+    #    return
     solver.G.eval()
     solver.C1.eval()
     solver.C2.eval()
@@ -65,10 +65,12 @@ def view_clusters(solver,clusters_file_class,probs_csv_class,epoch):
         for cur_class in range(solver.num_classes):
             cur_class_idxes = label_s == cur_class
             for i in range(solver.num_domains):
-                i_index = ((best_domains[cur_class_idxes][cur_class] == i).nonzero()).squeeze()
+                i_index = ((best_domains[cur_class_idxes][:,cur_class] == i).nonzero()).squeeze()
+                if len(i_index.shape)!=0 and i_index.shape[0]==0:
+                    continue
                 #print(i_index)
                 img_s_i = img_s[cur_class_idxes][i_index,:,:,:]
-                cur_probs = best_domain_probs[cur_class_idxes][cur_class][i_index]
+                cur_probs = best_domain_probs[cur_class_idxes][:,cur_class][i_index]
                 cur_real_domains = actual_domain_s[cur_class_idxes][i_index]
                 if(img_s_i.size()[0] > 0):
                     try:
@@ -107,12 +109,13 @@ def view_clusters(solver,clusters_file_class,probs_csv_class,epoch):
                 arrayOfClustersprobsClass[c][i] = arrayOfClustersprobsClass[c][i].data.cpu().numpy()
     #             print(arrayOfClustersprobs[i])
     #             print(arrayOfClustersprobs[i].shape)
-                maxProbIndices = arrayOfClustersprobsClass[c][i].argsort()[-min(arrayOfClustersprobsClass[c][i].shape[0],topk):][::-1]
+                #maxProbIndices = arrayOfClustersprobsClass[c][i].argsort()[-min(arrayOfClustersprobsClass[c][i].shape[0],topk):][::-1]
+                maxProbIndices = range(min(topk,arrayOfClustersprobsClass[c][i].shape[0]))
                 maxProbs = arrayOfClustersprobsClass[c][i][maxProbIndices].tolist()
                 #maxProbIndices = torch.from_numpy(maxProbIndices.copy()).long().cuda()
                 arrayOfProbs.append(maxProbs)
                 #print(arrayOfClusterstorch[i].size())
-                topImages = arrayOfClusterstorchClass[c][i][maxProbIndices.copy(),:,:,:]
+                topImages = arrayOfClusterstorchClass[c][i][maxProbIndices,:,:,:]
                 #torchvision.utils.save_image(arrayOfClusterstorch[i], clusters_file[i],nrow=7)
                 torchvision.utils.save_image(topImages, clusters_file[i][:-4] + '_probs_descending_'+str(epoch)+'.png',nrow=2, normalize=True)
                 print('Total Num images in this cluster : ', arrayOfClusterstorchClass[c][i].size()[0])

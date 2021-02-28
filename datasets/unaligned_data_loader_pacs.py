@@ -158,9 +158,9 @@ class UnalignedDataLoader():
             transform_source = transforms.Compose([
                 # transforms.Resize(scale),
                 # transforms.RandomCrop(scale),
-                transforms.Scale(scale),
+                transforms.Scale(scale2),
                 # ResizeImage(256),
-                transforms.RandomResizedCrop(scale2),
+                #transforms.RandomResizedCrop(scale2),
                 transforms.RandomHorizontalFlip(),
                 # transforms.ColorJitter(0.4,0.2,0.2),
                 transforms.ToTensor(),
@@ -171,8 +171,8 @@ class UnalignedDataLoader():
             transform_target = transforms.Compose([
                 # transforms.Resize((scale,scale)),
                 # ResizeImage(256),
-                transforms.Scale(scale),
-                transforms.RandomResizedCrop(scale2),
+                transforms.Scale(scale2),
+                #transforms.RandomResizedCrop(scale2),
                 transforms.RandomHorizontalFlip(),
                 # transforms.ColorJitter(0.4,0.2,0.2),
                 transforms.ToTensor(),
@@ -184,8 +184,8 @@ class UnalignedDataLoader():
             transform_source = transforms.Compose([
                 # transforms.Resize(scale),
                 # transforms.RandomCrop(scale),
-                transforms.Scale(scale),
-                transforms.CenterCrop(scale2),
+                #transforms.Scale(scale),
+                #transforms.CenterCrop(scale2),
                 # ResizeImage(256),
                 # PlaceCrop(224, start_center, start_center),
                 transforms.ToTensor(),
@@ -194,8 +194,8 @@ class UnalignedDataLoader():
             ])
             transform_target = transforms.Compose([
                 # transforms.Resize((scale,scale)),
-                transforms.Scale(scale),
-                transforms.CenterCrop(scale2),
+                #transforms.Scale(scale),
+                #transforms.CenterCrop(scale2),
                 # ResizeImage(256),
                 # PlaceCrop(224, start_center, start_center),
                 transforms.ToTensor(),

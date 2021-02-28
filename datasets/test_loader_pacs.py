@@ -136,7 +136,7 @@ class TestDataLoader():
         start_center = (256 - 224 - 1) / 2
         start_last = 256 - 224 - 1
 
-        scale2 = 224
+        scale2 = 227
         if split == 'Train':
             transform_source = transforms.Compose([
                 # transforms.Resize(scale),
@@ -165,8 +165,8 @@ class TestDataLoader():
             transform_source = transforms.Compose([
                 # transforms.Resize(scale),
                 # transforms.RandomCrop(scale),
-                transforms.Scale(scale),
-                transforms.CenterCrop(scale2),
+                transforms.Scale(scale2),
+                #transforms.CenterCrop(scale2),
                 # ResizeImage(256),
                 # PlaceCrop(224, start_center, start_center),
                 transforms.ToTensor(),
@@ -175,8 +175,8 @@ class TestDataLoader():
             ])
             transform_target = transforms.Compose([
                 # transforms.Resize((scale,scale)),
-                transforms.Scale(scale),
-                transforms.CenterCrop(scale2),
+                transforms.Scale(scale2),
+                #transforms.CenterCrop(scale2),
                 # ResizeImage(256),
                 # PlaceCrop(224, start_center, start_center),
                 transforms.ToTensor(),
