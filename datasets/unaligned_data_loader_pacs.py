@@ -10,6 +10,29 @@ from PIL import Image, ImageOps
 def worker_init_fn(worker_id):
     np.random.seed(np.random.get_state()[1][0] + worker_id)
 
+def balance_classes(labels, domain_labels, balance_domains=False):
+    num_labels = 7
+    num_domains = 3
+    class_counts = [0]*num_labels
+    class_domain_counts = []
+    for i in range(num_labels):
+        class_domain_counts.append([0]*num_domains)
+    for idx,label in enumerate(labels):
+        class_counts[label]+=1
+        class_domain_counts[label][domain_labels[idx]]+=1
+    print(class_counts, class_domain_counts)
+    N = float(sum(class_counts))
+    class_weights = [0]*len(labels)
+    class_domain_weights = [0]*len(labels)
+    for idx, label in enumerate(labels):
+        class_weights[idx] = N/float(class_counts[label])
+        class_domain_weights[idx] = N/float(class_domain_counts[label][domain_labels[idx]])
+
+    if balance_domains:
+        return class_domain_weights
+    else:
+        return class_weights
+
 
 class PlaceCrop(object):
     """Crops the given PIL.Image at the particular index.
@@ -218,7 +241,9 @@ class UnalignedDataLoader():
             target_labels += target['labels']
 
         dataset_source = Dataset(imgs, labels, domain_labels, transform=transform_source)
-        data_loader_s = torch.utils.data.DataLoader(dataset_source, batch_size=batch_size1, shuffle=True,
+        sampling_weights = torch.DoubleTensor(balance_classes(labels, domain_labels, balance_domains=False))
+        sampler = torch.utils.data.sampler.WeightedRandomSampler(sampling_weights, len(sampling_weights))
+        data_loader_s = torch.utils.data.DataLoader(dataset_source, batch_size=batch_size1,sampler=sampler,
                                                     num_workers=num_workers_, worker_init_fn=worker_init_fn,
                                                     pin_memory=True)
 

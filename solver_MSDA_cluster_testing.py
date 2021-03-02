@@ -237,7 +237,7 @@ class Solver(object):
                 #    if 'feature' in key:
                 #        re_key = key.replace('feature.model','dp_model')
                 #        state_dict_v2[re_key] = state_dict_v2.pop(key)
-                self.DP.load_state_dict(state_dict_v2, strict=False)
+                #self.DP.load_state_dict(state_dict_v2, strict=False)
 
             #self.opt_g.load_state_dict(checkpoint['G_state_dict_opt'])
             #self.opt_c1.load_state_dict(checkpoint['C1_state_dict_opt'])
@@ -383,20 +383,27 @@ class Solver(object):
         feat_s_comb, feat_t_comb = self.feat_soft_all_domain(img_s, img_t)
         feat_s, conv_feat_s = feat_s_comb
         feat_t, conv_feat_t = feat_t_comb
+        img_s_dl = self.get_one_hot_encoding(img_d_cl, self.num_domains).cuda()
         #with torch.no_grad():
         #    _, conv_feat_cl = self.G(img_s_cl)
-        if self.to_detach:
+        entropy_loss = torch.zeros(1,dtype=torch.float32).cuda()
+        kl_loss = torch.zeros(1,dtype=torch.float32).cuda()
+        if self.args.known_domains>0:
+            domain_prob = img_s_dl
+        elif self.to_detach:
             domain_logits, _ = self.DP(img_s)
             cl_s_logits,_ = self.DP(img_s_cl)
+            entropy_loss, domain_prob = self.entropy_loss(domain_logits)
+            _,cl_s_prob = self.entropy_loss(cl_s_logits)
+            kl_loss = -self.get_domain_entropy(cl_s_prob)
+            kl_loss = kl_loss * self.kl_wt
         else:
             domain_logits, _ = self.DP(img_s)
             cl_s_logits,_ = self.DP(img_s_cl)
-        entropy_loss, domain_prob = self.entropy_loss(domain_logits)
-
-
-        _,cl_s_prob = self.entropy_loss(cl_s_logits)
-        kl_loss = -self.get_domain_entropy(cl_s_prob)
-        kl_loss = kl_loss * self.kl_wt
+            entropy_loss, domain_prob = self.entropy_loss(domain_logits)
+            _,cl_s_prob = self.entropy_loss(cl_s_logits)
+            kl_loss = -self.get_domain_entropy(cl_s_prob)
+            kl_loss = kl_loss * self.kl_wt
        
         if self.to_detach:
             loss_msda = msda.msda_regulizer_soft(feat_s, feat_t, 5, domain_prob.detach()) * self.msda_wt 

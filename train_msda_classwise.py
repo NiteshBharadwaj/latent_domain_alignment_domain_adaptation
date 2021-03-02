@@ -49,12 +49,12 @@ def train_MSDA_classwise(solver, epoch, graph_data, classifier_disc=True, record
     batch_idx_g = 0
     tt = time.time()
     #print('creating classwise iterator', time.time())
-    solver.classwise_dataset.reset_iter()
-    classwise_dataset_iterator = iter(solver.classwise_dataset)
+    #solver.classwise_dataset.reset_iter()
+    #classwise_dataset_iterator = iter(solver.classwise_dataset)
 
     #     main_dataset_iterator = iter(solver.datasets)
     #     print(sum(1 for _ in main_dataset_iterator))
-    main_dataset_iterator = iter(solver.datasets)
+    #main_dataset_iterator = iter(solver.datasets)
     # sys.exit()
     #print('starting iteration', time.time())
 
@@ -63,18 +63,9 @@ def train_MSDA_classwise(solver, epoch, graph_data, classifier_disc=True, record
     tot_cuda_time = 0
     tot_classwisedata_time = 0
     tot_main_data_time = 0
-    while True:
-        try:
-            mt0 = time.time()
-            data = next(main_dataset_iterator)
-            mt = time.time() - mt0
-            # print('BATCH Main DATA', mt)
-            tot_main_data_time += mt
-        except:
-            print('End of epoch')
-            break
-        batch_idx_g += 1
-        if (batch_idx_g>max_it): 
+    for batch_idx, data in enumerate(solver.datasets):
+        batch_idx_g = batch_idx
+        if (batch_idx>max_it): 
             break
         batch_idx = batch_idx_g
         # print('batch no : ', batch_idx)
@@ -97,27 +88,23 @@ def train_MSDA_classwise(solver, epoch, graph_data, classifier_disc=True, record
             #print('Breaking because of low batch size')
             break
 
-        classwise_data = next(classwise_dataset_iterator)
-        ct5 = time.time()
-        img_s_cl = Variable(classwise_data['S'].squeeze(0).float().cuda())
-        ct6 = time.time()
 
-        ct = (ct2 - ct1) + (ct4 - ct3) + (ct6 - ct5)
+        ct = (ct2 - ct1) + (ct4 - ct3)
         # print('BATCH CUDA TIME', ct)
         tot_cuda_time += ct
-        cl_time = ct5 - ct4
-        tot_classwisedata_time += cl_time
+        #cl_time = ct5 - ct4
+        #tot_classwisedata_time += cl_time
         # print('CLASSWISE DATA TIME', cl_time)
-        if (img_s_cl.size()[0] <= 1):
+        #if (img_s_cl.size()[0] <= 1):
             #print('CLASS WISE is of size 1. Looping')
-            break
-            classwise_data = next(classwise_dataset_iterator)
-            img_s_cl = Variable(classwise_data['S'].cuda())
+        #    break
+        #    classwise_data = next(classwise_dataset_iterator)
+        #    img_s_cl = Variable(classwise_data['S'].cuda())
 
         # img_s_cl = img_s
 
-        if solver.args.clustering_only and classwise_batch is None:
-            classwise_batch = img_s_cl
+        #if solver.args.clustering_only and classwise_batch is None:
+        #    classwise_batch = img_s_cl
 
         # print('BATCHES DONE!!', time.time()-tt)
         tot_dataloading_time += time.time() - tt
@@ -126,8 +113,9 @@ def train_MSDA_classwise(solver, epoch, graph_data, classifier_disc=True, record
         #        switch_bn(solver.DP,True)
         solver.reset_grad()
         start = time.time()
-        loss_s_c1, loss_s_c2, intra_domain_mmd_loss, inter_domain_mmd_loss, entropy_loss, kl_loss, class_tear_apart_loss = solver.loss_domain_class_mmd(img_s, img_t, label_s, epoch, img_s_cl, img_s_dl, single_domain_mode=single_domain_mode) 
+        loss_s_c1, loss_s_c2, intra_domain_mmd_loss, inter_domain_mmd_loss, entropy_loss, kl_loss, class_tear_apart_loss = solver.loss_domain_class_mmd(img_s, img_t, label_s, epoch, None, img_s_dl, single_domain_mode=single_domain_mode) 
         end = time.time()
+        class_tear_apart_loss = class_tear_apart_loss*solver.args.class_tear_apart_wt
         loss_msda = intra_domain_mmd_loss + inter_domain_mmd_loss + class_tear_apart_loss
         #print("Time taken in training batch : ", end-start)
         if not classifier_disc:
@@ -137,7 +125,7 @@ def train_MSDA_classwise(solver, epoch, graph_data, classifier_disc=True, record
         elif solver.args.pretrained_source=="yes":
             loss = entropy_loss + kl_loss
         else:
-            if solver.args.load_ckpt!='' and epoch < 20:
+            if 0:#solver.args.load_ckpt!='' and epoch < 20:
                 loss = entropy_loss + kl_loss
             else:
                 loss = loss_s_c1 + loss_s_c2 + entropy_loss + loss_msda + kl_loss
@@ -185,5 +173,6 @@ def train_MSDA_classwise(solver, epoch, graph_data, classifier_disc=True, record
                         epoch, batch_idx, 100, 100. * batch_idx / 70000, loss_s_c1.data.item(), loss_s_c2.data.item(),
                         inter_domain_mmd_loss.data.item(), intra_domain_mmd_loss.data.item(),entropy_loss.data.item(), class_tear_apart_loss.data.item(), kl_loss.data.item(),
                         entropy_loss.data.item() + kl_loss.data.item()))
-
+    
+    print('End of epoch')
     return batch_idx_g, graph_data
