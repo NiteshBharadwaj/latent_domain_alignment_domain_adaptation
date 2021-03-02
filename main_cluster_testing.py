@@ -93,6 +93,8 @@ parser.add_argument('--num_k', type=int, default=4, metavar='N',
                     help='hyper paremeter for generator update')
 parser.add_argument('--num_workers', type=int, default=4, metavar='N',
                     help='dataloader num_workers')
+parser.add_argument('--classaware_dp', type=str, default='no', metavar='N',
+                    help='yes/no')
 parser.add_argument('--one_step', action='store_true', default=False,
                     help='one step training with gradient reversal layer')
 parser.add_argument('--optimizer', type=str, default='adam', metavar='N', help='which optimizer')

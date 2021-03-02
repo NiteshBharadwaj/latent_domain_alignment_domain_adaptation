@@ -38,6 +38,7 @@ class Solver(object):
 
         self.best_loss = 9999999
         self.best_acc = 0
+        self.classaware_dp = self.args.classaware_dp=='yes'
         print('dataset loading')
         if args.data == 'digits':
             if args.dl_type == 'original':
@@ -200,7 +201,7 @@ class Solver(object):
             self.G = Generator_pacs()
             self.C1 = Classifier_pacs(num_classes)
             self.C2 = Classifier_pacs(num_classes)
-            self.DP = DP_pacs(num_domains, classwise=self.is_classwise, num_classes=self.num_classes)
+            self.DP = DP_pacs(num_domains, classwise=self.is_classwise, num_classes=self.num_classes, classaware_dp=self.classaware_dp)
 
 
         # print(self.dataset['S1'].shape)
@@ -428,10 +429,13 @@ class Solver(object):
 
     def loss_domain_class_mmd(self, img_s, img_t, label_s, epoch, img_s_cl, img_s_dl, force_attach = False, single_domain_mode=False):
         feat_s_comb, feat_t_comb = self.feat_soft_all_domain(img_s, img_t)
-        feat_s, _ = feat_s_comb
+        feat_s, feat_s_conv = feat_s_comb
         feat_t, _ = feat_t_comb
         img_s_dl = self.get_one_hot_encoding(img_s_dl, self.num_domains).cuda()
-        domain_logits, _ = self.DP(img_s)
+        if self.classaware_dp:
+            domain_logits,_ = self.DP(feat_s_conv.clone().detach())
+        else:
+            domain_logits, _ = self.DP(img_s)
         domain_logits = domain_logits.reshape(domain_logits.shape[0],self.num_classes,self.num_domains)
         domain_prob_s = torch.zeros(domain_logits.shape,dtype=torch.float32).cuda()
         entropy_loss = 0
