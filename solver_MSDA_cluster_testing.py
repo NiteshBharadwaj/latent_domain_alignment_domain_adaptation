@@ -21,6 +21,7 @@ from scipy.stats import entropy
 from matplotlib import pyplot as plt
 from PIL import Image
 import classwise_da
+import class_domain_tc_da
 import class_domain_da
 # Training settings
 class Solver(object):
@@ -430,14 +431,21 @@ class Solver(object):
     def loss_domain_class_mmd(self, img_s, img_t, label_s, epoch, img_s_cl, img_s_dl, force_attach = False, single_domain_mode=False):
         feat_s_comb, feat_t_comb = self.feat_soft_all_domain(img_s, img_t)
         feat_s, feat_s_conv = feat_s_comb
-        feat_t, _ = feat_t_comb
+        feat_t, feat_t_conv = feat_t_comb
         img_s_dl = self.get_one_hot_encoding(img_s_dl, self.num_domains).cuda()
         if self.classaware_dp:
             domain_logits,_ = self.DP(feat_s_conv.clone().detach())
+            domain_logits_tar,_ = self.DP(feat_t_conv.clone().detach())
         else:
             domain_logits, _ = self.DP(img_s)
+            domain_logits_tar,_ = self.DP(img_t)
         domain_logits = domain_logits.reshape(domain_logits.shape[0],self.num_classes,self.num_domains)
         domain_prob_s = torch.zeros(domain_logits.shape,dtype=torch.float32).cuda()
+        if self.args.target_clustering:
+            domain_logits_tar = domain_logits_tar.reshape(domain_logits_tar.shape[0], self.num_classes, self.num_domains)
+            domain_prob_tar = torch.zeros(domain_logits_tar.shape, dtype=torch.float32).cuda()
+            entropy_loss_tar = 0
+            kl_loss_tar = 0
         entropy_loss = 0
         kl_loss = 0
         num_active_classes = 0
@@ -449,6 +457,11 @@ class Solver(object):
             kl_loss += -self.get_domain_entropy(domain_prob_s_cl)
             entropy_loss += entropy_loss_cl
             domain_prob_s[indexes,i] = domain_prob_s_cl
+            if self.args.target_clustering:
+                entropy_loss_cl_t, domain_prob_t_cl = self.entropy_loss(domain_logits_tar[:, i])
+                kl_loss_tar += -self.get_domain_entropy(domain_prob_t_cl)
+                entropy_loss_tar += entropy_loss_cl_t
+                domain_prob_tar[:, i] = domain_prob_t_cl
             if self.args.known_domains>0:
                 domain_prob_s[indexes,i] = img_s_dl[indexes]
                 entropy_loss = entropy_loss*0
@@ -459,17 +472,26 @@ class Solver(object):
             raise Exception('entropy loss is nan')
         entropy_loss = entropy_loss * self.entropy_wt / num_active_classes
         kl_loss = kl_loss * self.kl_wt / num_active_classes
-        
+        if self.args.target_clustering:
+            entropy_loss_tar = entropy_loss_tar * self.entropy_wt / self.num_classes
+            kl_loss_tar = kl_loss_tar * self.kl_wt / self.num_classes
+            entropy_loss = entropy_loss*0.75 + entropy_loss_tar*0.25
+            kl_loss = kl_loss*0.75 + kl_loss_tar*0.25
         output_s_c1, output_t_c1 = self.C1_all_domain_soft(feat_s, feat_t)
         output_s_c2, output_t_c2 = self.C2_all_domain_soft(feat_s, feat_t)
 
         # _, class_prob_s = self.entropy_loss(output_s_c1)
         entropy_t, class_prob_t = self.entropy_loss(output_t_c1)
-        entropy_t = entropy_t*self.entropy_wt
-        if self.to_detach and not force_attach:
-            intra_domain_mmd_loss, inter_domain_mmd_loss, class_tear_apart_loss = class_domain_da.class_da_regulizer_soft(self.args.class_tear_apart, feat_s, feat_t, 5, self.get_one_hot_encoding(label_s, self.num_classes).cuda(), class_prob_t.detach(), domain_prob_s.detach(), label_s)
+        if not self.args.target_clustering:
+            if self.to_detach and not force_attach:
+                intra_domain_mmd_loss, inter_domain_mmd_loss, class_tear_apart_loss = class_domain_da.class_da_regulizer_soft(self.args.class_tear_apart, feat_s, feat_t, 5, self.get_one_hot_encoding(label_s, self.num_classes).cuda(), class_prob_t.detach(), domain_prob_s.detach(), label_s)
+            else:
+                intra_domain_mmd_loss, inter_domain_mmd_loss, class_tear_apart_loss = class_domain_da.class_da_regulizer_soft(self.args.class_tear_apart, feat_s, feat_t, 5, self.get_one_hot_encoding(label_s, self.num_classes).cuda(), class_prob_t, domain_prob_s, label_s)
         else:
-            intra_domain_mmd_loss, inter_domain_mmd_loss, class_tear_apart_loss = class_domain_da.class_da_regulizer_soft(self.args.class_tear_apart, feat_s, feat_t, 5, self.get_one_hot_encoding(label_s, self.num_classes).cuda(), class_prob_t, domain_prob_s, label_s)
+            if self.to_detach and not force_attach:
+                intra_domain_mmd_loss, inter_domain_mmd_loss, class_tear_apart_loss = class_domain_tc_da.class_da_regulizer_soft(self.args.class_tear_apart, feat_s, feat_t, 5, self.get_one_hot_encoding(label_s, self.num_classes).cuda(), class_prob_t.detach(), domain_prob_s.detach(), label_s, domain_prob_tar.detach())
+            else:
+                intra_domain_mmd_loss, inter_domain_mmd_loss, class_tear_apart_loss = class_domain_tc_da.class_da_regulizer_soft(self.args.class_tear_apart, feat_s, feat_t, 5, self.get_one_hot_encoding(label_s, self.num_classes).cuda(), class_prob_t, domain_prob_s, label_s, domain_prob_tar)
         intra_domain_mmd_loss = intra_domain_mmd_loss*self.msda_wt
         inter_domain_mmd_loss = inter_domain_mmd_loss*self.msda_wt
         class_tear_apart_loss = class_tear_apart_loss*self.msda_wt

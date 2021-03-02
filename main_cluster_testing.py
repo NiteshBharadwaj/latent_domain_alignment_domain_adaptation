@@ -87,6 +87,8 @@ parser.add_argument('--class_tear_apart_wt', type=float, default=1.,
                      help='class tear apart weight')
 parser.add_argument('--class_tear_apart', action='store_true', default=False,
                      help='want class_tear_apart loss ?')
+parser.add_argument('--target_clustering', action='store_true', default=False,
+                     help='want to cluster target?')
 parser.add_argument('--no-cuda', action='store_true', default=False,
                     help='disables CUDA training')
 parser.add_argument('--num_k', type=int, default=4, metavar='N',
