@@ -26,7 +26,8 @@ def test(solver, epoch, split, record_file=None, save_model=False):
         which_dataset = solver.dataset_test
         data_symbol = 'T'
         data_label_symbol = 'T_label'
-
+    classwise_acc = [0]*solver.num_classes
+    classwise_sum = [0]*solver.num_classes
     with torch.no_grad():
         for batch_idx, data in enumerate(which_dataset):
             start = time.time()
@@ -56,15 +57,23 @@ def test(solver, epoch, split, record_file=None, save_model=False):
             k = label.data.size()[0]
             correct1 += pred1.eq(label.data).cpu().sum()
             size += k
+            for class_id in range(solver.num_classes):
+                idxes = label==class_id
+                classwise_acc[class_id] += pred1[idxes].eq(label[idxes].data).cpu().sum()
+                classwise_sum[class_id] += (idxes*1==1).sum()
             end = time.time()
             #print("Time taken for testing batch : ", end-start)
     # np.savez('result_plot_sv_t', feature_all, label_all )
     test_loss = test_loss / (size + 1e-6)
     
+    
     print('\n{} set: Average loss: {:.4f}, Accuracy C1: {}/{} ({:.06f}%)  \n'.format(split,test_loss, correct1, size,
                                                                                            100. * correct1 / (
                                                                                                        size + 1e-6)))
     test_acc =  100. * correct1 / (size + 1e-6)
+    for class_id in range(solver.num_classes):
+        class_acc = 100. * classwise_acc[class_id]/(classwise_sum[class_id]+1e-6)
+        print('{} set: Average Accuracy Class Id {}: {}'.format(split,class_id,class_acc))
     best = False
     bool_to_check = (test_loss < solver.best_loss)
     if solver.args.model_sel_acc == 1:

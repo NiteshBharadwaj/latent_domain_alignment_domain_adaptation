@@ -8,9 +8,9 @@ import os
 from collections import Counter
 
 def view_clusters(solver,clusters_file_class,probs_csv_class,epoch):
-    #if(solver.dl_type != 'soft_cluster'):
-    #    print('no clusters for dl type : ', solver.dl_type)
-    #    return
+    if(solver.dl_type != 'soft_cluster' and solver.dl_type !='classwise_msda'):
+        print('no clusters for dl type : ', solver.dl_type)
+        return
     solver.G.eval()
     solver.C1.eval()
     solver.C2.eval()
@@ -57,7 +57,6 @@ def view_clusters(solver,clusters_file_class,probs_csv_class,epoch):
             break
         prev = img_s.size()[0]
         #solver.reset_grad()
-
         loss_s_c1, loss_s_c2, intra_domain_mmd_loss, inter_domain_mmd_loss, entropy_loss, kl_loss, domain_prob = solver.loss_domain_class_mmd(img_s, img_t, label_s, epoch, img_s, actual_domain_s, single_domain_mode=False)
         domains_max = domain_prob.data.max(2)
         best_domain_probs = domains_max[0]

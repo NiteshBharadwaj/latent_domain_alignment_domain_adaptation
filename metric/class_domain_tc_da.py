@@ -64,10 +64,10 @@ def moment_soft(want_class_tear_apart, output_s, output_t, class_prob_s, class_p
             # if cc in useful_classes:
             #if domain_prob_sum_s[0,cc,dd]<3:
             #    continue
+            inter_domain_loss += domain_prob_sum_s[0, cc, dd] * domain_prob_sum_t[0, cc,dd] * euclidean(
+                output_prob_s[:, cc, dd], output_prob_t[:, cc, dd]) / (output_s.shape[0] ** 2)
             for dd2 in range(dd, output_prob_s.shape[2]):
                 #if domain_prob_sum_s[0,cc,dd2]<3:
-                inter_domain_loss += domain_prob_sum_s[0, cc, dd] * domain_prob_sum_t[0, cc,dd2] * euclidean(
-                    output_prob_s[:, cc, dd], output_prob_t[:, cc, dd2]) / (output_s.shape[0] ** 2)
                 #    continue
                 if dd2!=dd:
                     intra_domain_loss += domain_prob_sum_s[0,cc,dd]*domain_prob_sum_s[0,cc,dd2]*euclidean(
