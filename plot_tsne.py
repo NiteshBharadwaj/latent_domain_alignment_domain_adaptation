@@ -69,18 +69,20 @@ def scatter(x, colors, labelsOfInterest, figSize, plotName):
 # y = np.hstack([digits.target[digits.target==i]
 #                for i in range(10)])
 # digits_proj = TSNE(random_state=RS).fit_transform(X)
-def plot_tsne1(solver,plot_before_source, plot_before_target, plot_after_source, plot_after_target, all_plots, plot_domains, dataset):
+def plot_tsne3(solver,plot_before_source, plot_before_target, plot_after_source, plot_after_target, all_plots, plot_domains, dataset):
     solver.G.eval()
     solver.C1.eval()
     solver.C2.eval()
     solver.DP.eval()
     
+    num_batches = 10
     if(dataset == 'office'):
         labelsOfInterest = [2,8,14,22,30]
     if(dataset == 'digits'):
         labelsOfInterest = [1,4,6,9]
+    elif (dataset=='pacs'):
+        labelsOfInterest = [0,1,2]
     prev = solver.batch_size
-    
     with torch.no_grad():
         
         before_source_torch = 0
@@ -93,9 +95,10 @@ def plot_tsne1(solver,plot_before_source, plot_before_target, plot_after_source,
         prev = solver.batch_size
         for batch_idx, data in enumerate(solver.datasets):
             img = data['S']
-            label = data['S_label'].long()
+            label = data['SD_label'].long()
             img_transformed, _ = solver.G(img.cuda())
-            
+            if batch_idx>num_batches:
+                break
             if(img.size()[0] > prev):
                 total_iterations += 1
             prev = img.size()[0]
@@ -162,7 +165,179 @@ def plot_tsne1(solver,plot_before_source, plot_before_target, plot_after_source,
             img = data['T']
             label = data['T_label'].long()
             img_transformed, _ = solver.G(img.cuda())
-            
+            if batch_idx>num_batches//2:
+                break
+            if(img.size()[0] > prev):
+                total_iterations += 1
+            prev = img.size()[0]
+            if(total_iterations > 0):
+                break
+            img_l = img.view(img.size()[0], -1)
+            img_transformed_l = img_transformed.view(img_transformed.size()[0], -1)
+            cur_y = torch.zeros([img_l.size()[0]]).fill_(solver.num_domains)
+            target_label_torch.append(cur_y)
+            #print(img_l.size())
+            #print(cur_y.size())
+            if(before_target_bool == False):
+                before_target_torch = img_l
+                #print(before_source_torch.size())
+                before_target_bool = True
+                after_target_torch = img_transformed_l
+                after_target_bool = True
+            else:
+                before_target_torch = torch.cat((before_target_torch,img_l),0)
+                after_target_torch = torch.cat((after_target_torch,img_transformed_l),0)
+        target_label_torch = tuple(target_label_torch)
+        target_label_torch = torch.cat(target_label_torch,axis=0)
+        target_label_torch = target_label_torch.data.cpu().numpy()
+        #print(source_label_torch.shape)
+        before_target_torch = before_target_torch.data.cpu().numpy()
+        after_target_torch = after_target_torch.data.cpu().numpy()
+        
+#         scatter(TSNE(random_state=RS).fit_transform(before_target_torch),target_label_torch,labelsOfInterest,(5,5))
+#         plt.savefig(plot_before_target, dpi=120)
+#         print('target before plot saved in : ', plot_before_target)
+        
+#         scatter(TSNE(random_state=RS).fit_transform(after_target_torch),target_label_torch,labelsOfInterest,(5,5))
+#         plt.savefig(plot_after_target, dpi=120)
+#         print('target after plot saved in : ', plot_after_source)
+        
+        
+#         before_torch = torch.cat((before_source_torch,before_target))
+        before_torch = np.concatenate((before_source_torch,before_target_torch), axis=0)
+        after_torch = np.concatenate((after_source_torch,after_target_torch), axis=0)
+        label_torch = np.concatenate((source_label_torch,target_label_torch),axis=0)
+        #labels = np.concatenate((source_label_torch, target_label_torch), axis=0)
+        
+        source_num = source_label_torch.shape[0]
+        
+        beforeTSNE = TSNE(random_state=RS).fit_transform(before_torch)
+        scatter(beforeTSNE, label_torch, labelsOfInterest[:]+[solver.num_domains], (5,5), 'source before')
+        plt.savefig(plot_before_source, dpi=120)
+        #scatter(beforeTSNE[source_num:,:], target_label_torch, labelsOfInterest[:]+[solver.num_domains], (5,5), 'target before')
+        #plt.savefig(plot_before_target, dpi=120)
+        print('before training plots saved')
+        
+        afterTSNE = TSNE(random_state=RS).fit_transform(after_torch)
+        scatter(afterTSNE,label_torch, labelsOfInterest[:]+[solver.num_domains], (5,5), 'source after')
+        plt.savefig(plot_after_source, dpi=120)
+        #scatter(afterTSNE[source_num:,:], target_label_torch, labelsOfInterest[:]+[solver.num_domains], (5,5), 'target after')
+        #plt.savefig(plot_after_target, dpi=120)
+        print('after training plots saved')
+       
+        before_source = Image.open(plot_before_source)
+        after_source = Image.open(plot_after_source)
+        #before_target = Image.open(plot_before_target)
+        #after_target = Image.open(plot_after_target)
+        #v1 = get_concat_v(before_source, before_target)
+        #v2 = get_concat_v(after_source, after_target)
+        final = get_concat_h(before_source,after_source)
+        final.save(all_plots.replace(".png","_knowndomains.png"))
+        print('source target plots saved in : ', all_plots.replace(".png","_knowndomains.png"))
+        
+        os.remove(plot_before_source)
+        os.remove(plot_after_source)
+        #os.remove(plot_before_target)
+        #os.remove(plot_after_target)
+def plot_tsne1(solver,plot_before_source, plot_before_target, plot_after_source, plot_after_target, all_plots, plot_domains, dataset):
+    solver.G.eval()
+    solver.C1.eval()
+    solver.C2.eval()
+    solver.DP.eval()
+    
+    if(dataset == 'office'):
+        labelsOfInterest = [2,8,14,22,30]
+    if(dataset == 'digits'):
+        labelsOfInterest = [1,4,6,9]
+    elif (dataset=='pacs'):
+        labelsOfInterest = [0,1,2,3,4,5,6]
+    prev = solver.batch_size
+    num_batches = 5
+    with torch.no_grad():
+        
+        before_source_torch = 0
+        before_source_bool = False
+        after_source_torch = 0
+        after_source_bool = False
+        source_label_torch = []
+        source_label_bool = False
+        total_iterations = 0
+        prev = solver.batch_size
+        for batch_idx, data in enumerate(solver.datasets):
+            img = data['S']
+            label = data['S_label'].long()
+            img_transformed, _ = solver.G(img.cuda())
+            if batch_idx>num_batches:
+                break
+            if(img.size()[0] > prev):
+                total_iterations += 1
+            prev = img.size()[0]
+            if(total_iterations > 0):
+                break
+            for l in labelsOfInterest:
+                l_index = ((label == l).nonzero()).squeeze()
+                img_l = img[l_index,:,:,:]
+                img_transformed_l = img_transformed[l_index,:]
+                #print(img_transformed_l.size())
+                #print(img_l.size())
+                #cur_y = label[l_index,]
+                #print(img_l.size())
+                if(img_l.size()[0] > 0):
+                    try:
+                        a = img_l.size()[3]
+                    except:
+                        img_l = torch.unsqueeze(img_l, 0)
+                        img_transformed_l = torch.unsqueeze(img_transformed_l, 0)
+                        #cur_y = torch.unsqueeze(cur_y,0)
+                    #print(img_transformed_l.size())
+                    img_l = img_l.view(img_l.size()[0], -1)
+                    img_transformed_l = img_transformed_l.view(img_transformed_l.size()[0], -1)
+                    #source_label_torch.append(cur_y)
+                    cur_y = torch.zeros([img_l.size()[0]]).fill_(l)
+                    source_label_torch.append(cur_y)
+                    #print(img_l.size())
+                    #print(cur_y.size())
+                    if(before_source_bool == False):
+                        before_source_torch = img_l
+                        #print(before_source_torch.size())
+                        before_source_bool = True
+                        after_source_torch = img_transformed_l
+                        after_source_bool = True
+                    else:
+                        before_source_torch = torch.cat((before_source_torch,img_l),0)
+                        after_source_torch = torch.cat((after_source_torch,img_transformed_l),0)
+        source_label_torch = tuple(source_label_torch)
+        source_label_torch = torch.cat(source_label_torch,axis=0)
+        source_label_torch = source_label_torch.data.cpu().numpy()
+        #print(source_label_torch.shape)
+        before_source_torch = before_source_torch.data.cpu().numpy()
+        after_source_torch = after_source_torch.data.cpu().numpy()
+        
+#         scatter(TSNE(random_state=RS).fit_transform(before_source_torch),source_label_torch,labelsOfInterest,(5,5))
+#         plt.savefig(plot_before_source, dpi=120)
+#         print('source before plot saved in : ', plot_before_source)
+        
+#         scatter(TSNE(random_state=RS).fit_transform(after_source_torch),source_label_torch,labelsOfInterest,(5,5))
+#         plt.savefig(plot_after_source, dpi=120)
+#         print('source after plot saved in : ', plot_after_source)
+        
+        
+        
+        before_target_torch = 0
+        before_target_bool = False
+        after_target_torch = 0
+        after_target_bool = False
+        target_label_torch = []
+        target_label_bool = False
+        total_iterations = 0
+        prev = solver.batch_size
+        num_batches = 5
+        for batch_idx, data in enumerate(solver.dataset_test):
+            img = data['T']
+            label = data['T_label'].long()
+            img_transformed, _ = solver.G(img.cuda())
+            if batch_idx>num_batches:
+                break
             if(img.size()[0] > prev):
                 total_iterations += 1
             prev = img.size()[0]
@@ -258,7 +433,7 @@ def plot_tsne2(solver,plot_before_source, plot_before_target, plot_after_source,
     solver.C1.eval()
     solver.C2.eval()
     solver.DP.eval()
-    
+    num_batches=5
     if(dataset == 'office'):
         labelsOfInterest = [2,8,14,22,30]
     if(dataset == 'digits'):
@@ -274,16 +449,20 @@ def plot_tsne2(solver,plot_before_source, plot_before_target, plot_after_source,
         domain_y_torch = []
         domain_y_bool = False
         total = 0
-        if(solver.dl_type == 'soft_cluster'):
+        if(solver.dl_type == 'soft_cluster' or solver.dl_type=='classwise_mmd'):
             #print('here')
             for batch_idx, data in enumerate(solver.datasets):
                 #print('here1')
                 img_t = data['T'].cuda()
                 img = data['S'].cuda()
                 label = data['S_label'].long().cuda()
+                domain_labels = data['SD_label'].long().cuda()
+
+                domain_labels = solver.get_one_hot_encoding(domain_labels, solver.num_domains).cuda()
                 _, img_transformed1 = solver.G(img.cuda())
-                _, img_transformed2 = solver.DP(img_transformed1.cuda())
-                
+                #_, img_transformed2 = solver.DP(img_transformed1.cuda())
+                if batch_idx>num_batches:
+                    break
                 
                 #print(img.size()[0])
                 #print(img.size())
@@ -295,7 +474,9 @@ def plot_tsne2(solver,plot_before_source, plot_before_target, plot_after_source,
                 prev = img.size()[0]
                 #solver.reset_grad()
 
-                loss_s_c1, loss_s_c2, loss_msda, entropy_loss, kl_loss, domain_prob = solver.loss_soft_all_domain(img, img_t, label, 0)
+                #loss_s_c1, loss_s_c2, loss_msda, entropy_loss, kl_loss, domain_prob = solver.loss_soft_all_domain(img, img_t, label, 0)
+                
+                 
                 best_domains = domain_prob.data.max(1)[1]
                 for i in range(solver.num_domains):
                     i_index = ((best_domains == i).nonzero()).squeeze()

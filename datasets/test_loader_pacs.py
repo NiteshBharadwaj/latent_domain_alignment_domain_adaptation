@@ -197,7 +197,7 @@ class TestDataLoader():
         self.dataset_s = data_loader_s
 
         dataset_target = Dataset(target['imgs'], target['labels'], [-1]*len(target['labels']), transform=transform_target)
-        data_loader_t = torch.utils.data.DataLoader(dataset_target, batch_size=batch_size2, shuffle=(split == 'Train'),
+        data_loader_t = torch.utils.data.DataLoader(dataset_target, batch_size=batch_size2, shuffle=True,
                                                     num_workers=num_workers_, worker_init_fn=worker_init_fn)
 
         self.dataset_t = dataset_target
