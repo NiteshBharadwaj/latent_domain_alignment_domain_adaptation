@@ -6,10 +6,10 @@ import sys
 import csv
 import os
 
-def view_clusters(solver,clusters_file,probs_csv):
-    #if(solver.dl_type != 'soft_cluster'):
-    #    print('no clusters for dl type : ', solver.dl_type)
-    #    return
+def view_clusters(solver,clusters_file_class,probs_csv_class,epoch):
+    if(solver.dl_type != 'soft_cluster' and solver.dl_type !='classwise_msda'):
+        print('no clusters for dl type : ', solver.dl_type)
+        return
     solver.G.eval()
     solver.C1.eval()
     solver.C2.eval()
@@ -40,18 +40,8 @@ def view_clusters(solver,clusters_file,probs_csv):
             break
         prev = img_s.size()[0]
         #solver.reset_grad()
-
-        loss_s_c1, loss_s_c2, loss_msda_nc2, loss_msda_nc1, entropy_loss, kl_loss, domain_prob = solver.loss_domain_class_mmd(img_s, img_t, label_s, 0, img_s)
-        import pdb
-        pdb.set_trace()
-#         print(domain_prob.size())
-#         print(domain_prob[0])
-        domains_max = domain_prob.data.max(1)
-#         print(domains_max[0][0])
-#         print(domains_max[1][0])
-#         print(domains_max)
-#         sys.exit()
-        
+        loss_s_c1, loss_s_c2, intra_domain_mmd_loss, inter_domain_mmd_loss, entropy_loss, kl_loss, domain_prob = solver.loss_domain_class_mmd(img_s, img_t, label_s, epoch, img_s, actual_domain_s, single_domain_mode=False)
+        domains_max = domain_prob.data.max(2)
         best_domain_probs = domains_max[0]
         best_domains = domains_max[1]
         
