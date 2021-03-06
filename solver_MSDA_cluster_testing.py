@@ -90,7 +90,7 @@ class Solver(object):
             self.C2 = Classifier_cars(num_classes)
             self.DP = DP_cars(num_domains)
         elif args.data == 'office':
-            if args.dl_type == 'soft_cluster':
+            if args.dl_type == 'soft_cluster' or args.dl_type=='classwise_msda' or args.dl_type=='classwise_ssda':
                 self.datasets, self.dataset_test, self.dataset_valid, self.classwise_dataset = office_combined(target, self.batch_size, args.office_directory, args.seed, args.num_workers)
                 #if self.args.clustering_only:
                     #_, _, self.dataset_amazon, _ = office_combined('dwa', self.batch_size, args.office_directory, args.seed, args.num_workers)

@@ -17,7 +17,8 @@ spec:
       imagePullPolicy: Always
       command: ["/bin/sh","-c"]
       # Pip cmds are hardcoded in deploy.py. Add over there.
-      args: ["${PIP_CMD}; ${UNZIP_CMD}; cd /data-pacs/code_MSDA_digit/; ${CMD}" ]
+      args: ["${PIP_CMD}; ${UNZIP_CMD}; cd /data/code_MSDA_digit2/code_MSDA_digit; ${CMD}" ]
+      #args: ["${PIP_CMD}; ${UNZIP_CMD}; cd /data-pacs/code_MSDA_digit; ${CMD}" ]
       #args: ["/hooks/startup.sh" ]
       lifecycle:
         #postStart:
@@ -29,7 +30,7 @@ spec:
       resources:
         limits:
           memory: "8Gi"
-          cpu: "2.0"
+          cpu: "6.0"
           nvidia.com/gpu: ${NGPUS}
           ${MEM_LIMIT}
         requests:
@@ -49,6 +50,8 @@ spec:
         mountPath: /data
       - name: latent-pvc-pacs
         mountPath: /data-pacs
+      - name: latent-pvc-classwise
+        mountPath: /data-classwise
       - name: shm
         mountPath: /dev/shm
 
@@ -56,6 +59,9 @@ spec:
       ${NODE_HOSTNAME}
     restartPolicy: Never
     volumes:
+      - name: latent-pvc-classwise
+        persistentVolumeClaim:
+          claimName: latent-pvc-classwise
       - name: latent-pvc
         persistentVolumeClaim:
           claimName: latent-pvc

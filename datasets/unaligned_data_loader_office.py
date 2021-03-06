@@ -8,6 +8,30 @@ from PIL import Image, ImageOps
 def worker_init_fn(worker_id):
     np.random.seed(np.random.get_state()[1][0] + worker_id)
 
+def balance_classes(labels, domain_labels, balance_domains=False):
+    num_labels = 31
+    num_domains = 2
+    class_counts = [0]*num_labels
+    class_domain_counts = []
+    for i in range(num_labels):
+        class_domain_counts.append([0]*num_domains)
+    for idx,label in enumerate(labels):
+        class_counts[label]+=1
+        class_domain_counts[label][domain_labels[idx]]+=1
+    print(class_counts, class_domain_counts)
+    N = float(sum(class_counts))
+    class_weights = [0]*len(labels)
+    class_domain_weights = [0]*len(labels)
+    for idx, label in enumerate(labels):
+        class_weights[idx] = N/float(class_counts[label])
+        class_domain_weights[idx] = N/float(class_domain_counts[label][domain_labels[idx]])
+
+    if balance_domains:
+        return class_domain_weights
+    else:
+        return class_weights
+
+
 class PlaceCrop(object):
     """Crops the given PIL.Image at the particular index.
     Args:
@@ -86,57 +110,6 @@ class Lighting(object):
             .sum(1).squeeze()
         return img.add(rgb.view(3, 1, 1).expand_as(img))
 
-
-class CombinedDataLOL(Dataset):
-    def __init__(self, data_loader_S, data_loader_t, max_dataset_size):
-        super(Dataset,self).__init__()
-        self.data_loader_S = data_loader_S
-        self.num_S = len(data_loader_S)
-        self.stop_S = []
-        self.stop_t = False
-        for i in range(self.num_S):
-            self.stop_S.append(False)
-        self.max_dataset_size = max_dataset_size
-        self.num_datasets = self.num_S
-        self.data_loader_S_iter = []
-        for i in range(self.num_S):
-            self.data_loader_S_iter.append(iter(self.data_loader_S[i]))
-        self.data_loader_t = data_loader_t
-        self.data_loader_t_iter = iter(self.data_loader_t)
-        self.iter = 0
-
-    def __getitem__(self, index):
-        S, S_paths,t,t_paths = None, None, None, None
-        i = index%self.num_datasets
-        if (np.prod(self.stop_S)>0 and self.stop_t==True) or self.iter > self.max_dataset_size:
-            for i in range(len(self.stop_S)):
-                self.stop_S[i] = False
-            self.stop_t = False
-            self.iter=0
-            raise StopIteration()
-        try:
-            S, S_paths = next(self.data_loader_S_iter[i])
-        except StopIteration:
-            if S is None or S_paths is None:
-                self.stop_S[i] = True
-                self.data_loader_S_iter[i] = iter(self.data_loader_S[i])
-                S, S_paths = next(self.data_loader_S_iter[i])
-        try:
-            t, t_paths = next(self.data_loader_t_iter)
-        except StopIteration:
-            if t is None or t_paths is None:
-                self.stop_t = True
-                self.data_loader_t_iter = iter(self.data_loader_t)
-                t, t_paths = next(self.data_loader_t_iter)
-                
-
-        self.iter += 1 
-        return {'S': S, 'S_label': S_paths,
-                'T': t, 'T_label': t_paths}
-
-    def __len__(self):
-        return self.max_dataset_size*self.num_datasets
-
 class CombinedData(Dataset):
     def __init__(self, data_loader_s, data_loader_t, max_dataset_size):
         super(Dataset,self).__init__()
@@ -152,21 +125,21 @@ class CombinedData(Dataset):
         self.iter = 0
 
     def __getitem__(self, index):
-        S, S_paths,t,t_paths = None, None, None, None
+        S, S_paths, SD_label, t, t_paths, td_label = None, None, None, None, None, None
         try:
-            S, S_paths = next(self.data_loader_s_iter)
+            S, S_paths, SD_label = next(self.data_loader_s_iter)
         except StopIteration:
             if S is None or S_paths is None:
                 self.stop_s = True
                 self.data_loader_s_iter = iter(self.data_loader_s)
-                S, S_paths = next(self.data_loader_s_iter)
+                S, S_paths, SD_label = next(self.data_loader_s_iter)
         try:
-            t, t_paths = next(self.data_loader_t_iter)
+            t, t_paths, td_label = next(self.data_loader_t_iter)
         except StopIteration:
             if t is None or t_paths is None:
                 self.stop_t = True
                 self.data_loader_t_iter = iter(self.data_loader_t)
-                t, t_paths = next(self.data_loader_t_iter)
+                t, t_paths, td_label = next(self.data_loader_t_iter)
 
         if (self.stop_s and self.stop_t) or self.iter > self.max_dataset_size:
             self.stop_s = False
@@ -174,8 +147,8 @@ class CombinedData(Dataset):
             raise StopIteration()
         else:
             self.iter += 1
-            return {'S': S, 'S_label': S_paths,
-                    'T': t, 'T_label': t_paths}
+            return {'S': S, 'S_label': S_paths, 'SD_label': SD_label,
+                    'T': t, 'T_label': t_paths, 'td_label': td_label}
 
     def __len__(self):
         return self.max_dataset_size
@@ -251,15 +224,21 @@ class UnalignedDataLoader():
         target_labels = []
         imgs = []
         labels = []
+        domain_labels = []
         for j in range(5):
             for i in range(len(source)):
                 imgs += source[i]['imgs']
                 labels += source[i]['labels']
+                domain_labels+=len(source[i]['labels'])*[i]
             target_imgs +=target['imgs']
             target_labels += target['labels']
 
-        dataset_source = Dataset(imgs, labels, transform=transform_source)
-        data_loader_s = torch.utils.data.DataLoader(dataset_source, batch_size=batch_size1, shuffle=True, num_workers=num_workers_, worker_init_fn=worker_init_fn, pin_memory=True)
+        dataset_source = Dataset(imgs, labels, domain_labels, transform=transform_source)
+        sampling_weights = torch.DoubleTensor(balance_classes(labels, domain_labels, balance_domains=False))
+        sampler = torch.utils.data.sampler.WeightedRandomSampler(sampling_weights, len(sampling_weights))
+        data_loader_s = torch.utils.data.DataLoader(dataset_source, batch_size=batch_size1,sampler=sampler,
+                                                    num_workers=num_workers_, worker_init_fn=worker_init_fn,
+                                                    pin_memory=True)
 
         #data_sources = []
         #data_loader_s = []
@@ -270,8 +249,10 @@ class UnalignedDataLoader():
         #    max_size = max(max_size,len(data_sources[i]))
         #self.dataset_s = data_loader_s
 
-        dataset_target = Dataset(target_imgs, target_labels, transform=transform_target)
-        data_loader_t = torch.utils.data.DataLoader(dataset_target, batch_size=batch_size2, shuffle=True, num_workers=num_workers_, worker_init_fn=worker_init_fn, pin_memory=True)
+        dataset_target = Dataset(target_imgs, target_labels, [len(source)]*len(target_labels), transform=transform_target)
+        data_loader_t = torch.utils.data.DataLoader(dataset_target, batch_size=batch_size2, shuffle=True,
+                                                    num_workers=num_workers_, worker_init_fn=worker_init_fn,
+                                                    pin_memory=True)
 
         self.dataset_t = dataset_target
         self.paired_data = CombinedData(data_loader_s, data_loader_t,float("inf"))

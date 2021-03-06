@@ -50,8 +50,8 @@ def generate_yaml(type, cmd, name, mem_limit, mem_req, node, ngpus, ssh_key, use
     variables["CMD"] = cmd
     variables["NAME"] = name
     ssh_cmd = "eval \\\"$(ssh-agent -s)\\\";  ssh-add /data/ssh-keys/ssh-{}-rsa; chmod 600 /data/ssh-keys/ssh-{}-rsa.pub; chmod 600 /data/ssh-keys/ssh-${}-rsa; mkdir /root/.ssh; ssh-keyscan github.com >> /root/.ssh/known_hosts".format(user,user,user)
-    variables["PIP_CMD"] = "pip3 install opencv-contrib-python; pip3 install easydict; pip3 install pyyaml; pip3 install hdf5storage;  pip install metayaml; pip install deepdish; pip install -U scikit-learn; pip3 install jupyter; pip3 install --upgrade torch; pip3 install tensorboard; pip3 install opencv-python; pip3 install metayaml; pip3 install tb-nightly;pip3 install torchnet; pip3 install sklearn; pip3 install seaborn"
-    variables["UNZIP_CMD"] = "echo Unzipping; mkdir -p /localdata/office-caltech/data; unzip -qq /data/datasets/Office-Caltech10.zip  -d /localdata/office-caltech/data/"
+    variables["PIP_CMD"] = "pip3 install 'opencv-python-headless<4.3'; pip3 install easydict; pip3 install pyyaml; pip3 install hdf5storage;  pip install metayaml; pip install deepdish; pip install -U scikit-learn; pip3 install jupyter; pip3 install --upgrade torch; pip3 install tensorboard; pip3 install metayaml; pip3 install tb-nightly;pip3 install torchnet; pip3 install sklearn; pip3 install seaborn"
+    variables["UNZIP_CMD"] = "echo Unzipping;mkdir -p /localdata/office/data/;tar -xf /data/datasets/office.tar -C /localdata/office/data/"
     variables["NGPUS"] = str(ngpus)
     variables["SSH_CMD"] = ssh_cmd
 

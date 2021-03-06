@@ -71,6 +71,7 @@ def train_MSDA_soft(solver, epoch, graph_data, classifier_disc=True, record_file
         ct1 = time.time()
         img_t = Variable(data['T'].cuda())
         img_s = Variable(data['S'].cuda())
+        img_s_dl = Variable(data['SD_label'].long().cuda())
         ct2 = time.time()
         #print('batch size : ', img_s.size()[0])
 #         if(batch_idx > 50):
@@ -116,17 +117,18 @@ def train_MSDA_soft(solver, epoch, graph_data, classifier_disc=True, record_file
 
 #        switch_bn(solver.DP,True)
         solver.reset_grad()
-        loss_s_c1, loss_s_c2, loss_msda, entropy_loss, kl_loss, domain_prob = solver.loss_soft_all_domain(img_s, img_t, label_s, epoch, img_s_cl)
+        loss_s_c1, loss_s_c2, loss_msda, entropy_loss, kl_loss, domain_prob = solver.loss_soft_all_domain(img_s, img_t,
+                                                                                                          label_s,
+                                                                                                          epoch,
+                                                                                                          img_s_cl, img_s_dl)
         if not classifier_disc:
             loss_s_c2 = loss_s_c1
-#         if(batch_idx % 6 < 3):
-#             loss = loss_s_c1 + loss_s_c2 + loss_msda + 1.1*kl_loss
-#         else:
-#             loss = loss_s_c1 + loss_s_c2 + loss_msda + entropy_loss
-        if(epoch % 4 == 1):
-            loss = loss_s_c1 + loss_s_c2 + entropy_loss + 0.2*loss_msda
+        if solver.args.pretrained_clustering=="yes":
+            loss = loss_s_c1 + loss_s_c2 + loss_msda
+        elif solver.args.pretrained_source=="yes":
+            loss = entropy_loss + kl_loss
         else:
-            loss = loss_s_c1 + loss_s_c2 + loss_msda + kl_loss
+            loss = loss_s_c1 + loss_s_c2 + entropy_loss + loss_msda + kl_loss
         
         graph_data['entropy'].append(entropy_loss.data.item())
         graph_data['kl'].append(kl_loss.data.item())
@@ -146,11 +148,12 @@ def train_MSDA_soft(solver, epoch, graph_data, classifier_disc=True, record_file
 #         torch.nn.utils.clip_grad_norm(solver.DP.parameters(), clip_value)
 
         #solver.opt_g.step()
-        if not solver.args.clustering_only:
+        if not solver.args.clustering_only and not solver.args.pretrained_source=="yes":
             solver.opt_g.step()
             solver.opt_c1.step()
             solver.opt_c2.step()
-        solver.opt_dp.step()
+        if not solver.args.pretrained_clustering=="yes":
+            solver.opt_dp.step()
 
         #print('GRADIENT UPDATES DONE!!!', time.time()-tt)
         tot_updates_time += time.time()-tt
@@ -186,9 +189,11 @@ def train_MSDA_soft(solver, epoch, graph_data, classifier_disc=True, record_file
                 solver.reset_grad()
 
         if batch_idx % 10 == 0:
-            print \
-                ('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss1: {:.6f}\t Loss2: {:.6f}\t Loss_mmd: {:.6f}\t Loss_entropy: {:.6f}\t kl_loss: {:.6f}\t Combined Entropy: {:.6f}'.format(
-                epoch, batch_idx, 100, 100. * batch_idx / 70000, loss_s_c1.data.item(), loss_s_c2.data.item(), loss_msda.data.item(), entropy_loss.data.item(), kl_loss.data.item(), entropy_loss.data.item()+kl_loss.data.item()))
+            print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss1: {:.6f}\t Loss2: {:.6f}\t'
+                  ' Loss_mmd: {:.6f}\t Loss_entropy: {:.6f}\t kl_loss: {:.6f}\t Combined Entropy: {:.6f}'.format(
+                        epoch, batch_idx, 100, 100. * batch_idx / 70000, loss_s_c1.data.item(), loss_s_c2.data.item(),
+                        loss_msda.data.item(), entropy_loss.data.item(), kl_loss.data.item(),
+                        entropy_loss.data.item() + kl_loss.data.item()))
     print('tot_dataloading_time', tot_dataloading_time, 'tot_updates_time', tot_updates_time)
     print('CUDA Time', tot_cuda_time)
     print('CLDL Total Time', tot_classwisedata_time)

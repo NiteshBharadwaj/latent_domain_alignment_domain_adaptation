@@ -37,6 +37,8 @@ spec:
       mountPath: /localdata/
     - name: latent-pvc
       mountPath: /data
+    - name: latent-pvc-classwise
+      mountPath: /data-classwise
     - name: shm
       mountPath: /dev/shm
     - name: latent-pvc-pacs
@@ -46,6 +48,9 @@ spec:
     ${NODE_HOSTNAME}
   restartPolicy: Never
   volumes:
+    - name: latent-pvc-classwise
+      persistentVolumeClaim:
+        claimName: latent-pvc-classwise
     - name: latent-pvc
       persistentVolumeClaim:
         claimName: latent-pvc
