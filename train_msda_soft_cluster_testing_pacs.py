@@ -92,6 +92,7 @@ def train_MSDA_soft(solver, epoch, graph_data, classifier_disc=True, record_file
 
         ct3 = time.time()
         label_s = Variable(data['S_label'].long().cuda())
+        label_t = Variable(data['T_label'].long().cuda())
         ct4 = time.time()
         if img_s.size()[0] < solver.batch_size or img_t.size()[0] < solver.batch_size:
             #print('Breaking because of low batch size')
@@ -126,8 +127,8 @@ def train_MSDA_soft(solver, epoch, graph_data, classifier_disc=True, record_file
         #        switch_bn(solver.DP,True)
         solver.reset_grad()
         start = time.time()
-        loss_s_c1, loss_s_c2, loss_msda, entropy_loss, kl_loss, domain_prob = solver.loss_soft_all_domain(img_s, img_t,
-                                                                                                          label_s,
+        loss_s_c1, loss_s_c2, loss_msda, entropy_loss, kl_loss, domain_prob = solver.loss_domain_class_mmd(img_s, img_t,
+                                                                                                          label_s, label_t,
                                                                                                           epoch,
                                                                                                           img_s_cl, img_s_dl)
         end = time.time()
