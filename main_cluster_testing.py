@@ -120,6 +120,10 @@ parser.add_argument('--target', type=str, default='mnist', metavar='N', help='ta
 parser.add_argument('--network', type=str, default='', metavar='N', help='network')
 parser.add_argument('--use_abs_diff', action='store_true', default=False,
                     help='use absolute difference value as a measurement')
+parser.add_argument('--pseudo_label_mode', type=str, default='gen_epoch', metavar='N',
+                    help='gen_epoch, perfect, init_only')
+parser.add_argument('--pseudo_logits_criteria', action='store_true', default=False,
+                    help='Use raw logits to sort or probabilities?')
 
 args = parser.parse_args()
 args.cuda = not args.no_cuda and torch.cuda.is_available()
@@ -275,6 +279,8 @@ def main():
                     num = train_MSDA_hard(solver, t, classifier_disc, record_file=record_train)
             else:
                 raise Exception('One step solver not defined')
+            if args.pseudo_label_mode=="gen_epoch":
+                solver.pseudo_labels, solver.pseudo_accept_mask = generate_pseudo(solver,solver.G_T,solver.C1_T,solver.datasets,logits_criteria=args.pseudo_logits_criteria)
             end = time()
             print("Time taken for training epoch : ", end-start)
             if 0:#not solver.args.clustering_only:

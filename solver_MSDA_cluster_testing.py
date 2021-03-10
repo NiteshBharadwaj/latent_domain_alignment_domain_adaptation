@@ -285,7 +285,7 @@ class Solver(object):
         if self.is_classwise:
             if args.target_baseline_pre!="":
                 print("Generating pseudo labels using pretrained model")
-                self.pseudo_labels, self.pseudo_rejection_mask = generate_pseudo(self,self.G_T,self.C1_T,self.datasets,logits_criteria=args.pseudo_logits_criteria)
+                self.pseudo_labels, self.pseudo_accept_mask = generate_pseudo(self,self.G_T,self.C1_T,self.datasets,logits_criteria=args.pseudo_logits_criteria)
             else:
                 if args.pseudo_label_mode=="perfect":
                     print("Initializing perfect pseudo labels")
