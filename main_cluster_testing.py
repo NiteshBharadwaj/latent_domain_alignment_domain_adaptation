@@ -24,6 +24,7 @@ from test import test
 from view_clusters import view_clusters
 from train_source_only import train_source_only
 from matplotlib import pyplot as plt
+from generate_pseudo import generate_pseudo, generate_empty_pseudo, generate_perfect_pseudo
 
 from plot_tsne import plot_tsne1,plot_tsne2, plot_tsne3
 
@@ -121,7 +122,7 @@ parser.add_argument('--network', type=str, default='', metavar='N', help='networ
 parser.add_argument('--use_abs_diff', action='store_true', default=False,
                     help='use absolute difference value as a measurement')
 parser.add_argument('--pseudo_label_mode', type=str, default='gen_epoch', metavar='N',
-                    help='gen_epoch, perfect, init_only')
+                    help='gen_epoch, gen_best_epoch, perfect, init_only')
 parser.add_argument('--pseudo_logits_criteria', action='store_true', default=False,
                     help='Use raw logits to sort or probabilities?')
 
@@ -236,7 +237,18 @@ def main():
                         save_epoch=args.save_epoch)
         if args.target_baseline_pre!="":
             print("Setting pseudo label temperature")
-            test(solver, 0, 'val', record_file=record_val, save_model=args.save_model, temperature_scaling=True, use_g_t=True)
+            _,val_acc = test(solver, 0, 'val', record_file=record_val, save_model=args.save_model, temperature_scaling=True, use_g_t=True)
+        if solver.is_classwise:
+            if args.target_baseline_pre!="":
+                print("Generating pseudo labels using pretrained model")
+                solver.pseudo_labels, solver.pseudo_accept_mask = generate_pseudo(solver,solver.G_T,solver.C1_T,solver.datasets,logits_criteria=args.pseudo_logits_criteria, split="target",reject_quantile=1-val_acc/100.+0.1)
+            else:
+                if args.pseudo_label_mode=="perfect":
+                    print("Initializing perfect pseudo labels")
+                    solver.pseudo_labels, solver.pseudo_accept_mask = generate_perfect_pseudo(solver, solver.datasets)
+                else:
+                    print("Initializing pseudo labels to all zeros, no classwise adaptation can be performed initially")
+                    solver.pseudo_labels, solver.pseudo_accept_mask = generate_empty_pseudo(solver, solver.datasets)
         count = 0
         graph_data = {}
         keys = ['entropy', 'kl', 'c1', 'c2', 'h', 'total', 'msda']
@@ -279,8 +291,6 @@ def main():
                     num = train_MSDA_hard(solver, t, classifier_disc, record_file=record_train)
             else:
                 raise Exception('One step solver not defined')
-            if args.pseudo_label_mode=="gen_epoch":
-                solver.pseudo_labels, solver.pseudo_accept_mask = generate_pseudo(solver,solver.G_T,solver.C1_T,solver.datasets,logits_criteria=args.pseudo_logits_criteria)
             end = time()
             print("Time taken for training epoch : ", end-start)
             if 0:#not solver.args.clustering_only:
@@ -297,8 +307,12 @@ def main():
                     #view_clusters(solver, clusters_file_class, probs_csv_class, t)
                 if args.data == 'cars':
                     test(solver, t, 'train', record_file=record_test, save_model=args.save_model)
-                best = test(solver, t, 'val', record_file=record_val, save_model=args.save_model, temperature_scaling=args.temperature_scaling)
+                best, val_acc = test(solver, t, 'val', record_file=record_val, save_model=args.save_model, temperature_scaling=args.temperature_scaling)
+                if args.pseudo_label_mode=="gen_epoch":
+                    solver.pseudo_labels, solver.pseudo_accept_mask = generate_pseudo(solver,solver.G,solver.C1,solver.datasets,logits_criteria=args.pseudo_logits_criteria, split="target", reject_quantile=1-val_acc/100.+0.5)
                 if best:
+                    if t>2 and args.pseudo_label_mode=="gen_best_epoch":
+                        solver.pseudo_labels, solver.pseudo_accept_mask = generate_pseudo(solver,solver.G,solver.C1,solver.datasets,logits_criteria=args.pseudo_logits_criteria, split="target", reject_quantile=1-val_acc/100.+0.5)
                     print('best epoch : ', t)
                     start = time()
                     test(solver, t, 'test', record_file=record_test, save_model=args.save_model)

@@ -144,4 +144,4 @@ def test(solver, epoch, split, record_file=None, save_model=False, temperature_s
             print('recording %s', record_file)
             record.write('%s\n' % (float(correct1) / (size + 1e-6)))
             record.close()
-    return best
+    return best, test_acc

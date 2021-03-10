@@ -15,7 +15,6 @@ from datasets.cars import cars_combined
 from datasets.office import office_combined
 from datasets.office_caltech import office_caltech_combined
 from datasets.pacs import pacs_combined
-from generate_pseudo import generate_pseudo, generate_empty_pseudo, generate_perfect_pseudo
 import numpy as np
 import math
 from scipy.stats import entropy
@@ -282,17 +281,6 @@ class Solver(object):
         self.sche_dp = torch.optim.lr_scheduler.MultiStepLR(self.opt_dp, milestones, gamma=0.1)
 
         self.lr = learning_rate
-        if self.is_classwise:
-            if args.target_baseline_pre!="":
-                print("Generating pseudo labels using pretrained model")
-                self.pseudo_labels, self.pseudo_accept_mask = generate_pseudo(self,self.G_T,self.C1_T,self.datasets,logits_criteria=args.pseudo_logits_criteria)
-            else:
-                if args.pseudo_label_mode=="perfect":
-                    print("Initializing perfect pseudo labels")
-                    self.pseudo_labels, self.pseudo_accept_mask = generate_perfect_pseudo(self, self.datasets)
-                else:
-                    print("Initializing pseudo labels to all zeros, no classwise adaptation can be performed initially")
-                    self.pseudo_labels, self.pseudo_accept_mask = generate_empty_pseudo(self, self.datasets)
         print('initialize complete')
 
     def set_optimizer(self, which_opt='momentum', lr=0.001, momentum=0.9):
@@ -461,7 +449,9 @@ class Solver(object):
 #        print("loss_s_c1", loss_s_c1, "loss_s_c2", loss_s_c2, "loss_msda", loss_msda, "entropy_loss", entropy_loss, "kl_loss", kl_loss)
         return loss_s_c1, loss_s_c2, loss_msda, entropy_loss, kl_loss, domain_prob
 
-    def T_scaling(self, logits):
+    def T_scaling(self, logits, cpu=False):
+        if cpu:
+            return torch.div(logits, self.temperature.cpu())
         return torch.div(logits, self.temperature)
 
     def loss_domain_class_mmd(self, img_s, img_t, label_s, label_t, epoch, img_s_cl, img_s_dl, indices_t, force_attach = False, single_domain_mode=False):
@@ -517,7 +507,7 @@ class Solver(object):
         output_s_c2, output_t_c2 = self.C2_all_domain_soft(feat_s, feat_t)
 
         class_prob_t = self.pseudo_labels[label_t].cuda()
-        pseudo_mask = self.pseudo_rejection_mask[label_t].cuda()
+        pseudo_mask = self.pseudo_accept_mask[label_t].cuda()
 
         if self.args.target_baseline_pre:
             with torch.no_grad():

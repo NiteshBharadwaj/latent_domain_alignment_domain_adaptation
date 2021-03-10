@@ -71,6 +71,7 @@ def train_MSDA_classwise(solver, epoch, graph_data, classifier_disc=True, record
         # print('batch no : ', batch_idx)
         ct1 = time.time()
         img_t = Variable(data['T'].cuda())
+        idx_t = Variable(data['T_idx'].cuda())
         img_s = Variable(data['S'].cuda())
         img_s_dl = Variable(data['SD_label'].long().cuda())
         ct2 = time.time()
@@ -114,7 +115,7 @@ def train_MSDA_classwise(solver, epoch, graph_data, classifier_disc=True, record
         #        switch_bn(solver.DP,True)
         solver.reset_grad()
         start = time.time()
-        loss_s_c1, loss_s_c2, intra_domain_mmd_loss, inter_domain_mmd_loss, entropy_loss, kl_loss, class_tear_apart_loss = solver.loss_domain_class_mmd(img_s, img_t, label_s, label_t, epoch, None, img_s_dl, single_domain_mode=single_domain_mode) 
+        loss_s_c1, loss_s_c2, intra_domain_mmd_loss, inter_domain_mmd_loss, entropy_loss, kl_loss, class_tear_apart_loss = solver.loss_domain_class_mmd(img_s, img_t, label_s, label_t, epoch, None, img_s_dl,idx_t, single_domain_mode=single_domain_mode) 
         end = time.time()
         class_tear_apart_loss = class_tear_apart_loss*solver.args.class_tear_apart_wt
         loss_msda = intra_domain_mmd_loss + inter_domain_mmd_loss + class_tear_apart_loss

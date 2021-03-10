@@ -13,8 +13,6 @@ def generate_pseudo(solver, model_G, model_C1, dataset, split="train", reject_qu
     feature_all = np.array([])
     label_all = []
 
-    data_symbol = 'T'
-    data_label_symbol = 'T_label'
     classwise_acc = [0]*solver.num_classes
     classwise_sum = [0]*solver.num_classes
     logits_list = []
@@ -22,12 +20,11 @@ def generate_pseudo(solver, model_G, model_C1, dataset, split="train", reject_qu
     dset_size = len(dataset.data_loader_t.dataset)
     logits_map = torch.zeros((dset_size,solver.num_classes),dtype=torch.float32)
     softmax = torch.nn.Softmax(dim=1)
+    total_batches = len(dataset.data_loader_t)
     with torch.no_grad():
-        for batch_idx, data in enumerate(dataset):
+        for batch_idx, data in enumerate(dataset.data_loader_t):
             start = time.time()
-            img = data[data_symbol]
-            label = data[data_label_symbol]
-            idxes = data["T_idx"]
+            img, label, _, idxes = data
 
             img, label,idxes = img.cuda(), label.long().cuda(), idxes.long().cuda()
             img, label = Variable(img, volatile=True), Variable(label)
@@ -62,6 +59,8 @@ def generate_pseudo(solver, model_G, model_C1, dataset, split="train", reject_qu
                 classwise_acc[class_id] += pred1[idxes].eq(label[idxes].data).cpu().sum()
                 classwise_sum[class_id] += (idxes*1==1).sum()
             end = time.time()
+            if batch_idx%10==0:
+                print("{}/{} done".format(batch_idx, total_batches))
             #print("Time taken for testing batch : ", end-start)
     # np.savez('result_plot_sv_t', feature_all, label_all )
     test_loss = test_loss / (size + 1e-6)
@@ -73,13 +72,13 @@ def generate_pseudo(solver, model_G, model_C1, dataset, split="train", reject_qu
         class_acc = 100. * classwise_acc[class_id]/(classwise_sum[class_id]+1e-6)
         print('{} set: Average Accuracy Class Id {}: {}'.format(split,class_id,class_acc))
 
-    probits_map = softmax(solver.T_scaling(logits_list))
+    probits_map = softmax(solver.T_scaling(logits_map, cpu=True)).detach()
     if logits_criteria:
-        logits_map_max = logits_map.max(dim=1)
+        logits_map_max,_ = logits_map.max(dim=1)
         _, sorted_indices = torch.sort(logits_map_max,dim=0)
         reject_indices = sorted_indices[:int((sorted_indices.shape[0])*reject_quantile)]
     else:
-        probits_map_max = probits_map.max(dim=1)
+        probits_map_max,_ = probits_map.max(dim=1)
         _, sorted_indices = torch.sort(probits_map_max, dim=0)
         reject_indices = sorted_indices[:int((sorted_indices.shape[0]) * reject_quantile)]
     accept_mask = torch.ones((probits_map.shape[0]),dtype=torch.int32)
@@ -98,17 +97,18 @@ def generate_empty_pseudo(solver, dataset):
     accept_mask = accept_mask==1
     return probits_map, accept_mask
 
+def get_one_hot(labels, num_classes):
+    y = torch.eye(num_classes)
+    return y[labels]
 
 def generate_perfect_pseudo(solver, dataset):
     data_label_symbol = 'T_label'
     dset_size = len(dataset.data_loader_t.dataset)
     probits_map = torch.zeros((dset_size,solver.num_classes),dtype=torch.float32)
     with torch.no_grad():
-        for batch_idx, data in enumerate(dataset):
-            label = data[data_label_symbol]
-            idxes = data["T_idx"]
-            label,idxes = label.long(), idxes.long()
-            probits_map[idxes] = get_one_hot(label, solver.num_classes)
+        for batch_idx, data in enumerate(dataset.data_loader_t): 
+            _, label, _, idxes = data
+            probits_map[idxes] = get_one_hot(label.long(), solver.num_classes)
 
     accept_mask = torch.ones((probits_map.shape[0]),dtype=torch.int32)
     accept_mask = accept_mask==1

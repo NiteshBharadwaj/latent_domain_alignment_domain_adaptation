@@ -104,7 +104,7 @@ class Data(Dataset):
     def __getitem__(self, index):
         t, t_paths = None, None
         try:
-            t, t_paths, td_labels = next(self.data_loader_t_iter)
+            t, t_paths, td_labels,_ = next(self.data_loader_t_iter)
         except StopIteration:
             if t is None or t_paths is None:
                 self.data_loader_t_iter = iter(self.data_loader_t)
