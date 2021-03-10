@@ -74,6 +74,10 @@ parser.add_argument('--seed', type=int, default=1, metavar='S',
                     help='random seed (default: 1)')
 parser.add_argument('--source', type=str, default='svhn', metavar='N',
                     help='source dataset')
+parser.add_argument('--pseudo_label_mode', type=str, default='gen_epoch', metavar='N',
+                    help='gen_epoch, perfect, init_only')
+parser.add_argument('--pseudo_logits_criteria', action='store_true', default=False,
+                    help='Use raw logits to sort or probabilities?')
 parser.add_argument('--target', type=str, default='mnist', metavar='N', help='target dataset')
 parser.add_argument('--use_abs_diff', action='store_true', default=False,
                     help='use absolute difference value as a measurement')

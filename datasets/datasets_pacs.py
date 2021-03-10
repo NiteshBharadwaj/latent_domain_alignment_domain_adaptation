@@ -70,6 +70,6 @@ class Dataset(data.Dataset):
         if self.transform is not None:
             img = self.transform(img)
             # return img, target
-        return img, target*1.0, domain_label*1.0
+        return img, target*1.0, domain_label*1.0, index
     def __len__(self):
         return len(self.data)

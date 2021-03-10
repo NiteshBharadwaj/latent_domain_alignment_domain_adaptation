@@ -100,11 +100,15 @@ def k_moment_soft(want_class_tear_apart, output_s, output_t, k, class_prob_s, cl
     output_t_k = output_t**k
     return moment_soft(want_class_tear_apart, output_s_k, output_t_k, class_prob_s, class_prob_t, domain_prob_s, label_s, k)
 
-def class_da_regulizer_soft(want_class_tear_apart, output_s, output_t, belta_moment, class_prob_s, class_prob_t, domain_prob_s, label_s):
+def class_da_regulizer_soft(want_class_tear_apart, output_s, output_t, belta_moment, class_prob_s, class_prob_t, domain_prob_s, label_s, pseudo_mask):
     # print('s1:{}, s2:{}, s3:{}, s4:{}'.format(output_s1.shape, output_s2.shape, output_s3.shape, output_t.shape))        
     intra_domain_loss = torch.zeros(1).cuda()
     inter_domain_loss = torch.zeros(1).cuda()
     class_tear_apart_loss = torch.zeros(1).cuda()
+    output_t = output_t[pseudo_mask]
+    class_prob_t = class_prob_t[pseudo_mask]
+    if output_t.shape[0] == 0:
+        return intra_domain_loss, inter_domain_loss, class_tear_apart_loss * belta_moment
     for i in range(0,belta_moment):
         klosses = k_moment_soft(want_class_tear_apart, output_s, output_t, i + 1, class_prob_s, class_prob_t, domain_prob_s, label_s)
         intra_domain_loss += klosses[0]

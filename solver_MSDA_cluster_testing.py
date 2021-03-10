@@ -15,6 +15,7 @@ from datasets.cars import cars_combined
 from datasets.office import office_combined
 from datasets.office_caltech import office_caltech_combined
 from datasets.pacs import pacs_combined
+from generate_pseudo import generate_pseudo, generate_empty_pseudo, generate_perfect_pseudo
 import numpy as np
 import math
 from scipy.stats import entropy
@@ -281,6 +282,17 @@ class Solver(object):
         self.sche_dp = torch.optim.lr_scheduler.MultiStepLR(self.opt_dp, milestones, gamma=0.1)
 
         self.lr = learning_rate
+        if self.is_classwise:
+            if args.target_baseline_pre!="":
+                print("Generating pseudo labels using pretrained model")
+                self.pseudo_labels, self.pseudo_rejection_mask = generate_pseudo(self,self.G_T,self.C1_T,self.datasets,logits_criteria=args.pseudo_logits_criteria)
+            else:
+                if args.pseudo_label_mode=="perfect":
+                    print("Initializing perfect pseudo labels")
+                    self.pseudo_labels, self.pseudo_accept_mask = generate_perfect_pseudo(self, self.datasets)
+                else:
+                    print("Initializing pseudo labels to all zeros, no classwise adaptation can be performed initially")
+                    self.pseudo_labels, self.pseudo_accept_mask = generate_empty_pseudo(self, self.datasets)
         print('initialize complete')
 
     def set_optimizer(self, which_opt='momentum', lr=0.001, momentum=0.9):
@@ -452,7 +464,7 @@ class Solver(object):
     def T_scaling(self, logits):
         return torch.div(logits, self.temperature)
 
-    def loss_domain_class_mmd(self, img_s, img_t, label_s, label_t, epoch, img_s_cl, img_s_dl, force_attach = False, single_domain_mode=False):
+    def loss_domain_class_mmd(self, img_s, img_t, label_s, label_t, epoch, img_s_cl, img_s_dl, indices_t, force_attach = False, single_domain_mode=False):
         feat_s_comb, feat_t_comb = self.feat_soft_all_domain(img_s, img_t)
         feat_s, feat_s_conv, _ = feat_s_comb
         feat_t, feat_t_conv, _ = feat_t_comb
@@ -503,9 +515,10 @@ class Solver(object):
             kl_loss = kl_loss*0.75 + kl_loss_tar*0.25
         output_s_c1, output_t_c1 = self.C1_all_domain_soft(feat_s, feat_t)
         output_s_c2, output_t_c2 = self.C2_all_domain_soft(feat_s, feat_t)
-        
-        # _, class_prob_s = self.entropy_loss(output_s_c1)
-        entropy_t, class_prob_t = self.entropy_loss(self.T_scaling(output_t_c1))
+
+        class_prob_t = self.pseudo_labels[label_t].cuda()
+        pseudo_mask = self.pseudo_rejection_mask[label_t].cuda()
+
         if self.args.target_baseline_pre:
             with torch.no_grad():
                 feat_t_pre,_,_ = self.G_T(img_t)
@@ -513,9 +526,9 @@ class Solver(object):
                 class_prob_t = class_prob_t_pre
         if not self.args.target_clustering:
             if self.to_detach and not force_attach:
-                intra_domain_mmd_loss, inter_domain_mmd_loss, class_tear_apart_loss = class_domain_da.class_da_regulizer_soft(self.args.class_tear_apart, feat_s, feat_t, 5, self.get_one_hot_encoding(label_s, self.num_classes).cuda(), class_prob_t.detach(), domain_prob_s.detach(), label_s)
+                intra_domain_mmd_loss, inter_domain_mmd_loss, class_tear_apart_loss = class_domain_da.class_da_regulizer_soft(self.args.class_tear_apart, feat_s, feat_t, 5, self.get_one_hot_encoding(label_s, self.num_classes).cuda(), class_prob_t.detach(), domain_prob_s.detach(), label_s, pseudo_mask)
             else:
-                intra_domain_mmd_loss, inter_domain_mmd_loss, class_tear_apart_loss = class_domain_da.class_da_regulizer_soft(self.args.class_tear_apart, feat_s, feat_t, 5, self.get_one_hot_encoding(label_s, self.num_classes).cuda(), class_prob_t, domain_prob_s, label_s)
+                intra_domain_mmd_loss, inter_domain_mmd_loss, class_tear_apart_loss = class_domain_da.class_da_regulizer_soft(self.args.class_tear_apart, feat_s, feat_t, 5, self.get_one_hot_encoding(label_s, self.num_classes).cuda(), class_prob_t, domain_prob_s, label_s, pseudo_mask)
         else:
             if self.to_detach and not force_attach:
                 intra_domain_mmd_loss, inter_domain_mmd_loss, class_tear_apart_loss = class_domain_tc_da.class_da_regulizer_soft(self.args.class_tear_apart, feat_s, feat_t, 5, self.get_one_hot_encoding(label_s, self.num_classes).cuda(), class_prob_t.detach(), domain_prob_s.detach(), label_s, domain_prob_tar.detach())

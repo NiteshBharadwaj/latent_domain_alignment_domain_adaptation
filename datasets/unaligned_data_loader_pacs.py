@@ -131,20 +131,21 @@ class CombinedData(Dataset):
 
     def __getitem__(self, index):
         S, S_paths, SD_label, t, t_paths, td_label = None, None, None, None, None, None
+        S_idx, T_idx = None,None
         try:
-            S, S_paths, SD_label = next(self.data_loader_s_iter)
+            S, S_paths, SD_label, S_idx = next(self.data_loader_s_iter)
         except StopIteration:
             if S is None or S_paths is None:
                 self.stop_s = True
                 self.data_loader_s_iter = iter(self.data_loader_s)
-                S, S_paths, SD_label = next(self.data_loader_s_iter)
+                S, S_paths, SD_label, S_idx = next(self.data_loader_s_iter)
         try:
-            t, t_paths, td_label = next(self.data_loader_t_iter)
+            t, t_paths, td_label, T_idx = next(self.data_loader_t_iter)
         except StopIteration:
             if t is None or t_paths is None:
                 self.stop_t = True
                 self.data_loader_t_iter = iter(self.data_loader_t)
-                t, t_paths, td_label = next(self.data_loader_t_iter)
+                t, t_paths, td_label, T_idx = next(self.data_loader_t_iter)
 
         if (self.stop_s and self.stop_t) or self.iter > self.max_dataset_size:
             self.stop_s = False
@@ -152,8 +153,8 @@ class CombinedData(Dataset):
             raise StopIteration()
         else:
             self.iter += 1
-            return {'S': S, 'S_label': S_paths, 'SD_label': SD_label,
-                    'T': t, 'T_label': t_paths, 'td_label': td_label}
+            return {'S': S, 'S_label': S_paths, 'SD_label': SD_label, 'S_idx': S_idx,
+                    'T': t, 'T_label': t_paths, 'td_label': td_label, 'T_idx': T_idx}
 
     def __len__(self):
         return self.max_dataset_size
