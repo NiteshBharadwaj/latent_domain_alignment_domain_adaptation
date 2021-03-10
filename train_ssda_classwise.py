@@ -92,6 +92,7 @@ def train_SSDA_classwise(solver, epoch, graph_data, classifier_disc=True, record
 
         ct3 = time.time()
         label_s = Variable(data['S_label'].long().cuda())
+        label_t = Variable(data['T_label'].long().cuda())
         ct4 = time.time()
         if img_s.size()[0] < solver.batch_size or img_t.size()[0] < solver.batch_size:
             #print('Breaking because of low batch size')
@@ -126,13 +127,13 @@ def train_SSDA_classwise(solver, epoch, graph_data, classifier_disc=True, record
         #        switch_bn(solver.DP,True)
         solver.reset_grad()
         start = time.time()
-        loss_s_c1, loss_s_c2, intra_domain_mmd_loss, _,_,_, domain_prob = solver.loss_class_mmd(img_s, img_t, label_s, epoch, img_s_cl, single_domain_mode=single_domain_mode) 
+        loss_s_c1, loss_s_c2, intra_domain_mmd_loss, _,_,_, domain_prob = solver.loss_class_mmd(img_s, img_t, label_s, label_t, epoch, img_s_cl, single_domain_mode=single_domain_mode) 
         end = time.time()
         loss_msda = intra_domain_mmd_loss
         entropy_loss = loss_s_c1*0.
         kl_loss = loss_s_c1*0.
         #print("Time taken in training batch : ", end-start)
-        if not classifieir_disc:
+        if not classifier_disc:
             loss_s_c2 = loss_s_c1
         if solver.args.pretrained_clustering=="yes":
             loss = loss_s_c1 + loss_s_c2 + loss_msda

@@ -511,7 +511,7 @@ class Solver(object):
         #loss_s_c1+=entropy_t
         return loss_s_c1, loss_s_c2, intra_domain_mmd_loss, inter_domain_mmd_loss, entropy_loss, kl_loss, class_tear_apart_loss
 
-    def loss_class_mmd(self, img_s, img_t, label_s, epoch, img_s_cl, force_attach = False, single_domain_mode=False):
+    def loss_class_mmd(self, img_s, img_t, label_s, label_t, epoch, img_s_cl, force_attach = False, single_domain_mode=False):
         feat_s_comb, feat_t_comb = self.feat_soft_all_domain(img_s, img_t)
         feat_s, _ = feat_s_comb
         feat_t, _ = feat_t_comb
@@ -523,9 +523,9 @@ class Solver(object):
         _, class_prob_t = self.entropy_loss(output_t_c1)
 
         if self.to_detach and not force_attach:
-            classwise_da_loss = classwise_da.class_da_regulizer_soft(feat_s, feat_t, 5, self.get_one_hot_encoding(label_s, self.num_classes).cuda(), class_prob_t.detach())
+            classwise_da_loss = classwise_da.class_da_regulizer_soft(feat_s, feat_t, 5, self.get_one_hot_encoding(label_s, self.num_classes).cuda(), self.get_one_hot_encoding(label_t, self.num_classes).cuda())
         else:
-            classwise_da_loss = classwise_da.class_da_regulizer_soft(feat_s, feat_t, 5, self.get_one_hot_encoding(label_s, self.num_classes).cuda(), class_prob_t)
+            classwise_da_loss = classwise_da.class_da_regulizer_soft(feat_s, feat_t, 5, self.get_one_hot_encoding(label_s, self.num_classes).cuda(), self.get_one_hot_encoding(label_t, self.num_classes).cuda())
         classwise_da_loss = classwise_da_loss*self.msda_wt
 
         if (math.isnan(classwise_da_loss.data.item())):
