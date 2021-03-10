@@ -132,7 +132,7 @@ def train_SSDA_classwise(solver, epoch, graph_data, classifier_disc=True, record
         entropy_loss = loss_s_c1*0.
         kl_loss = loss_s_c1*0.
         #print("Time taken in training batch : ", end-start)
-        if not classifieir_disc:
+        if not classifier_disc:
             loss_s_c2 = loss_s_c1
         if solver.args.pretrained_clustering=="yes":
             loss = loss_s_c1 + loss_s_c2 + loss_msda

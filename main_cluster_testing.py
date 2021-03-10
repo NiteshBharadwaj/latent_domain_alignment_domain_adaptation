@@ -83,6 +83,12 @@ parser.add_argument('--lr', type=float, default=0.001, metavar='LR',
                     help='learning rate (default: 0.0002)')
 parser.add_argument('--max_epoch', type=int, default=200, metavar='N',
                     help='how many epochs')
+parser.add_argument('--target_baseline_pre', type=str, default="",
+                     help='target baseline pretrained model')
+parser.add_argument('--baseline_effect', action='store_true', default=False,
+                     help='baseine effect')
+parser.add_argument('--temperature_scaling', action='store_true', default=False,
+                     help='temperature scaling')
 parser.add_argument('--class_tear_apart_wt', type=float, default=1.,
                      help='class tear apart weight')
 parser.add_argument('--class_tear_apart', action='store_true', default=False,
@@ -203,7 +209,7 @@ def main():
 
         # train_MSDA_soft(solver,0,classifier_disc)
 
-        test(solver, 0, 'test', record_file=None, save_model=False)
+        test(solver, 0, 'test', record_file=None, save_model=False, temperature_scaling=True)
         #view_clusters(solver, clusters_file_class, probs_csv_class,0)
         plot_tsne1(solver, plot_before_source, plot_before_target, plot_after_source, plot_after_target, all_plots,
                     plot_domains, args.data)
@@ -224,6 +230,9 @@ def main():
                         optimizer=args.optimizer,
                         checkpoint_dir=args.checkpoint_dir,
                         save_epoch=args.save_epoch)
+        if args.target_baseline_pre!="":
+            print("Setting pseudo label temperature")
+            test(solver, 0, 'val', record_file=record_val, save_model=args.save_model, temperature_scaling=True, use_g_t=True)
         count = 0
         graph_data = {}
         keys = ['entropy', 'kl', 'c1', 'c2', 'h', 'total', 'msda']
@@ -282,7 +291,7 @@ def main():
                     #view_clusters(solver, clusters_file_class, probs_csv_class, t)
                 if args.data == 'cars':
                     test(solver, t, 'train', record_file=record_test, save_model=args.save_model)
-                best = test(solver, t, 'val', record_file=record_val, save_model=args.save_model)
+                best = test(solver, t, 'val', record_file=record_val, save_model=args.save_model, temperature_scaling=args.temperature_scaling)
                 if best:
                     print('best epoch : ', t)
                     start = time()

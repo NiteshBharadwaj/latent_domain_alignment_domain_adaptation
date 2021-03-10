@@ -195,6 +195,8 @@ class Solver(object):
             self.kl_wt = args.kl_wt
             self.to_detach = args.to_detach
             num_classes = 7
+            self.temperature = nn.Parameter(torch.ones(1).cuda())
+            self.temperature_optim = optim.LBFGS([self.temperature], lr=0.001, max_iter=10000, line_search_fn='strong_wolfe')
             self.num_classes = num_classes
             num_domains = args.num_domain
             self.num_domains = num_domains
@@ -203,6 +205,10 @@ class Solver(object):
             self.C1 = Classifier_pacs(num_classes)
             self.C2 = Classifier_pacs(num_classes)
             self.DP = DP_pacs(num_domains, classwise=self.is_classwise, num_classes=self.num_classes, classaware_dp=self.classaware_dp)
+            if args.target_baseline_pre!="":
+                self.G_T = Generator_pacs()
+                self.C1_T = Classifier_pacs(num_classes)
+                self.C2_T = Classifier_pacs(num_classes)
 
 
         # print(self.dataset['S1'].shape)
@@ -210,6 +216,14 @@ class Solver(object):
 
         self.set_optimizer(which_opt=optimizer, lr=learning_rate)
         print('ARGS EVAL ONLY : ', args.eval_only)
+        if args.target_baseline_pre!="":
+            print('Loading pseudo-labels from ', args.target_baseline_pre)
+            checkpoint = torch.load(args.target_baseline_pre)
+            self.G_T.load_state_dict(checkpoint['G_state_dict'])
+            self.C1_T.load_state_dict(checkpoint['C1_state_dict'])
+            self.C2_T.load_state_dict(checkpoint['C2_state_dict'])
+
+
         if args.eval_only or args.load_ckpt !="":
             if not args.load_ckpt=="":
                 print('Loading state from args.load_ckpt')
@@ -249,6 +263,13 @@ class Solver(object):
         self.C1.cuda()
         self.C2.cuda()
         self.DP.cuda()
+        if args.target_baseline_pre!="":
+            self.G_T.cuda()
+            self.C1_T.cuda()
+            self.C2_T.cuda()
+            self.G_T.eval()
+            self.C1_T.eval()
+            self.C2_T.eval()
         self.interval = interval
         if args.data=='cars':
             milestones = [100]
@@ -428,10 +449,13 @@ class Solver(object):
 #        print("loss_s_c1", loss_s_c1, "loss_s_c2", loss_s_c2, "loss_msda", loss_msda, "entropy_loss", entropy_loss, "kl_loss", kl_loss)
         return loss_s_c1, loss_s_c2, loss_msda, entropy_loss, kl_loss, domain_prob
 
+    def T_scaling(self, logits):
+        return torch.div(logits, self.temperature)
+
     def loss_domain_class_mmd(self, img_s, img_t, label_s, label_t, epoch, img_s_cl, img_s_dl, force_attach = False, single_domain_mode=False):
         feat_s_comb, feat_t_comb = self.feat_soft_all_domain(img_s, img_t)
-        feat_s, feat_s_conv = feat_s_comb
-        feat_t, feat_t_conv = feat_t_comb
+        feat_s, feat_s_conv, _ = feat_s_comb
+        feat_t, feat_t_conv, _ = feat_t_comb
         img_s_dl = self.get_one_hot_encoding(img_s_dl, self.num_domains).cuda()
         if self.classaware_dp:
             domain_logits,_ = self.DP(feat_s_conv.clone().detach())
@@ -479,23 +503,30 @@ class Solver(object):
             kl_loss = kl_loss*0.75 + kl_loss_tar*0.25
         output_s_c1, output_t_c1 = self.C1_all_domain_soft(feat_s, feat_t)
         output_s_c2, output_t_c2 = self.C2_all_domain_soft(feat_s, feat_t)
-
+        
         # _, class_prob_s = self.entropy_loss(output_s_c1)
-        entropy_t, class_prob_t = self.entropy_loss(output_t_c1)
+        entropy_t, class_prob_t = self.entropy_loss(self.T_scaling(output_t_c1))
+        if self.args.target_baseline_pre:
+            with torch.no_grad():
+                feat_t_pre,_,_ = self.G_T(img_t)
+                _, class_prob_t_pre = self.entropy_loss(self.C1_T(feat_t_pre))
+                class_prob_t = class_prob_t_pre
         if not self.args.target_clustering:
             if self.to_detach and not force_attach:
-                intra_domain_mmd_loss, inter_domain_mmd_loss, class_tear_apart_loss = class_domain_da.class_da_regulizer_soft(self.args.class_tear_apart, feat_s, feat_t, 5, self.get_one_hot_encoding(label_s, self.num_classes).cuda(), self.get_one_hot_encoding(label_t, self.num_classes).cuda(), domain_prob_s.detach(), label_s)
+                intra_domain_mmd_loss, inter_domain_mmd_loss, class_tear_apart_loss = class_domain_da.class_da_regulizer_soft(self.args.class_tear_apart, feat_s, feat_t, 5, self.get_one_hot_encoding(label_s, self.num_classes).cuda(), class_prob_t.detach(), domain_prob_s.detach(), label_s)
             else:
-                intra_domain_mmd_loss, inter_domain_mmd_loss, class_tear_apart_loss = class_domain_da.class_da_regulizer_soft(self.args.class_tear_apart, feat_s, feat_t, 5, self.get_one_hot_encoding(label_s, self.num_classes).cuda(), self.get_one_hot_encoding(label_t, self.num_classes).cuda(), domain_prob_s, label_s)
+                intra_domain_mmd_loss, inter_domain_mmd_loss, class_tear_apart_loss = class_domain_da.class_da_regulizer_soft(self.args.class_tear_apart, feat_s, feat_t, 5, self.get_one_hot_encoding(label_s, self.num_classes).cuda(), class_prob_t, domain_prob_s, label_s)
         else:
             if self.to_detach and not force_attach:
-                intra_domain_mmd_loss, inter_domain_mmd_loss, class_tear_apart_loss = class_domain_tc_da.class_da_regulizer_soft(self.args.class_tear_apart, feat_s, feat_t, 5, self.get_one_hot_encoding(label_s, self.num_classes).cuda(), self.get_one_hot_encoding(label_t, self.num_classes).cuda(), domain_prob_s.detach(), label_s, domain_prob_tar.detach())
+                intra_domain_mmd_loss, inter_domain_mmd_loss, class_tear_apart_loss = class_domain_tc_da.class_da_regulizer_soft(self.args.class_tear_apart, feat_s, feat_t, 5, self.get_one_hot_encoding(label_s, self.num_classes).cuda(), class_prob_t.detach(), domain_prob_s.detach(), label_s, domain_prob_tar.detach())
             else:
-                intra_domain_mmd_loss, inter_domain_mmd_loss, class_tear_apart_loss = class_domain_tc_da.class_da_regulizer_soft(self.args.class_tear_apart, feat_s, feat_t, 5, self.get_one_hot_encoding(label_s, self.num_classes).cuda(), self.get_one_hot_encoding(label_t, self.num_classes).cuda(), domain_prob_s, label_s, domain_prob_tar)
+                intra_domain_mmd_loss, inter_domain_mmd_loss, class_tear_apart_loss = class_domain_tc_da.class_da_regulizer_soft(self.args.class_tear_apart, feat_s, feat_t, 5, self.get_one_hot_encoding(label_s, self.num_classes).cuda(), class_prob_t, domain_prob_s, label_s, domain_prob_tar)
         intra_domain_mmd_loss = intra_domain_mmd_loss*self.msda_wt
         inter_domain_mmd_loss = inter_domain_mmd_loss*self.msda_wt
         class_tear_apart_loss = class_tear_apart_loss*self.msda_wt
-
+        if self.args.baseline_effect:
+            loss_baseline = msda.msda_regulizer_single(feat_s, feat_t, 5) * self.msda_wt
+            inter_domain_mmd_loss += loss_baseline
         if (math.isnan(intra_domain_mmd_loss.data.item())):
             raise Exception('intra_domain_mmd_loss is nan')
         loss_s_c1 = \

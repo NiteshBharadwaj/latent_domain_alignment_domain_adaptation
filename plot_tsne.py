@@ -96,7 +96,7 @@ def plot_tsne3(solver,plot_before_source, plot_before_target, plot_after_source,
         for batch_idx, data in enumerate(solver.datasets):
             img = data['S']
             label = data['SD_label'].long()
-            img_transformed, _ = solver.G(img.cuda())
+            img_transformed, _,_ = solver.G(img.cuda())
             if batch_idx>num_batches:
                 break
             if(img.size()[0] > prev):
@@ -164,7 +164,7 @@ def plot_tsne3(solver,plot_before_source, plot_before_target, plot_after_source,
         for batch_idx, data in enumerate(solver.dataset_test):
             img = data['T']
             label = data['T_label'].long()
-            img_transformed, _ = solver.G(img.cuda())
+            img_transformed, _, _ = solver.G(img.cuda())
             if batch_idx>num_batches//2:
                 break
             if(img.size()[0] > prev):
@@ -266,7 +266,7 @@ def plot_tsne1(solver,plot_before_source, plot_before_target, plot_after_source,
         for batch_idx, data in enumerate(solver.datasets):
             img = data['S']
             label = data['S_label'].long()
-            img_transformed, _ = solver.G(img.cuda())
+            img_transformed, _,_ = solver.G(img.cuda())
             if batch_idx>num_batches:
                 break
             if(img.size()[0] > prev):
@@ -335,7 +335,7 @@ def plot_tsne1(solver,plot_before_source, plot_before_target, plot_after_source,
         for batch_idx, data in enumerate(solver.dataset_test):
             img = data['T']
             label = data['T_label'].long()
-            img_transformed, _ = solver.G(img.cuda())
+            img_transformed, _, _ = solver.G(img.cuda())
             if batch_idx>num_batches:
                 break
             if(img.size()[0] > prev):
@@ -459,7 +459,7 @@ def plot_tsne2(solver,plot_before_source, plot_before_target, plot_after_source,
                 domain_labels = data['SD_label'].long().cuda()
 
                 domain_labels = solver.get_one_hot_encoding(domain_labels, solver.num_domains).cuda()
-                _, img_transformed1 = solver.G(img.cuda())
+                _, img_transformed1, _ = solver.G(img.cuda())
                 #_, img_transformed2 = solver.DP(img_transformed1.cuda())
                 if batch_idx>num_batches:
                     break

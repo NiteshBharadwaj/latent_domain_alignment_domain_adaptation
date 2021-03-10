@@ -4,8 +4,8 @@ def Generator():
     return pacs_architecture.Feature()
 
 
-def Classifier(num_classes):
-    return pacs_architecture.Predictor(num_classes)
+def Classifier(num_classes, inp_channels=512):
+    return pacs_architecture.Predictor(num_classes,inp_channels)
 
 
 def DomainPredictor(num_domains, classwise=False, num_classes=None, classaware_dp=False):
