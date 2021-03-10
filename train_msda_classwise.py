@@ -17,12 +17,12 @@ def train_MSDA_classwise(solver, epoch, classifier_disc=True, record_file=None, 
         if img_s.size()[0] < solver.batch_size or img_t.size()[0] < solver.batch_size:
             break
 
-        classwise_data = next(classwise_dataset_iterator)
-        img_s_cl = Variable(classwise_data['S'].cuda())
+        #classwise_data = next(classwise_dataset_iterator)
+        #img_s_cl = Variable(classwise_data['S'].cuda())
 
         solver.reset_grad()
         
-        loss_s_c1, loss_s_c2, intra_domain_mmd_loss, inter_domain_mmd_loss, entropy_loss, kl_loss, domain_prob = solver.loss_domain_class_mmd(img_s, img_t, label_s, epoch, img_s_cl, single_domain_mode=single_domain_mode)
+        loss_s_c1, loss_s_c2, intra_domain_mmd_loss, inter_domain_mmd_loss, entropy_loss, kl_loss, domain_prob = solver.loss_domain_class_mmd(img_s, img_t, label_s, epoch, None, single_domain_mode=single_domain_mode)
         if not classifier_disc:
             loss_s_c2 = loss_s_c1
         if solver.args.saved_model_dir!='na' and epoch < 20:

@@ -13,12 +13,13 @@ class Dataset2(data.Dataset):
             puts it in root directory. If dataset is already downloaded, it is not
             downloaded again.
     """
-    def __init__(self, data, label,
+    def __init__(self, data, label, domain_labels,
                  transform=None,target_transform=None):
         self.transform = transform
         self.target_transform = target_transform
         self.data = data
         self.labels = label
+        self.dlabels = domain_labels
         self.n_datas = len(self.data)
         self.len_end = [0]
         for i in range(self.n_datas):
@@ -38,8 +39,8 @@ class Dataset2(data.Dataset):
                 data_idx = i
                 break
         assert data_idx != -1000
-        data, labels = self.data[data_idx], self.labels[data_idx]
-        img, target = data[index%len(data)], labels[index%len(labels)]
+        data, labels, dlabels = self.data[data_idx], self.labels[data_idx], self.dlabels[data_idx]
+        img, target, target_d = data[index%len(data)], labels[index%len(labels)], dlabels[index%len(dlabels)]
         # doing this so that it is consistent with all other datasets
         # to return a PIL Image
         # print(img.shape)
@@ -58,7 +59,7 @@ class Dataset2(data.Dataset):
         if self.transform is not None:
             img = self.transform(img)
             # return img, target
-        return img, target
+        return img, target, target_d*1
     def __len__(self):
         return self.total_len
 class Dataset(data.Dataset):

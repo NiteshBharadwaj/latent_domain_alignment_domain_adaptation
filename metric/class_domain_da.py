@@ -27,14 +27,14 @@ def k_moment(source_output, target_output, k):
 
 def moment_soft(output_s, output_t, class_prob_s, class_prob_t, domain_prob_s, label_s):
     output_s = output_s.reshape(output_s.shape[0], output_s.shape[1],1) # N x e x 1
-    class_prob_s = class_prob_s.reshape(class_prob_s.shape[0], 1, class_prob_s.shape[1]) # SHAPE -> N x 1 x c
-    output_s_times_cp = torch.matmul(output_s, class_prob_s) #SHAPE -> N x e x c
+    class_prob_s = class_prob_s.reshape(class_prob_s.shape[0], 1, class_prob_s.shape[1]) # SHAPE -> N x 1 x c 
+    output_s_cl = torch.matmul(output_s, class_prob_s) #SHAPE -> N x e x c
     domain_prob_s = domain_prob_s.reshape(domain_prob_s.shape[0], 1, domain_prob_s.shape[1], domain_prob_s.shape[2]) # SHAPE -> N x 1 x c x d
-    output_s_times_cp = output_s_times_cp.reshape(output_s_times_cp.shape[0], output_s_times_cp.shape[1], output_s_times_cp.shape[2], 1) #SHAPE -> N x e x c x 1
+    output_s_times_cp = output_s_cl.reshape(output_s_cl.shape[0], output_s_cl.shape[1], output_s_cl.shape[2], 1) #SHAPE -> N x e x c x 1
     output_prob_s = output_s_times_cp * domain_prob_s #SHAPE -> N x e x c x d
     N,e,c,d = output_prob_s.shape
     class_prob_sum_s = class_prob_s.sum(0) + 1e-6
-    class_prob_sum_s = class_prob_sum_s.reshape(1, -1, 1) #SHAPE -> 1 x c x 1 
+    class_prob_sum_s = class_prob_sum_s.reshape(1, -1) #SHAPE -> 1 x c
     domain_prob_sum_s = domain_prob_s.sum(0) + 1e-6
     domain_prob_sum_s = domain_prob_sum_s.reshape(1, c, d) # SHAPE -> 1 x c x d
 
@@ -46,10 +46,12 @@ def moment_soft(output_s, output_t, class_prob_s, class_prob_t, domain_prob_s, l
     class_prob_sum_t = class_prob_t.sum(0) + 1e-6
     class_prob_sum_t = class_prob_sum_t.reshape(1, -1) #SHAPE -> 1 x c
     output_prob_t = output_prob_t.sum(0)/class_prob_sum_t # SHAPE -> e x c
+    output_s_cl = output_s_cl.sum(0)/class_prob_sum_s
 
     intra_domain_loss = 0
     inter_domain_loss = 0
     for cc in range(output_prob_s.shape[1]):
+        #inter_domain_loss += class_prob_sum_s[0,cc]*class_prob_sum_t[0,cc]*euclidean(output_s_cl[:, cc], output_prob_t[:, cc])/(output_s.shape[0]**2)
         for dd in range(output_prob_s.shape[2]):
             inter_domain_loss += domain_prob_sum_s[0,cc,dd]*class_prob_sum_t[0,cc]*euclidean(output_prob_s[:, cc, dd], output_prob_t[:, cc])/(output_s.shape[0]**2)
             for dd2 in range(dd+1, output_prob_s.shape[2]):

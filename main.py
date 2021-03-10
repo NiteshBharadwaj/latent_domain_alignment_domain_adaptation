@@ -18,7 +18,7 @@ from train_ssda_classwise import train_SSDA_classwise
 from test import test
 from view_clusters import view_clusters
 from train_source_only import train_source_only
-from plot_tsne import plot_tsne1,plot_tsne2
+from plot_tsne import plot_tsne1,plot_tsne2, plot_tsne3
 from torch.utils.tensorboard import SummaryWriter
 
 
@@ -46,6 +46,8 @@ parser.add_argument('--office_directory', type=str, default='.', metavar='N',
                     help='directory for office data')
 parser.add_argument('--batch-size', type=int, default=64, metavar='N',
                     help='input batch size for training (default: 64)')
+parser.add_argument('--pretrained_target_prob', type=str, default='', metavar='N',
+                    help='pretrained targt model')
 parser.add_argument('--checkpoint_dir', type=str, default='checkpoint', metavar='N',
                     help='source only or not')
 parser.add_argument('--saved_model_dir', type=str, default='na', metavar='N',
@@ -168,15 +170,16 @@ def main():
         #train_MSDA_soft(solver,0,classifier_disc)
 
         test(solver, 0, 'test', record_file=None, save_model=False)
-        view_clusters(solver, clusters_file, probs_csv)
+        #view_clusters(solver, clusters_file, probs_csv)
         plot_tsne1(solver, plot_before_source, plot_before_target, plot_after_source, plot_after_target, all_plots, plot_domains, args.data)
+        plot_tsne3(solver, plot_before_source, plot_before_target, plot_after_source, plot_after_target, all_plots, plot_domains, args.data)
 
-        solver = Solver(args, target=args.target, learning_rate=args.lr, batch_size=args.batch_size,
-                    optimizer=args.optimizer, 
-                    checkpoint_dir=args.checkpoint_dir,
-                    save_epoch=args.save_epoch)
+        #solver = Solver(args, target=args.target, learning_rate=args.lr, batch_size=args.batch_size,
+        #            optimizer=args.optimizer, 
+        #            checkpoint_dir=args.checkpoint_dir,
+        #            save_epoch=args.save_epoch)
 
-        plot_tsne2(solver, plot_before_source, plot_before_target, plot_after_source, plot_after_target, all_plots, plot_domains, args.data)
+        #plot_tsne2(solver, plot_before_source, plot_before_target, plot_after_source, plot_after_target, all_plots, plot_domains, args.data)
 
     else:
 

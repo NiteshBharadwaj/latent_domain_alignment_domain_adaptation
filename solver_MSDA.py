@@ -73,6 +73,14 @@ class Solver(object):
             self.G = Generator_digit(cd=class_disc, usps_only=self.usps_only)
             self.C1 = Classifier_digit(cd=class_disc, usps_only=self.usps_only)
             self.C2 = Classifier_digit(cd=class_disc, usps_only=self.usps_only)
+            if args.pretrained_target_prob!="":
+                self.G_T = Generator_digit(cd=class_disc, usps_only=self.usps_only).cuda()
+                self.C1_T = Classifier_digit(cd=class_disc, usps_only=self.usps_only).cuda()
+                self.C2_T = Classifier_digit(cd=class_disc, usps_only=self.usps_only).cuda()
+                
+                self.G_T.eval()
+                self.C1_T.eval()
+                self.C2_T.eval()
             self.classaware_dp = self.args.classaware_dp=='yes'
             self.DP = DP_Digit(num_domains,cd=class_disc, usps_only=self.usps_only, classwise=self.is_classwise, num_classes=self.num_classes, classaware_dp=self.classaware_dp)
         elif args.data == 'cars':
@@ -130,6 +138,12 @@ class Solver(object):
             #self.opt_c1.load_state_dict(checkpoint['C1_state_dict_opt'])
             #self.opt_c2.load_state_dict(checkpoint['C2_state_dict_opt'])
             #self.opt_dp.load_state_dict(checkpoint['DP_state_dict_opt'])
+        if args.pretrained_target_prob!="":
+            print('Loading pretrained target model from: ','%s' % (args.pretrained_target_prob))
+            checkpoint = torch.load('%s' % (args.pretrained_target_prob))
+            self.G_T.load_state_dict(checkpoint['G_state_dict'])
+            self.C1_T.load_state_dict(checkpoint['C1_state_dict'])
+            self.C2_T.load_state_dict(checkpoint['C2_state_dict'])
 
         if args.eval_only:
             print('Loading state from: ','%s/%s_model_best.pth' % (self.checkpoint_dir, self.target))
@@ -137,12 +151,12 @@ class Solver(object):
             self.G.load_state_dict(checkpoint['G_state_dict'])
             self.C1.load_state_dict(checkpoint['C1_state_dict'])
             self.C2.load_state_dict(checkpoint['C2_state_dict'])
-            self.DP.load_state_dict(checkpoint['DP_state_dict'])
+            #self.DP.load_state_dict(checkpoint['DP_state_dict'])
 
             self.opt_g.load_state_dict(checkpoint['G_state_dict_opt'])
             self.opt_c1.load_state_dict(checkpoint['C1_state_dict_opt'])
             self.opt_c2.load_state_dict(checkpoint['C2_state_dict_opt'])
-            self.opt_dp.load_state_dict(checkpoint['DP_state_dict_opt'])
+            #self.opt_dp.load_state_dict(checkpoint['DP_state_dict_opt'])
 
         self.G.cuda()
         self.C1.cuda()
@@ -353,6 +367,11 @@ class Solver(object):
 
         # _, class_prob_s = self.entropy_loss(output_s_c1)
         _, class_prob_t = self.entropy_loss(output_t_c1)
+        if self.args.pretrained_target_prob!="":
+            with torch.no_grad():
+                feat_pre,_,_ = self.G_T(img_t)
+                c1_pre = self.C1_T(feat_pre)
+                _,class_prob_t = self.entropy_loss(output_t_c1)
 
         if self.to_detach and not force_attach:
             intra_domain_mmd_loss, inter_domain_mmd_loss = class_domain_da.class_da_regulizer_soft(feat_da_s, feat_da_t, 5, self.get_one_hot_encoding(label_s, self.num_classes).cuda(), class_prob_t.detach(), domain_prob_s.detach(), label_s)

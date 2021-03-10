@@ -60,7 +60,7 @@ def test(solver, epoch, split, record_file=None, save_model=False, summary_write
                 idxes = label==class_id
                 classwise_acc[class_id] += pred1[idxes].eq(label[idxes].data).cpu().sum()
                 classwise_sum[class_id] += (idxes*1==1).sum()
-            end = time.time()
+            #end = time.time()
             #print("Time taken for testing batch : ", end-start)
     # np.savez('result_plot_sv_t', feature_all, label_all )
     test_loss = test_loss / (size + 1e-6)

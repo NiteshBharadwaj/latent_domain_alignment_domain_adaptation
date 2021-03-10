@@ -28,14 +28,14 @@ class CombinedData(Dataset):
 
     
     def __getitem__(self, index):
-        S, S_paths,t,t_paths = None, None, None, None
+        S, S_paths,SD,t,t_paths = None, None, None, None, None
         try:
-            S, S_paths = next(self.data_loader_s_iter)
+            S, S_paths, SD = next(self.data_loader_s_iter)
         except StopIteration:
             if S is None or S_paths is None:
                 self.stop_s = True
                 self.data_loader_s_iter = iter(self.data_loader_s)
-                S, S_paths = next(self.data_loader_s_iter)
+                S, S_paths, SD = next(self.data_loader_s_iter)
         try:
             t, t_paths = next(self.data_loader_t_iter)
         except StopIteration:
@@ -50,7 +50,7 @@ class CombinedData(Dataset):
             raise StopIteration()
         else:
             self.iter += 1
-            return {'S': S, 'S_label': S_paths,
+            return {'S': S, 'S_label': S_paths, 'SD_label': SD,
                     'T': t, 'T_label': t_paths}
 
     def __len__(self):
@@ -66,11 +66,12 @@ class UnalignedDataLoader():
         ])
         imgs = []
         labels = []
+        domain_labels = []
         for i in range(len(source)):
             imgs.append(source[i]['imgs'])
             labels.append(source[i]['labels'])
-
-        dataset_source = Dataset2(imgs, labels, transform=transform)
+            domain_labels.append([i]*len(source[i]['labels']))
+        dataset_source = Dataset2(imgs, labels,domain_labels,transform=transform)
         data_loader_s = torch.utils.data.DataLoader(dataset_source, batch_size=batch_size1, shuffle=True, num_workers=4)
 
         dataset_target = Dataset(target['imgs'], target['labels'], transform=transform)

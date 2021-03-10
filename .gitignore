@@ -1,3 +1,4 @@
+record_pacs*/
 *.pyc
 data/*
 data_cropped/*

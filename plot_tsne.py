@@ -75,11 +75,11 @@ def plot_tsne3(solver,plot_before_source, plot_before_target, plot_after_source,
     solver.C2.eval()
     solver.DP.eval()
     
-    num_batches = 10
+    num_batches = 5
     if(dataset == 'office'):
         labelsOfInterest = [2,8,14,22,30]
     if(dataset == 'digits'):
-        labelsOfInterest = [1,4,6,9]
+        labelsOfInterest = [0,1,2,3]
     elif (dataset=='pacs'):
         labelsOfInterest = [0,1,2]
     prev = solver.batch_size
@@ -96,7 +96,7 @@ def plot_tsne3(solver,plot_before_source, plot_before_target, plot_after_source,
         for batch_idx, data in enumerate(solver.datasets):
             img = data['S']
             label = data['SD_label'].long()
-            img_transformed, _ = solver.G(img.cuda())
+            img_transformed, _, _ = solver.G(img.cuda())
             if batch_idx>num_batches:
                 break
             if(img.size()[0] > prev):
@@ -164,7 +164,7 @@ def plot_tsne3(solver,plot_before_source, plot_before_target, plot_after_source,
         for batch_idx, data in enumerate(solver.dataset_test):
             img = data['T']
             label = data['T_label'].long()
-            img_transformed, _ = solver.G(img.cuda())
+            img_transformed, _, _ = solver.G(img.cuda())
             if batch_idx>num_batches//2:
                 break
             if(img.size()[0] > prev):
@@ -248,7 +248,7 @@ def plot_tsne1(solver,plot_before_source, plot_before_target, plot_after_source,
     if(dataset == 'office'):
         labelsOfInterest = [2,8,14,22,30]
     if(dataset == 'digits'):
-        labelsOfInterest = [1,4,6,9]
+        labelsOfInterest = [0,1,2,3,4,5,6,7,8,9]
     elif (dataset=='pacs'):
         labelsOfInterest = [0,1,2,3,4,5,6]
     prev = solver.batch_size
@@ -266,7 +266,7 @@ def plot_tsne1(solver,plot_before_source, plot_before_target, plot_after_source,
         for batch_idx, data in enumerate(solver.datasets):
             img = data['S']
             label = data['S_label'].long()
-            img_transformed, _ = solver.G(img.cuda())
+            img_transformed, _, _ = solver.G(img.cuda())
             if batch_idx>num_batches:
                 break
             if(img.size()[0] > prev):
@@ -335,7 +335,7 @@ def plot_tsne1(solver,plot_before_source, plot_before_target, plot_after_source,
         for batch_idx, data in enumerate(solver.dataset_test):
             img = data['T']
             label = data['T_label'].long()
-            img_transformed, _ = solver.G(img.cuda())
+            img_transformed, _,_ = solver.G(img.cuda())
             if batch_idx>num_batches:
                 break
             if(img.size()[0] > prev):

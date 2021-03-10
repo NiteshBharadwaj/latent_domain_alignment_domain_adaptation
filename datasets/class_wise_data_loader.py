@@ -59,13 +59,15 @@ class ClasswiseDataLoader():
         for i in range(10):
             img_list = []
             label_list = []
+            dom_list = []
             for j in range(len(source)):
                 imgs = source[j]['imgs']
                 labels = source[j]['labels']
                 mask = labels==i
                 img_list.append(imgs[mask])
                 label_list.append(labels[mask])
-            dataset_source.append(Dataset2(img_list, label_list, transform=transform))
+                dom_list.append([j]*len(labels[mask]))
+            dataset_source.append(Dataset2(img_list, label_list, dom_list, transform=transform))
             self.max_len = max(self.max_len, len(dataset_source))
             dataloader_source.append(
                 torch.utils.data.DataLoader(dataset_source[i], batch_size=batch_size, shuffle=True,
