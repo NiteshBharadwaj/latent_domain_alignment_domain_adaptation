@@ -21,6 +21,7 @@ from train_msda_single import train_MSDA_single
 from train_msda_classwise import train_MSDA_classwise
 from train_ssda_classwise import train_SSDA_classwise
 from test import test
+from test2 import test2
 from view_clusters import view_clusters
 from train_source_only import train_source_only
 from matplotlib import pyplot as plt
@@ -275,6 +276,9 @@ def main():
                     elif args.data == 'pacs':
                         num, graph_data = train_MSDA_soft_pacs(solver, t, graph_data, classifier_disc,
                                                                          record_file=record_train, max_it=total_it-count)
+                    elif args.data == 'birds':
+                        num, graph_data = train_MSDA_soft_pacs(solver, t, graph_data, classifier_disc,
+                                                               record_file=record_train, max_it=total_it - count)
                     else:
                         print("WTF Noob")
                 elif args.dl_type == 'source_only':
@@ -306,8 +310,8 @@ def main():
                     #plot_data(graph_data, loss_plot)
                     #view_clusters(solver, clusters_file_class, probs_csv_class, t)
                 if args.data == 'cars':
-                    test(solver, t, 'train', record_file=record_test, save_model=args.save_model)
-                best, val_acc = test(solver, t, 'val', record_file=record_val, save_model=args.save_model, temperature_scaling=args.temperature_scaling)
+                    test2(solver, t, 'train', record_file=record_test, save_model=args.save_model)
+                best, val_acc = test2(solver, t, 'val', record_file=record_val, save_model=args.save_model, temperature_scaling=args.temperature_scaling)
                 if args.pseudo_label_mode=="gen_epoch":
                     solver.pseudo_labels, solver.pseudo_accept_mask = generate_pseudo(solver,solver.G,solver.C1,solver.datasets,logits_criteria=args.pseudo_logits_criteria, split="target", reject_quantile=1-val_acc/100.+0.5)
                 if best:
@@ -315,7 +319,7 @@ def main():
                         solver.pseudo_labels, solver.pseudo_accept_mask = generate_pseudo(solver,solver.G,solver.C1,solver.datasets,logits_criteria=args.pseudo_logits_criteria, split="target", reject_quantile=1-val_acc/100.+0.5)
                     print('best epoch : ', t)
                     start = time()
-                    test(solver, t, 'test', record_file=record_test, save_model=args.save_model)
+                    test2(solver, t, 'test', record_file=record_test, save_model=args.save_model)
                     end = time()
                     print("Time taken for testing epoch : ", end-start)
                 #view_clusters(solver, clusters_file, probs_csv, t)

@@ -10,11 +10,13 @@ from model.build_gen_digits import Generator as Generator_digit, Classifier as C
 from model.build_gen import Generator as Generator_cars, Classifier as Classifier_cars, DomainPredictor as DP_cars
 from model.build_gen_office_caltech import Generator as Generator_office_caltech, Classifier as Classifier_office_caltech, DomainPredictor as DP_office_caltech
 from model.build_gen_pacs import Generator as Generator_pacs, Classifier as Classifier_pacs, DomainPredictor as DP_pacs
+from model.build_gen_birds import Generator as Generator_birds, Classifier as Classifier_birds, DomainPredictor as DP_birds
 from datasets.dataset_read_cluster_testing import dataset_read, dataset_hard_cluster, dataset_combined
 from datasets.cars import cars_combined
 from datasets.office import office_combined
 from datasets.office_caltech import office_caltech_combined
 from datasets.pacs import pacs_combined
+from datasets.birds import birds_combined
 import numpy as np
 import math
 from scipy.stats import entropy
@@ -209,6 +211,33 @@ class Solver(object):
                 self.G_T = Generator_pacs()
                 self.C1_T = Classifier_pacs(num_classes)
                 self.C2_T = Classifier_pacs(num_classes)
+        elif args.data == 'birds':
+            self.datasets, self.dataset_test, self.dataset_valid, self.classwise_dataset, self.dataset_test10 = birds_combined(
+                target,
+                self.batch_size,
+                args.pacs_directory,
+                args.seed,
+                args.num_workers)
+            print('load finished!')
+            self.entropy_wt = args.entropy_wt
+            self.msda_wt = args.msda_wt
+            self.kl_wt = args.kl_wt
+            self.to_detach = args.to_detach
+            num_classes = 31
+            self.temperature = nn.Parameter(torch.ones(1).cuda())
+            self.temperature_optim = optim.LBFGS([self.temperature], lr=0.001, max_iter=10000, line_search_fn='strong_wolfe')
+            self.num_classes = num_classes
+            num_domains = args.num_domain
+            self.num_domains = num_domains
+            self.is_classwise = args.dl_type=='classwise_msda' or args.dl_type=='classwise_ssda'
+            self.G = Generator_birds()
+            self.C1 = Classifier_birds(num_classes)
+            self.C2 = Classifier_birds(num_classes)
+            self.DP = DP_pacs(num_domains, classwise=self.is_classwise, num_classes=self.num_classes, classaware_dp=self.classaware_dp)
+            if args.target_baseline_pre!="":
+                self.G_T = Generator_birds()
+                self.C1_T = Classifier_birds(num_classes)
+                self.C2_T = Classifier_birds(num_classes)
 
 
         # print(self.dataset['S1'].shape)
@@ -284,8 +313,12 @@ class Solver(object):
         print('initialize complete')
 
     def set_optimizer(self, which_opt='momentum', lr=0.001, momentum=0.9):
+        optimizer_dict = [
+            {"params": filter(lambda p: p.requires_grad, self.G.model.parameters().parameters()), "lr": 0.1},
+            {"params": filter(lambda p: p.requires_grad, self.G.bottleneck_layer.parameters()), "lr": 1}
+        ]
         if which_opt == 'momentum':
-            self.opt_g = optim.SGD(self.G.parameters(),lr=lr, weight_decay=1e-6, momentum=momentum)
+            self.opt_g = optim.SGD(optimizer_dict,lr=lr, weight_decay=1e-6, momentum=momentum)
 
             self.opt_c1 = optim.SGD(self.C1.parameters(), lr=lr, weight_decay=1e-6, momentum=momentum)
             self.opt_c2 = optim.SGD(self.C2.parameters(), lr=lr, weight_decay=1e-6, momentum=momentum)
@@ -294,7 +327,7 @@ class Solver(object):
             else:
                 self.opt_dp = optim.SGD(self.DP.parameters(), lr=lr/self.args.lr_ratio, weight_decay=1e-6, momentum=momentum)
         if which_opt == 'adam':
-            self.opt_g = optim.Adam(self.G.parameters(), lr=lr, weight_decay=1e-6)
+            self.opt_g = optim.Adam(optimizer_dict, lr=lr, weight_decay=1e-6)
 
             self.opt_c1 = optim.Adam(self.C1.parameters(), lr=lr, weight_decay=1e-6)
             self.opt_c2 = optim.Adam(self.C2.parameters(), lr=lr, weight_decay=1e-6)
