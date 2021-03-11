@@ -18,7 +18,7 @@ def test2(solver, epoch, split, record_file=None, save_model=False, temperature_
             for j in range(10):
                 inputs[j] = inputs[j].cuda()
             labels = labels.cuda()
-            labels = labels[:, 0]
+            #labels = labels[:, 0]
             outputs = []
             for j in range(10):
                 feat,_,_ = solver.G(inputs[j])
@@ -34,7 +34,7 @@ def test2(solver, epoch, split, record_file=None, save_model=False, temperature_
                 all_label = torch.cat((all_label, labels.data.float()), 0)
         _, predict = torch.max(all_output, 1)
         test_acc = torch.sum(torch.squeeze(predict).float() == all_label).item() / float(all_label.size()[0])
-
+    print("{} epoch {}: Test Acc: {}".format(split,epoch, test_acc))
     best = False
     bool_to_check = (test_acc > solver.best_acc)
 
@@ -61,7 +61,7 @@ def test2(solver, epoch, split, record_file=None, save_model=False, temperature_
 #            solver.best_loss = test_loss
 #            best = True
 
-        if bool_to_check and size!=0 and not use_g_t:
+        if bool_to_check and not use_g_t:
             solver.best_acc = test_acc
 
             #solver.best_loss = test_loss
@@ -72,7 +72,7 @@ def test2(solver, epoch, split, record_file=None, save_model=False, temperature_
             print('recording %s', record_file)
             record.write('%s\n' % test_acc)
             record.close()
-    elif split=='test' and size!=0:
+    elif split=='test':
         if record_file:
             record = open(record_file, 'a')
             print('recording %s', record_file)

@@ -312,35 +312,58 @@ class Solver(object):
         self.lr = learning_rate
         print('initialize complete')
 
+    def get_param_groups(self,optimizer):
+        param_lr = []
+        for param_group in optimizer.param_groups:
+            param_lr.append(param_group["lr"])
+        return param_lr
+
     def set_optimizer(self, which_opt='momentum', lr=0.001, momentum=0.9):
         optimizer_dict = [
-            {"params": filter(lambda p: p.requires_grad, self.G.model.parameters().parameters()), "lr": 0.1},
-            {"params": filter(lambda p: p.requires_grad, self.G.bottleneck_layer.parameters()), "lr": 1}
+            {"params": filter(lambda p: p.requires_grad, self.G.model.parameters()), "lr": 0.1},
+            {"params": filter(lambda p: p.requires_grad, self.G.bottleneck_layer.parameters()), "lr": 1},
+            {"params": filter(lambda p: p.requires_grad, self.G.bn1.parameters()), "lr": 1}
         ]
         if which_opt == 'momentum':
-            self.opt_g = optim.SGD(optimizer_dict,lr=lr, weight_decay=1e-6, momentum=momentum)
+            self.opt_g = optim.SGD(optimizer_dict,lr=0.1, weight_decay=5e-4, momentum=momentum)
 
-            self.opt_c1 = optim.SGD(self.C1.parameters(), lr=lr, weight_decay=1e-6, momentum=momentum)
-            self.opt_c2 = optim.SGD(self.C2.parameters(), lr=lr, weight_decay=1e-6, momentum=momentum)
+            self.opt_c1 = optim.SGD(self.C1.parameters(), lr=0.1, weight_decay=5e-4, momentum=momentum)
+            self.opt_c2 = optim.SGD(self.C2.parameters(), lr=0.1, weight_decay=5e-4, momentum=momentum)
             if self.args.load_ckpt !='':
-                self.opt_dp = optim.SGD(self.DP.parameters(), lr=1e-6, weight_decay=1e-6, momentum=momentum)
+                self.opt_dp = optim.SGD(self.DP.parameters(), lr=0.1, weight_decay=5e-4, momentum=momentum)
             else:
-                self.opt_dp = optim.SGD(self.DP.parameters(), lr=lr/self.args.lr_ratio, weight_decay=1e-6, momentum=momentum)
+                self.opt_dp = optim.SGD(self.DP.parameters(), lr=0.1, weight_decay=5e-4, momentum=momentum)
         if which_opt == 'adam':
-            self.opt_g = optim.Adam(optimizer_dict, lr=lr, weight_decay=1e-6)
+            self.opt_g = optim.Adam(optimizer_dict, lr=0.1, weight_decay=5e-4)
 
-            self.opt_c1 = optim.Adam(self.C1.parameters(), lr=lr, weight_decay=1e-6)
-            self.opt_c2 = optim.Adam(self.C2.parameters(), lr=lr, weight_decay=1e-6)
+            self.opt_c1 = optim.Adam(self.C1.parameters(), lr=0.1, weight_decay=5e-4)
+            self.opt_c2 = optim.Adam(self.C2.parameters(), lr=0.1, weight_decay=5e-4)
             if self.args.load_ckpt !='':
-                self.opt_dp = optim.Adam(self.DP.parameters(), lr=1e-6, weight_decay=1e-6)
+                self.opt_dp = optim.Adam(self.DP.parameters(), lr=0.1, weight_decay=5e-4)
             else:
-                self.opt_dp = optim.Adam(self.DP.parameters(), lr=lr/self.args.lr_ratio, weight_decay=1e-6)
-    def reset_grad(self):
+                self.opt_dp = optim.Adam(self.DP.parameters(), lr=lr/self.args.lr_ratio, weight_decay=5e-4)
+        self.opt_g_params = self.get_param_groups(self.opt_g)
+        self.opt_c1_params = self.get_param_groups(self.opt_c1)
+        self.opt_c2_params = self.get_param_groups(self.opt_c2)
+        self.opt_dp_params = self.get_param_groups(self.opt_dp)
+    def reset_grad(self,iter_num):
+        self.opt_g = self.update_optim(self.opt_g_params,self.opt_g, iter_num, gamma=0.001, power=0.75, init_lr=self.args.lr)
+        self.opt_c1 = self.update_optim(self.opt_c1_params,self.opt_c1, iter_num, gamma=0.001, power=0.75, init_lr=self.args.lr)
+        self.opt_c2 = self.update_optim(self.opt_c2_params,self.opt_c2, iter_num, gamma=0.001, power=0.75, init_lr=self.args.lr)
+        self.opt_dp = self.update_optim(self.opt_dp_params,self.opt_dp, iter_num, gamma=0.001, power=0.75, init_lr=self.args.lr)
         self.opt_g.zero_grad()
         self.opt_c1.zero_grad()
         self.opt_c2.zero_grad()
         self.opt_dp.zero_grad()
 
+    def update_optim(self,param_lr, optimizer, iter_num, gamma, power, init_lr=0.001):
+        lr = init_lr * (1 + gamma * iter_num) ** (-power)
+        i=0
+        for param_group in optimizer.param_groups:
+            param_group['lr'] = lr * param_lr[i]
+            i+=1
+        return optimizer
+    
     def ent(self, output):
         return - torch.mean(output * torch.log(output + 1e-6))
 
@@ -420,7 +443,7 @@ class Solver(object):
     
     def source_only_loss(self, img_s, label_s, epoch):
         feat_s_comb = self.G(img_s)
-        feat_s, conv_feat_s = feat_s_comb
+        feat_s, conv_feat_s,_ = feat_s_comb
         output_s_c1 = self.C1(feat_s)
         loss_s_c1 = self.softmax_loss_all_domain_soft(output_s_c1, label_s)
         return loss_s_c1
@@ -437,9 +460,9 @@ class Solver(object):
     def loss_soft_all_domain(self, img_s, img_t, label_s, epoch, img_s_cl, img_d_cl):
         # Takes source images, target images, source labels and returns classifier loss, domain adaptation loss and entropy loss
         feat_s_comb, feat_t_comb = self.feat_soft_all_domain(img_s, img_t)
-        feat_s, conv_feat_s = feat_s_comb
-        feat_t, conv_feat_t = feat_t_comb
-        img_s_dl = self.get_one_hot_encoding(img_d_cl, self.num_domains).cuda()
+        feat_s, conv_feat_s,_ = feat_s_comb
+        feat_t, conv_feat_t,_ = feat_t_comb
+        #img_s_dl = self.get_one_hot_encoding(img_d_cl, self.num_domains).cuda()
         #with torch.no_grad():
         #    _, conv_feat_cl = self.G(img_s_cl)
         entropy_loss = torch.zeros(1,dtype=torch.float32).cuda()

@@ -12,7 +12,7 @@ def worker_init_fn(worker_id):
 
 def balance_classes(labels, domain_labels, balance_domains=False):
     num_labels = 31
-    num_domains = 3
+    num_domains = 1
     class_counts = [0]*num_labels
     class_domain_counts = []
     for i in range(num_labels):

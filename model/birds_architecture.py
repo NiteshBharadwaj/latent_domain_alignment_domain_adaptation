@@ -47,10 +47,10 @@ class Feature(nn.Module):
         self.bottleneck_0.weight.data.normal_(0, 0.005)
         self.bottleneck_0.bias.data.fill_(0.1)
         self.bottleneck_layer = nn.Sequential(self.bottleneck_0, nn.ReLU(), nn.Dropout(0.5))
-        self.bn1 = nn.BatchNorm1d(affine=False)
+        self.bn1 = nn.BatchNorm1d(256,affine=False)
 
     def forward(self, x, reverse=False):
-        features = self.model_fc(x)
+        features = self.model(x)
         out_bottleneck = self.bottleneck_layer(features)
         out_bottleneck = self.bn1(out_bottleneck)
         return out_bottleneck, features, out_bottleneck

@@ -19,7 +19,7 @@ def read_birds_domain(domain, birds_directory, is_target, seed_id):
         for line in lines:
             path_label = line.strip().split(" ")
             path = path_label[0]
-            label = int(path_label[0])
+            label = int(path_label[1])
             paths.append(path)
             labels.append(label)
 

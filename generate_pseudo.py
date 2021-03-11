@@ -91,7 +91,7 @@ def generate_empty_pseudo(solver, dataset):
     dset_size = len(dataset.data_loader_t.dataset)
     logits_map = torch.zeros((dset_size,solver.num_classes),dtype=torch.float32)
     probits_map = logits_map
-    reject_indices = torch.range(probits_map.shape[0])
+    reject_indices = torch.arange(0,probits_map.shape[0], dtype=torch.int32).long()
     accept_mask = torch.ones((probits_map.shape[0]),dtype=torch.int32)
     accept_mask[reject_indices] = 0
     accept_mask = accept_mask==1

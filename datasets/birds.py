@@ -92,7 +92,7 @@ def birds_combined(target, batch_size, birds_directory, seed_id, num_workers):
         #         "pai":"/vulcan-pvc1/ml_for_da_pan_base/dataset_list/cub200_drawing_20.txt",
         #         "cub":"/vulcan-pvc1/ml_for_da_pan_base/dataset_list/cub200_2011_20.txt"
     }
-    target_file = file_path[target]
+    target_file = file_path[target[-1]]
     prep_dict_test = prep.image_test_10crop(resize_size=256, crop_size=224)
     dataset_loaders = {}
     for i in range(10):

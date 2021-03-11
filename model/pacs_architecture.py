@@ -77,7 +77,7 @@ class DomainPredictor(nn.Module):
         for param in self.dp_model.layer2.parameters():
             param.requires_grad = False
 
-        self.fc5 = nn.Linear(512, 128)
+        self.fc5 = nn.Linear(2048, 128)
         self.bn_fc5 = nn.BatchNorm1d(128)
         self.dp_layer = nn.Linear(128, num_domains)
 

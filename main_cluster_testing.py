@@ -283,14 +283,14 @@ def main():
                         print("WTF Noob")
                 elif args.dl_type == 'source_only':
                     torch.cuda.empty_cache()
-                    num = train_source_only(solver, t, record_file=record_train, max_it = total_it-count)
+                    num = train_source_only(solver, t, record_file=record_train, max_it = total_it-count, prev_count = count)
                 elif args.dl_type=='classwise_msda':
-                    num, graph_data = train_MSDA_classwise(solver,t, graph_data,classifier_disc,record_file=record_train, single_domain_mode=True, max_it=total_it-count)
+                    num, graph_data = train_MSDA_classwise(solver,t, graph_data,classifier_disc,record_file=record_train, single_domain_mode=True, max_it=total_it-count, prev_count = count)
                 elif args.dl_type=='classwise_ssda':
-                    num, graph_data = train_SSDA_classwise(solver,t,graph_data, classifier_disc,record_file=record_train, single_domain_mode=True, max_it=total_it-count)
+                    num, graph_data = train_SSDA_classwise(solver,t,graph_data, classifier_disc,record_file=record_train, single_domain_mode=True, max_it=total_it-count, prev_count=count)
                 elif args.dl_type == 'source_target_only':
                     torch.cuda.empty_cache()
-                    num = train_MSDA_single(solver, t, classifier_disc, record_file=record_train, max_it=total_it-count)
+                    num = train_MSDA_single(solver, t, classifier_disc, record_file=record_train, max_it=total_it-count, prev_count=count)
                 else:
                     num = train_MSDA_hard(solver, t, classifier_disc, record_file=record_train)
             else:
@@ -318,10 +318,10 @@ def main():
                     if t>2 and args.pseudo_label_mode=="gen_best_epoch":
                         solver.pseudo_labels, solver.pseudo_accept_mask = generate_pseudo(solver,solver.G,solver.C1,solver.datasets,logits_criteria=args.pseudo_logits_criteria, split="target", reject_quantile=1-val_acc/100.+0.5)
                     print('best epoch : ', t)
-                    start = time()
-                    test2(solver, t, 'test', record_file=record_test, save_model=args.save_model)
-                    end = time()
-                    print("Time taken for testing epoch : ", end-start)
+                    #start = time()
+                    #test2(solver, t, 'test', record_file=record_test, save_model=args.save_model)
+                    #end = time()
+                    #print("Time taken for testing epoch : ", end-start)
                 #view_clusters(solver, clusters_file, probs_csv, t)
                 # print('clustering images saved in!')
 

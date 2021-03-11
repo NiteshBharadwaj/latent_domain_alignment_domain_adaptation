@@ -27,7 +27,7 @@ def switch_bn(model, on):
 import time
 
 
-def train_MSDA_classwise(solver, epoch, graph_data, classifier_disc=True, record_file=None, max_it=10000, single_domain_mode=False):
+def train_MSDA_classwise(solver, epoch, graph_data, classifier_disc=True, record_file=None, max_it=10000, single_domain_mode=False, prev_count=0):
     #print('inside function', time.time())
     global cluster_batch
     global art_painting_batch
@@ -113,7 +113,7 @@ def train_MSDA_classwise(solver, epoch, graph_data, classifier_disc=True, record
         tt = time.time()
 
         #        switch_bn(solver.DP,True)
-        solver.reset_grad()
+        solver.reset_grad(prev_count+batch_idx)
         start = time.time()
         loss_s_c1, loss_s_c2, intra_domain_mmd_loss, inter_domain_mmd_loss, entropy_loss, kl_loss, class_tear_apart_loss = solver.loss_domain_class_mmd(img_s, img_t, label_s, label_t, epoch, None, img_s_dl,idx_t, single_domain_mode=single_domain_mode) 
         end = time.time()
@@ -163,12 +163,6 @@ def train_MSDA_classwise(solver, epoch, graph_data, classifier_disc=True, record
         tot_updates_time += time.time() - tt
         tt = time.time()
 
-        if not solver.args.clustering_only and not solver.args.pretrained_source=="yes":
-            solver.sche_g.step()
-            solver.sche_c1.step()
-            solver.sche_c2.step()
-        if not solver.args.pretrained_clustering=="yes":
-            solver.sche_dp.step()
         if batch_idx % 10 == 0:
             print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss1: {:.6f}\t Loss2: {:.6f}\t'
                   ' Loss_mmd_inter: {:.6f}\t Loss_mmd_intra: {:.6f}\t Loss_entropy: {:.6f}\t class_tear_apart_loss: {:.6f}\t kl_loss: {:.6f}\t Combined Entropy: {:.6f}'.format(

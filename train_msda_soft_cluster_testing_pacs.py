@@ -27,7 +27,7 @@ def switch_bn(model, on):
 import time
 
 
-def train_MSDA_soft(solver, epoch, graph_data, classifier_disc=True, record_file=None, max_it=10000):
+def train_MSDA_soft(solver, epoch, graph_data, classifier_disc=True, record_file=None, max_it=10000, prev_count=0):
     #print('inside function', time.time())
     global cluster_batch
     global art_painting_batch
@@ -125,10 +125,10 @@ def train_MSDA_soft(solver, epoch, graph_data, classifier_disc=True, record_file
         tt = time.time()
 
         #        switch_bn(solver.DP,True)
-        solver.reset_grad()
+        solver.reset_grad(prev_count+batch_idx)
         start = time.time()
-        loss_s_c1, loss_s_c2, loss_msda, entropy_loss, kl_loss, domain_prob = solver.loss_domain_class_mmd(img_s, img_t,
-                                                                                                          label_s, label_t,
+        loss_s_c1, loss_s_c2, loss_msda, entropy_loss, kl_loss, domain_prob = solver.loss_soft_all_domain(img_s, img_t,
+                                                                                                          label_s, 
                                                                                                           epoch,
                                                                                                           img_s_cl, img_s_dl)
         end = time.time()
