@@ -63,6 +63,7 @@ def train_MSDA_soft(solver, epoch, graph_data, classifier_disc=True, record_file
     tot_cuda_time = 0
     tot_classwisedata_time = 0
     tot_main_data_time = 0
+    tot_clustering_loss = 0
     while True:
         try:
             mt0 = time.time()
@@ -141,7 +142,7 @@ def train_MSDA_soft(solver, epoch, graph_data, classifier_disc=True, record_file
             loss = entropy_loss + kl_loss
         else:
             loss = loss_s_c1 + loss_s_c2 + entropy_loss + loss_msda + kl_loss
-
+        tot_clustering_loss += entropy_loss.data.item() + kl_loss.data.item()
         graph_data['entropy'].append(entropy_loss.data.item())
         graph_data['kl'].append(kl_loss.data.item())
         graph_data['c1'].append(loss_s_c1.data.item())
@@ -152,15 +153,6 @@ def train_MSDA_soft(solver, epoch, graph_data, classifier_disc=True, record_file
             entropy_loss.data.item() + kl_loss.data.item() + loss_s_c1.data.item() + loss_msda.data.item())
 
         loss.backward()
-        clip_value = 1.0
-
-        #         torch.nn.utils.clip_grad_norm(solver.G.parameters(), clip_value)
-        #         torch.nn.utils.clip_grad_norm(solver.C1.parameters(), clip_value)
-        if classifier_disc:
-            torch.nn.utils.clip_grad_norm(solver.C2.parameters(), clip_value)
-        #         torch.nn.utils.clip_grad_norm(solver.DP.parameters(), clip_value)
-
-        # solver.opt_g.step()
         if not solver.args.clustering_only and not solver.args.pretrained_source=="yes":
             solver.opt_g.step()
             solver.opt_c1.step()
@@ -172,44 +164,6 @@ def train_MSDA_soft(solver, epoch, graph_data, classifier_disc=True, record_file
         tot_updates_time += time.time() - tt
         tt = time.time()
 
-        if not solver.args.clustering_only and not solver.args.pretrained_source=="yes":
-            solver.sche_g.step()
-            solver.sche_c1.step()
-            solver.sche_c2.step()
-        if not solver.args.pretrained_clustering=="yes":
-            solver.sche_dp.step()
-        if classifier_disc:
-            solver.reset_grad()
-            loss_s_c1, loss_s_c2, loss_msda, entropy_loss, kl_loss, domain_prob = solver.loss_soft_all_domain(img_s,
-                                                                                                              img_t,
-                                                                                                              label_s,
-                                                                                                              epoch,
-                                                                                                              img_s_cl)
-
-            feat_t, conv_feat_t = solver.G(img_t)
-            output_t1 = solver.C1(feat_t)
-            output_t2 = solver.C2(feat_t)
-
-            loss_s = loss_s_c1 + loss_msda + loss_s_c2 + entropy_loss + kl_loss
-            loss_dis = solver.discrepancy(output_t1, output_t2)
-            loss = loss_s - loss_dis
-            loss.backward()
-
-            torch.nn.utils.clip_grad_norm(solver.C1.parameters(), clip_value)
-            torch.nn.utils.clip_grad_norm(solver.C2.parameters(), clip_value)
-            solver.opt_c1.step()
-            solver.opt_c2.step()
-            solver.reset_grad()
-
-            for i in range(solver.args.num_k):
-                feat_t, conv_feat_t = solver.G(img_t)
-                output_t1 = solver.C1(feat_t)
-                output_t2 = solver.C2(feat_t)
-                loss_dis = solver.discrepancy(output_t1, output_t2)
-                loss_dis.backward()
-                torch.nn.utils.clip_grad_norm(solver.G.parameters(), clip_value)
-                solver.opt_g.step()
-                solver.reset_grad()
 
         if batch_idx % 10 == 0:
             print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss1: {:.6f}\t Loss2: {:.6f}\t'
@@ -217,9 +171,5 @@ def train_MSDA_soft(solver, epoch, graph_data, classifier_disc=True, record_file
                         epoch, batch_idx, 100, 100. * batch_idx / 70000, loss_s_c1.data.item(), loss_s_c2.data.item(),
                         loss_msda.data.item(), entropy_loss.data.item(), kl_loss.data.item(),
                         entropy_loss.data.item() + kl_loss.data.item()))
-
-    #print('tot_dataloading_time', tot_dataloading_time, 'tot_updates_time', tot_updates_time)
-    #print('CUDA Time', tot_cuda_time)
-    #print('CLDL Total Time', tot_classwisedata_time)
-    #print('MDL Total Time', tot_main_data_time)
-    return batch_idx_g, graph_data
+    tot_clustering_loss = tot_clustering_loss/(batch_idx_g + 1e-8)
+    return batch_idx_g, graph_data, tot_clustering_loss

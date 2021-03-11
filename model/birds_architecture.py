@@ -71,18 +71,18 @@ class Predictor(nn.Module):
 class DomainPredictor(nn.Module):
     def __init__(self, num_domains, prob=0.5, classaware_dp=False):
         super(DomainPredictor, self).__init__()
-        self.dp_model = models.resnet18(pretrained=True)
+        self.dp_model = Resnet50Fc()
         self.classaware_dp=classaware_dp
         for param in self.dp_model.conv1.parameters():
             param.requires_grad = False
         for param in self.dp_model.bn1.parameters():
             param.requires_grad = False
         for param in self.dp_model.layer1.parameters():
-            param.requires_grad = False
+            param.requires_grad = True
         for param in self.dp_model.layer2.parameters():
-            param.requires_grad = False
-
-        self.fc5 = nn.Linear(256, 128)
+            param.requires_grad = True
+        self.inp_layer = 2048 if classaware_dp else 2048
+        self.fc5 = nn.Linear(self.inp_layer, 128)
         self.bn_fc5 = nn.BatchNorm1d(128)
         self.dp_layer = nn.Linear(128, num_domains)
 

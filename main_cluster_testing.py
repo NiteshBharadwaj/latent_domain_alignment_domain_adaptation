@@ -23,6 +23,7 @@ from train_ssda_classwise import train_SSDA_classwise
 from test import test
 from test2 import test2
 from view_clusters import view_clusters
+from view_clusters_ldada_unsorted import view_clusters as view_clusters_ldada_unsorted
 from train_source_only import train_source_only
 from matplotlib import pyplot as plt
 from generate_pseudo import generate_pseudo, generate_empty_pseudo, generate_perfect_pseudo
@@ -122,7 +123,7 @@ parser.add_argument('--target', type=str, default='mnist', metavar='N', help='ta
 parser.add_argument('--network', type=str, default='', metavar='N', help='network')
 parser.add_argument('--use_abs_diff', action='store_true', default=False,
                     help='use absolute difference value as a measurement')
-parser.add_argument('--pseudo_label_mode', type=str, default='gen_epoch', metavar='N',
+parser.add_argument('--pseudo_label_mode', type=str, default='init_only', metavar='N',
                     help='gen_epoch, gen_best_epoch, perfect, init_only')
 parser.add_argument('--pseudo_logits_criteria', action='store_true', default=False,
                     help='Use raw logits to sort or probabilities?')
@@ -215,12 +216,13 @@ def main():
 
         # train_MSDA_soft(solver,0,classifier_disc)
 
-        test(solver, 0, 'test', record_file=None, save_model=False, temperature_scaling=True)
+        #test(solver, 0, 'test', record_file=None, save_model=False, temperature_scaling=True)
         #view_clusters(solver, clusters_file_class, probs_csv_class,0)
-        plot_tsne1(solver, plot_before_source, plot_before_target, plot_after_source, plot_after_target, all_plots,
-                    plot_domains, args.data)
-        plot_tsne3(solver, plot_before_source, plot_before_target, plot_after_source, plot_after_target, all_plots,
-                    plot_domains, args.data)
+        view_clusters_ldada_unsorted(solver, clusters_file_class, probs_csv_class)
+        #plot_tsne1(solver, plot_before_source, plot_before_target, plot_after_source, plot_after_target, all_plots,
+        #            plot_domains, args.data)
+        #plot_tsne3(solver, plot_before_source, plot_before_target, plot_after_source, plot_after_target, all_plots,
+        #            plot_domains, args.data)
         #
         # solver = Solver(args, target=args.target, learning_rate=args.lr, batch_size=args.batch_size,
         #                 optimizer=args.optimizer,
@@ -237,6 +239,7 @@ def main():
                         checkpoint_dir=args.checkpoint_dir,
                         save_epoch=args.save_epoch)
         if args.target_baseline_pre!="":
+            #test2(solver, 0, 'target', record_file=record_test, save_model=args.save_model)
             print("Setting pseudo label temperature")
             _,val_acc = test(solver, 0, 'val', record_file=record_val, save_model=args.save_model, temperature_scaling=True, use_g_t=True)
         if solver.is_classwise:
@@ -251,6 +254,7 @@ def main():
                     print("Initializing pseudo labels to all zeros, no classwise adaptation can be performed initially")
                     solver.pseudo_labels, solver.pseudo_accept_mask = generate_empty_pseudo(solver, solver.datasets)
         count = 0
+        solver.best_clus_loss = 1e9
         graph_data = {}
         keys = ['entropy', 'kl', 'c1', 'c2', 'h', 'total', 'msda']
         for k in keys:
@@ -274,10 +278,10 @@ def main():
                         num, graph_data = train_MSDA_soft_office_caltech(solver, t, graph_data, classifier_disc,
                                                                          record_file=record_train)
                     elif args.data == 'pacs':
-                        num, graph_data = train_MSDA_soft_pacs(solver, t, graph_data, classifier_disc,
+                        num, graph_data, clus_loss = train_MSDA_soft_pacs(solver, t, graph_data, classifier_disc,
                                                                          record_file=record_train, max_it=total_it-count)
                     elif args.data == 'birds':
-                        num, graph_data = train_MSDA_soft_pacs(solver, t, graph_data, classifier_disc,
+                        num, graph_data, clus_loss = train_MSDA_soft_pacs(solver, t, graph_data, classifier_disc,
                                                                record_file=record_train, max_it=total_it - count)
                     else:
                         print("WTF Noob")
@@ -304,7 +308,26 @@ def main():
             if 0:
                 solver.sche_dp.step()
             count += num
-            if t % 1 == 0 or count>=total_it:
+            if args.msda_wt<1e-8:
+                if solver.best_clus_loss > clus_loss and num>10:
+                    print("Current best clustering loss {}".format(clus_loss))
+                    solver.best_clus_loss = clus_loss
+                    print('Saving best clustering model','%s/%s_model_best.pth' % (solver.checkpoint_dir, solver.target))
+                    checkpoint = {}
+                    checkpoint['G_state_dict'] = solver.G.state_dict()
+                    checkpoint['C1_state_dict'] = solver.C1.state_dict()
+                    checkpoint['C2_state_dict'] = solver.C2.state_dict()
+                    checkpoint['DP_state_dict'] = solver.DP.state_dict()
+
+                    checkpoint['G_state_dict_opt'] = solver.opt_g.state_dict()
+                    checkpoint['C1_state_dict_opt'] = solver.opt_c1.state_dict()
+                    checkpoint['C2_state_dict_opt'] = solver.opt_c2.state_dict()
+                    checkpoint['DP_state_dict_opt'] = solver.opt_dp.state_dict()
+                    torch.save(checkpoint, '%s/%s_model_best.pth' % (solver.checkpoint_dir, solver.target))
+
+
+
+            if (t % 1 == 0 or count>=total_it) and args.msda_wt>1e-8:
                 # print('testing now')
                 #if (args.dl_type == 'soft_cluster' or args.dl_type == 'classwise_ssda' or args.dl_type == 'classwise_msda'):
                     #plot_data(graph_data, loss_plot)

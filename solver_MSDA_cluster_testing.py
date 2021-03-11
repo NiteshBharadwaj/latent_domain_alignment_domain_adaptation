@@ -233,7 +233,7 @@ class Solver(object):
             self.G = Generator_birds()
             self.C1 = Classifier_birds(num_classes)
             self.C2 = Classifier_birds(num_classes)
-            self.DP = DP_pacs(num_domains, classwise=self.is_classwise, num_classes=self.num_classes, classaware_dp=self.classaware_dp)
+            self.DP = DP_birds(num_domains, classwise=self.is_classwise, num_classes=self.num_classes, classaware_dp=self.classaware_dp)
             if args.target_baseline_pre!="":
                 self.G_T = Generator_birds()
                 self.C1_T = Classifier_birds(num_classes)
@@ -282,7 +282,7 @@ class Solver(object):
                 #    if 'feature' in key:
                 #        re_key = key.replace('feature.model','dp_model')
                 #        state_dict_v2[re_key] = state_dict_v2.pop(key)
-                #self.DP.load_state_dict(state_dict_v2, strict=False)
+                self.DP.load_state_dict(state_dict_v2, strict=False)
 
             #self.opt_g.load_state_dict(checkpoint['G_state_dict_opt'])
             #self.opt_c1.load_state_dict(checkpoint['C1_state_dict_opt'])
@@ -327,25 +327,26 @@ class Solver(object):
         if which_opt == 'momentum':
             self.opt_g = optim.SGD(optimizer_dict,lr=0.1, weight_decay=5e-4, momentum=momentum)
 
-            self.opt_c1 = optim.SGD(self.C1.parameters(), lr=0.1, weight_decay=5e-4, momentum=momentum)
-            self.opt_c2 = optim.SGD(self.C2.parameters(), lr=0.1, weight_decay=5e-4, momentum=momentum)
+            self.opt_c1 = optim.SGD(self.C1.parameters(), lr=1., weight_decay=5e-4, momentum=momentum)
+            self.opt_c2 = optim.SGD(self.C2.parameters(), lr=1., weight_decay=5e-4, momentum=momentum)
             if self.args.load_ckpt !='':
-                self.opt_dp = optim.SGD(self.DP.parameters(), lr=0.1, weight_decay=5e-4, momentum=momentum)
+                self.opt_dp = optim.SGD(self.DP.parameters(), lr=10., weight_decay=5e-4, momentum=momentum)
             else:
-                self.opt_dp = optim.SGD(self.DP.parameters(), lr=0.1, weight_decay=5e-4, momentum=momentum)
+                self.opt_dp = optim.SGD(self.DP.parameters(), lr=10., weight_decay=5e-4, momentum=momentum)
         if which_opt == 'adam':
             self.opt_g = optim.Adam(optimizer_dict, lr=0.1, weight_decay=5e-4)
 
-            self.opt_c1 = optim.Adam(self.C1.parameters(), lr=0.1, weight_decay=5e-4)
-            self.opt_c2 = optim.Adam(self.C2.parameters(), lr=0.1, weight_decay=5e-4)
+            self.opt_c1 = optim.Adam(self.C1.parameters(), lr=1., weight_decay=5e-4)
+            self.opt_c2 = optim.Adam(self.C2.parameters(), lr=1., weight_decay=5e-4)
             if self.args.load_ckpt !='':
-                self.opt_dp = optim.Adam(self.DP.parameters(), lr=0.1, weight_decay=5e-4)
+                self.opt_dp = optim.Adam(self.DP.parameters(), lr=10., weight_decay=5e-4)
             else:
-                self.opt_dp = optim.Adam(self.DP.parameters(), lr=lr/self.args.lr_ratio, weight_decay=5e-4)
+                self.opt_dp = optim.Adam(self.DP.parameters(), lr=10., weight_decay=5e-4)
         self.opt_g_params = self.get_param_groups(self.opt_g)
         self.opt_c1_params = self.get_param_groups(self.opt_c1)
         self.opt_c2_params = self.get_param_groups(self.opt_c2)
         self.opt_dp_params = self.get_param_groups(self.opt_dp)
+    
     def reset_grad(self,iter_num):
         self.opt_g = self.update_optim(self.opt_g_params,self.opt_g, iter_num, gamma=0.001, power=0.75, init_lr=self.args.lr)
         self.opt_c1 = self.update_optim(self.opt_c1_params,self.opt_c1, iter_num, gamma=0.001, power=0.75, init_lr=self.args.lr)
@@ -510,18 +511,23 @@ class Solver(object):
             return torch.div(logits, self.temperature.cpu())
         return torch.div(logits, self.temperature)
 
-    def loss_domain_class_mmd(self, img_s, img_t, label_s, label_t, epoch, img_s_cl, img_s_dl, indices_t, force_attach = False, single_domain_mode=False):
+    def loss_domain_class_mmd(self, img_s, img_t, label_s, label_t, epoch, img_s_cl, label_s_cl, img_s_dl, indices_t, force_attach = False, single_domain_mode=False):
         feat_s_comb, feat_t_comb = self.feat_soft_all_domain(img_s, img_t)
         feat_s, feat_s_conv, _ = feat_s_comb
         feat_t, feat_t_conv, _ = feat_t_comb
         img_s_dl = self.get_one_hot_encoding(img_s_dl, self.num_domains).cuda()
+        _, feat_conv_s_cl, _ = self.G(img_s_cl)
+
         if self.classaware_dp:
             domain_logits,_ = self.DP(feat_s_conv.clone().detach())
+            domain_logits_s_cl, _ = self.DP(feat_conv_s_cl.clone().detach())
             domain_logits_tar,_ = self.DP(feat_t_conv.clone().detach())
         else:
             domain_logits, _ = self.DP(img_s)
+            domain_logits_s_cl,_ = self.DP(img_s_cl)
             domain_logits_tar,_ = self.DP(img_t)
         domain_logits = domain_logits.reshape(domain_logits.shape[0],self.num_classes,self.num_domains)
+        domain_logits_s_cl = domain_logits_s_cl.reshape(domain_logits_s_cl.shape[0],self.num_classes,self.num_domains)
         domain_prob_s = torch.zeros(domain_logits.shape,dtype=torch.float32).cuda()
         if self.args.target_clustering:
             domain_logits_tar = domain_logits_tar.reshape(domain_logits_tar.shape[0], self.num_classes, self.num_domains)
@@ -532,27 +538,35 @@ class Solver(object):
         kl_loss = 0
         num_active_classes = 0
         for i in range(self.num_classes):
-            indexes = label_s == i
-            if indexes.sum()==0:
-                continue
-            entropy_loss_cl, domain_prob_s_cl = self.entropy_loss(domain_logits[indexes,i])
-            kl_loss += -self.get_domain_entropy(domain_prob_s_cl)
-            entropy_loss += entropy_loss_cl
-            domain_prob_s[indexes,i] = domain_prob_s_cl
             if self.args.target_clustering:
                 entropy_loss_cl_t, domain_prob_t_cl = self.entropy_loss(domain_logits_tar[:, i])
                 kl_loss_tar += -self.get_domain_entropy(domain_prob_t_cl)
                 entropy_loss_tar += entropy_loss_cl_t
                 domain_prob_tar[:, i] = domain_prob_t_cl
+            indexes = label_s == i
+            if indexes.sum()==0:
+                continue
+            entropy_loss_cl, domain_prob_s_cl = self.entropy_loss(domain_logits[indexes,i])
+            domain_prob_s[indexes,i] = domain_prob_s_cl
+            entropy_loss += entropy_loss_cl
             if self.args.known_domains>0:
                 domain_prob_s[indexes,i] = img_s_dl[indexes]
+            num_active_classes+=1
+        entropy_loss = entropy_loss * self.entropy_wt / num_active_classes
+        num_active_classes = 0
+        for i in range(self.num_classes):
+            indexes = label_s_cl == i
+            if indexes.sum()==0:
+                continue
+            entropy_loss_cl, domain_prob_s_cl = self.entropy_loss(domain_logits_s_cl[indexes,i])
+            kl_loss += -self.get_domain_entropy(domain_prob_s_cl)
+            if self.args.known_domains>0:
                 entropy_loss = entropy_loss*0
                 kl_loss = kl_loss*0
             num_active_classes+=1
 
         if (math.isnan(entropy_loss.data.item())):
             raise Exception('entropy loss is nan')
-        entropy_loss = entropy_loss * self.entropy_wt / num_active_classes
         kl_loss = kl_loss * self.kl_wt / num_active_classes
         if self.args.target_clustering:
             entropy_loss_tar = entropy_loss_tar * self.entropy_wt / self.num_classes

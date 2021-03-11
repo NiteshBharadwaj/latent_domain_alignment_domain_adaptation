@@ -48,9 +48,9 @@ def train_MSDA_classwise(solver, epoch, graph_data, classifier_disc=True, record
 
     batch_idx_g = 0
     tt = time.time()
-    #print('creating classwise iterator', time.time())
-    #solver.classwise_dataset.reset_iter()
-    #classwise_dataset_iterator = iter(solver.classwise_dataset)
+    print('creating classwise iterator', time.time())
+    solver.classwise_dataset.reset_iter()
+    classwise_dataset_iterator = iter(solver.classwise_dataset)
 
     #     main_dataset_iterator = iter(solver.datasets)
     #     print(sum(1 for _ in main_dataset_iterator))
@@ -89,6 +89,13 @@ def train_MSDA_classwise(solver, epoch, graph_data, classifier_disc=True, record
         if img_s.size()[0] < solver.batch_size or img_t.size()[0] < solver.batch_size:
             #print('Breaking because of low batch size')
             break
+        classwise_data = next(classwise_dataset_iterator)
+        ct5 = time.time()
+        img_s_cl = Variable(classwise_data['S'].squeeze(0).float().cuda())
+        label_s_cl = Variable(classwise_data['S_label'].squeeze(0).long().cuda())
+        if (img_s_cl.size()[0] <= 1):
+            #print('CLASS WISE is of size 1. Looping')
+            break
 
 
         ct = (ct2 - ct1) + (ct4 - ct3)
@@ -115,7 +122,7 @@ def train_MSDA_classwise(solver, epoch, graph_data, classifier_disc=True, record
         #        switch_bn(solver.DP,True)
         solver.reset_grad(prev_count+batch_idx)
         start = time.time()
-        loss_s_c1, loss_s_c2, intra_domain_mmd_loss, inter_domain_mmd_loss, entropy_loss, kl_loss, class_tear_apart_loss = solver.loss_domain_class_mmd(img_s, img_t, label_s, label_t, epoch, None, img_s_dl,idx_t, single_domain_mode=single_domain_mode) 
+        loss_s_c1, loss_s_c2, intra_domain_mmd_loss, inter_domain_mmd_loss, entropy_loss, kl_loss, class_tear_apart_loss = solver.loss_domain_class_mmd(img_s, img_t, label_s, label_t, epoch, img_s_cl, label_s_cl, img_s_dl,idx_t, single_domain_mode=single_domain_mode) 
         end = time.time()
         class_tear_apart_loss = class_tear_apart_loss*solver.args.class_tear_apart_wt
         loss_msda = intra_domain_mmd_loss + inter_domain_mmd_loss + class_tear_apart_loss
