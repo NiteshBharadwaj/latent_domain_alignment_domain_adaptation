@@ -99,8 +99,24 @@ class TextData():
         label = np.vstack(label)
         return torch.from_numpy(data).float(), torch.from_numpy(label).float()
 
-
-def make_dataset(image_list, labels):
+import itertools
+def make_dataset(image_list, labels, seed=42, valid=True):
+    if valid:
+        n_samples = 5
+        n_labels = 31
+        image_list.sort()
+        import random
+        random.seed(seed)
+        random.shuffle(image_list)
+        classwise_lists = []
+        for _ in range(n_labels):
+            classwise_lists.append([])
+        for val in image_list:
+            label = int(val.split()[1])
+            if len(classwise_lists[label])<n_samples:
+                classwise_lists[label].append(val)
+        image_list = list(itertools.chain.from_iterable(classwise_lists))
+        random.shuffle(image_list)
     if labels:
         len_ = len(image_list)
         images = [(image_list[i].strip(), labels[i, :]) for i in xrange(len_)]
@@ -109,6 +125,7 @@ def make_dataset(image_list, labels):
             images = [(val.split()[0], np.array([int(la) for la in val.split()[1:]])) for val in image_list]
         else:
             images = [(val.split()[0], int(val.split()[1])) for val in image_list]
+
     return images
 
 
@@ -158,8 +175,8 @@ class ImageList(object):
     """
 
     def __init__(self, image_list, labels=None, transform=None, target_transform=None,
-                 loader=default_loader):
-        imgs = make_dataset(image_list, labels)
+                 loader=default_loader, seed=42,valid=True):
+        imgs = make_dataset(image_list, labels,seed,valid)
         if len(imgs) == 0:
             raise (RuntimeError("Found 0 images in subfolders of: " + root + "\n"
                                                                              "Supported image extensions are: " + ",".join(

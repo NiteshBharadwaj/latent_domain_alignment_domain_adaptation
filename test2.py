@@ -7,7 +7,10 @@ import time
 def test2(solver, epoch, split, record_file=None, save_model=False, temperature_scaling = False, use_g_t=False):
     solver.G.eval()
     solver.C1.eval()
-    loader = solver.dataset_test10
+    if split=="val":
+        loader = solver.dataset_valid
+    else:
+        loader = solver.dataset_test
     with torch.no_grad():
         start_test = True
         iter_val = [iter(loader['val'+str(i)]) for i in range(10)]
@@ -34,7 +37,8 @@ def test2(solver, epoch, split, record_file=None, save_model=False, temperature_
                 all_label = torch.cat((all_label, labels.data.float()), 0)
         _, predict = torch.max(all_output, 1)
         test_acc = torch.sum(torch.squeeze(predict).float() == all_label).item() / float(all_label.size()[0])
-    print("{} epoch {}: Test Acc: {}".format(split,epoch, test_acc))
+    print("{} epoch {} acc: {}".format(split,epoch, test_acc))
+    
     best = False
     bool_to_check = (test_acc > solver.best_acc)
 

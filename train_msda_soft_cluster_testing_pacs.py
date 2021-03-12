@@ -82,6 +82,7 @@ def train_MSDA_soft(solver, epoch, graph_data, classifier_disc=True, record_file
         ct1 = time.time()
         img_t = Variable(data['T'].cuda())
         img_s = Variable(data['S'].cuda())
+        img_s_idxes = Variable(data['S_idx'].long().cuda())
         img_s_dl = Variable(data['SD_label'].long().cuda())
         ct2 = time.time()
 
@@ -94,7 +95,7 @@ def train_MSDA_soft(solver, epoch, graph_data, classifier_disc=True, record_file
             #print('Breaking because of low batch size')
             break
         ct5 = time.time()
-        if not solver.args.pretrained_clustering:
+        if not solver.args.pretrained_clustering=='yes':
             classwise_data = next(classwise_dataset_iterator)
             img_s_cl = Variable(classwise_data['S'].squeeze(0).float().cuda())
             if (img_s_cl.size()[0] <= 1):
@@ -120,7 +121,7 @@ def train_MSDA_soft(solver, epoch, graph_data, classifier_disc=True, record_file
         loss_s_c1, loss_s_c2, loss_msda, entropy_loss, kl_loss, domain_prob = solver.loss_soft_all_domain(img_s, img_t,
                                                                                                           label_s, 
                                                                                                           epoch,
-                                                                                                          img_s_cl, img_s_dl)
+                                                                                                          img_s_cl, img_s_dl, img_s_idxes)
         end = time.time()
         #print("Time taken in training batch : ", end-start)
         if not classifier_disc:

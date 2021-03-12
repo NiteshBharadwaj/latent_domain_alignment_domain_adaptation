@@ -58,6 +58,8 @@ class Dataset(data.Dataset):
             img = Image.open(img_path)
             img = np.array(img)
             img = img[..., :3]
+            if img.shape[2]==1:
+                img = img.repeat(3,axis=2)
             img = Image.fromarray(img)
             # self.hashmap[class_index][img_path] = img
 

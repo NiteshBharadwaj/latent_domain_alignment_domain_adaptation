@@ -8,6 +8,7 @@ def worker_init_fn(worker_id):
     np.random.seed(np.random.get_state()[1][0] + worker_id)
 
 def generate_domains(solver, model_G, model_DP, dataset, split="train"):
+    print("Generating domain probabilities from pretrained model")
     model_G.eval()
     model_DP.eval()
     dataset_s = dataset.data_loader_s.dataset
@@ -15,12 +16,12 @@ def generate_domains(solver, model_G, model_DP, dataset, split="train"):
     is_classwise = solver.is_classwise
     is_classaware = solver.classaware_dp
     dataloader = torch.utils.data.DataLoader(dataset_s, batch_size=solver.args.batch_size,
-                                                    num_workers=solver.args.num_workds, worker_init_fn=worker_init_fn,
+                                                    num_workers=solver.args.num_workers, worker_init_fn=worker_init_fn,
                                                     pin_memory=True)
     if is_classwise:
         probs_map = torch.zeros((dset_size,solver.num_classes,solver.num_domains),dtype=torch.float32)
     else:
-        probs_map = torch.zeros((dset_size, solver.num_classes), dtype=torch.float32)
+        probs_map = torch.zeros((dset_size, solver.num_domains), dtype=torch.float32)
     total_batches = len(dataset.data_loader_t)
     with torch.no_grad():
         for batch_idx, data in enumerate(dataloader):

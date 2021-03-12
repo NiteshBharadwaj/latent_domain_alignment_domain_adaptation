@@ -59,9 +59,11 @@ class Dataset(data.Dataset):
             img = Image.open(img_path)
             img = np.array(img)
             img = img[...,:3]
+            if img.shape[2]==1:
+                img = img.repeat(3,axis=2)
             img = Image.fromarray(img)
             #self.hashmap[img_path] = img
-
+        
         # doing this so that it is consistent with all other datasets
         # to return a PIL Image
 

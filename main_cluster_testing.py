@@ -242,8 +242,8 @@ def main():
             #test2(solver, 0, 'target', record_file=record_test, save_model=args.save_model)
             print("Setting pseudo label temperature")
             _,val_acc = test(solver, 0, 'val', record_file=record_val, save_model=args.save_model, temperature_scaling=True, use_g_t=True)
-        if args.pretrained_clustering:
-            solver.probs_map = generate_domains(solver,solver.G, solver.DP,solver.datasets)
+        if args.pretrained_clustering=='yes':
+            solver.clusters = generate_domains(solver,solver.G, solver.DP,solver.datasets)
         if solver.is_classwise:
             if args.target_baseline_pre!="":
                 print("Generating pseudo labels using pretrained model")

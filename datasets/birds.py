@@ -94,8 +94,13 @@ def birds_combined(target, batch_size, birds_directory, seed_id, num_workers):
     }
     target_file = file_path[target[-1]]
     prep_dict_test = prep.image_test_10crop(resize_size=256, crop_size=224)
-    dataset_loaders = {}
+    valid_dataset_loaders = {}
     for i in range(10):
-        dataset_list = ImageList(open(target_file).readlines(), transform=prep_dict_test["val" + str(i)])
-        dataset_loaders["val" + str(i)] = torch.utils.data.DataLoader(dataset_list, batch_size=4, shuffle=False, num_workers=4)
-    return dataset, dataset_test, dataset_valid, dataset_class, dataset_loaders
+        dataset_list = ImageList(open(target_file).readlines(), transform=prep_dict_test["val" + str(i)],seed=seed_id, valid=True)
+        valid_dataset_loaders["val" + str(i)] = torch.utils.data.DataLoader(dataset_list, batch_size=4, shuffle=False, num_workers=4)
+
+    test_dataset_loaders = {}
+    for i in range(10):
+        dataset_list = ImageList(open(target_file).readlines(), transform=prep_dict_test["val" + str(i)],seed=seed_id, valid=False)
+        test_dataset_loaders["val" + str(i)] = torch.utils.data.DataLoader(dataset_list, batch_size=4, shuffle=False, num_workers=4)
+    return dataset, test_dataset_loaders, valid_dataset_loaders, dataset_class

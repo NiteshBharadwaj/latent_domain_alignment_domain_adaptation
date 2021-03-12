@@ -212,7 +212,7 @@ class Solver(object):
                 self.C1_T = Classifier_pacs(num_classes)
                 self.C2_T = Classifier_pacs(num_classes)
         elif args.data == 'birds':
-            self.datasets, self.dataset_test, self.dataset_valid, self.classwise_dataset, self.dataset_test10 = birds_combined(
+            self.datasets, self.dataset_test, self.dataset_valid, self.classwise_dataset = birds_combined(
                 target,
                 self.batch_size,
                 args.pacs_directory,
@@ -473,7 +473,7 @@ class Solver(object):
 
         entropy_loss = torch.zeros(1,dtype=torch.float32).cuda()
         kl_loss = torch.zeros(1,dtype=torch.float32).cuda()
-        if not self.args.pretrained_clustering:
+        if not self.args.pretrained_clustering=='yes':
             if self.args.known_domains>0:
                 domain_prob = img_s_dl  #TODO Handle knownd
             elif self.to_detach:
@@ -494,7 +494,7 @@ class Solver(object):
             if self.args.known_domains > 0:
                 domain_prob = img_s_dl #TODO Handle knownd
             else:
-                domain_prob = self.clusters[src_idxs]
+                domain_prob = self.clusters[src_idxs].cuda()
        
         if self.to_detach:
             loss_msda = msda.msda_regulizer_soft(feat_s, feat_t, 5, domain_prob.detach()) * self.msda_wt 
