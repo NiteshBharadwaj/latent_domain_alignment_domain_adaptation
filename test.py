@@ -107,10 +107,10 @@ def test(solver, epoch, split, record_file=None, save_model=False, temperature_s
         if save_model and epoch % solver.save_epoch == 0 and bool_to_check and not use_g_t:
             print('Saving best model','%s/%s_model_best.pth' % (solver.checkpoint_dir, solver.target))
             checkpoint = {}
-            checkpoint['G_state_dict'] = solver.G.state_dict()
+            checkpoint['G_state_dict'] = solver.G.module.state_dict()
             checkpoint['C1_state_dict'] = solver.C1.state_dict()
             checkpoint['C2_state_dict'] = solver.C2.state_dict()
-            checkpoint['DP_state_dict'] = solver.DP.state_dict()
+            checkpoint['DP_state_dict'] = solver.DP.module.state_dict()
 
             checkpoint['G_state_dict_opt'] = solver.opt_g.state_dict()
             checkpoint['C1_state_dict_opt'] = solver.opt_c1.state_dict()

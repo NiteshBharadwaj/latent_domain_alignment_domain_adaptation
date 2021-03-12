@@ -239,7 +239,6 @@ class Solver(object):
                 self.C1_T = Classifier_birds(num_classes)
                 self.C2_T = Classifier_birds(num_classes)
 
-
         # print(self.dataset['S1'].shape)
         print('model_loaded')
 
@@ -288,12 +287,17 @@ class Solver(object):
             #self.opt_c1.load_state_dict(checkpoint['C1_state_dict_opt'])
             #self.opt_c2.load_state_dict(checkpoint['C2_state_dict_opt'])
             #self.opt_dp.load_state_dict(checkpoint['DP_state_dict_opt'])
+        my_device_ids = list(range(torch.cuda.device_count()))
+        print(my_device_ids)
         self.G.cuda()
+        self.G = torch.nn.DataParallel(self.G, device_ids=my_device_ids)
         self.C1.cuda()
         self.C2.cuda()
         self.DP.cuda()
+        self.DP = torch.nn.DataParallel(self.DP, device_ids=my_device_ids)
         if args.target_baseline_pre!="":
             self.G_T.cuda()
+            self.G_T = torch.nn.DataParallel(self.G_T, device_ids=my_device_ids)
             self.C1_T.cuda()
             self.C2_T.cuda()
             self.G_T.eval()
