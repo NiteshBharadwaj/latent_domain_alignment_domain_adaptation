@@ -227,7 +227,7 @@ class UnalignedDataLoader():
         dataset_source = Dataset(imgs, labels, domain_labels, transform=transform_source)
         sampling_weights = torch.DoubleTensor(balance_classes(labels, domain_labels, balance_domains=False))
         sampler = torch.utils.data.sampler.WeightedRandomSampler(sampling_weights, len(sampling_weights))
-        data_loader_s = torch.utils.data.DataLoader(dataset_source, batch_size=batch_size1,sampler=sampler,
+        data_loader_s = torch.utils.data.DataLoader(dataset_source, batch_size=batch_size1,#sampler=sampler,
                                                     num_workers=num_workers_, worker_init_fn=worker_init_fn,
                                                     pin_memory=True)
 

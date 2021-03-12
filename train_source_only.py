@@ -47,7 +47,7 @@ def train_source_only(solver, epoch, record_file=None, max_it=100000, prev_count
         
         solver.reset_grad(batch_idx+prev_count)
         
-        loss_s_c1 = solver.source_only_loss(img_s, label_s, epoch)
+        loss_s_c1 = solver.source_only_loss(img_s, img_t, label_s, epoch)
 
         loss_s_c1.backward()
 

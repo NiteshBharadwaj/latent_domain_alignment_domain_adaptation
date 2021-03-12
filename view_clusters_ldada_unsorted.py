@@ -57,7 +57,7 @@ def view_clusters(solver, clusters_file, probs_csv):
                 break
             loss_s_c1, loss_s_c2, loss_msda, entropy_loss, kl_loss, domain_prob = solver.loss_soft_all_domain(img_s, img_s,
                                                                                                               label_s, 0,
-                                                                                                              img_s, label_s*0)
+                                                                                                              img_s, label_s*0, label_s*0)
             bucket_ids = (domain_prob * 100).int() // len(cluster_viz_res[0])
             for cluster_id in range(solver.num_domains):
                 clbucket_ids = bucket_ids[:, cluster_id]

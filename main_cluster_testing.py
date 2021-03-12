@@ -216,7 +216,7 @@ def main():
 
         # train_MSDA_soft(solver,0,classifier_disc)
 
-        #test(solver, 0, 'test', record_file=None, save_model=False, temperature_scaling=True)
+        #test2(solver, 0, 'test', record_file=None, save_model=False, temperature_scaling=True)
         #view_clusters(solver, clusters_file_class, probs_csv_class,0)
         view_clusters_ldada_unsorted(solver, clusters_file_class, probs_csv_class)
         #plot_tsne1(solver, plot_before_source, plot_before_target, plot_after_source, plot_after_target, all_plots,

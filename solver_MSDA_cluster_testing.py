@@ -331,7 +331,8 @@ class Solver(object):
         if which_opt == 'momentum':
             self.opt_g = optim.SGD(optimizer_dict,lr=0.1, weight_decay=5e-4, momentum=momentum)
 
-            self.opt_c1 = optim.SGD(self.C1.parameters(), lr=1., weight_decay=5e-4, momentum=momentum)
+            self.opt_c1 = optim.SGD([{"params": filter(lambda p: p.requires_grad, self.C1.parameters()), "lr": 1}], 
+                    lr=0.1, weight_decay=5e-4, momentum=momentum)
             self.opt_c2 = optim.SGD(self.C2.parameters(), lr=1., weight_decay=5e-4, momentum=momentum)
             if self.args.load_ckpt !='':
                 self.opt_dp = optim.SGD(self.DP.parameters(), lr=10., weight_decay=5e-4, momentum=momentum)
@@ -446,12 +447,14 @@ class Solver(object):
         domain_prob_sum = domain_prob_sum*mask + (1-mask.int())*1e-5
         return -(domain_prob_sum*(domain_prob_sum.log())).mean()
     
-    def source_only_loss(self, img_s, label_s, epoch):
+    def source_only_loss(self, img_s, img_t, label_s, epoch):
         feat_s_comb = self.G(img_s)
         feat_s, conv_feat_s,_ = feat_s_comb
         output_s_c1 = self.C1(feat_s)
+        output_t_c1 = self.C1(self.G(img_t)[0])
+        entropy_loss_t,_ = self.entropy_loss(output_t_c1)
         loss_s_c1 = self.softmax_loss_all_domain_soft(output_s_c1, label_s)
-        return loss_s_c1
+        return loss_s_c1 + entropy_loss_t*0.01
         
     def one_hot(self, y, num_dom):
         batch_size = y.shape[0]
