@@ -462,7 +462,7 @@ class Solver(object):
         # In your for loop
         return y_onehot
 
-    def loss_soft_all_domain(self, img_s, img_t, label_s, epoch, img_s_cl, img_d_cl):
+    def loss_soft_all_domain(self, img_s, img_t, label_s, epoch, img_s_cl, img_d_cl, src_idxs):
         # Takes source images, target images, source labels and returns classifier loss, domain adaptation loss and entropy loss
         feat_s_comb, feat_t_comb = self.feat_soft_all_domain(img_s, img_t)
         feat_s, conv_feat_s,_ = feat_s_comb
@@ -470,24 +470,31 @@ class Solver(object):
         #img_s_dl = self.get_one_hot_encoding(img_d_cl, self.num_domains).cuda()
         #with torch.no_grad():
         #    _, conv_feat_cl = self.G(img_s_cl)
+
         entropy_loss = torch.zeros(1,dtype=torch.float32).cuda()
         kl_loss = torch.zeros(1,dtype=torch.float32).cuda()
-        if self.args.known_domains>0:
-            domain_prob = img_s_dl
-        elif self.to_detach:
-            domain_logits, _ = self.DP(img_s)
-            cl_s_logits,_ = self.DP(img_s_cl)
-            entropy_loss, domain_prob = self.entropy_loss(domain_logits)
-            _,cl_s_prob = self.entropy_loss(cl_s_logits)
-            kl_loss = -self.get_domain_entropy(cl_s_prob)
-            kl_loss = kl_loss * self.kl_wt
+        if not self.args.pretrained_clustering:
+            if self.args.known_domains>0:
+                domain_prob = img_s_dl  #TODO Handle knownd
+            elif self.to_detach:
+                domain_logits, _ = self.DP(img_s)
+                cl_s_logits,_ = self.DP(img_s_cl)
+                entropy_loss, domain_prob = self.entropy_loss(domain_logits)
+                _,cl_s_prob = self.entropy_loss(cl_s_logits)
+                kl_loss = -self.get_domain_entropy(cl_s_prob)
+                kl_loss = kl_loss * self.kl_wt
+            else:
+                domain_logits, _ = self.DP(img_s)
+                cl_s_logits,_ = self.DP(img_s_cl)
+                entropy_loss, domain_prob = self.entropy_loss(domain_logits)
+                _,cl_s_prob = self.entropy_loss(cl_s_logits)
+                kl_loss = -self.get_domain_entropy(cl_s_prob)
+                kl_loss = kl_loss * self.kl_wt
         else:
-            domain_logits, _ = self.DP(img_s)
-            cl_s_logits,_ = self.DP(img_s_cl)
-            entropy_loss, domain_prob = self.entropy_loss(domain_logits)
-            _,cl_s_prob = self.entropy_loss(cl_s_logits)
-            kl_loss = -self.get_domain_entropy(cl_s_prob)
-            kl_loss = kl_loss * self.kl_wt
+            if self.args.known_domains > 0:
+                domain_prob = img_s_dl #TODO Handle knownd
+            else:
+                domain_prob = self.clusters[src_idxs]
        
         if self.to_detach:
             loss_msda = msda.msda_regulizer_soft(feat_s, feat_t, 5, domain_prob.detach()) * self.msda_wt 

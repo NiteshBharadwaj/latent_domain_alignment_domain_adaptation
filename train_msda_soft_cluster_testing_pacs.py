@@ -84,11 +84,6 @@ def train_MSDA_soft(solver, epoch, graph_data, classifier_disc=True, record_file
         img_s = Variable(data['S'].cuda())
         img_s_dl = Variable(data['SD_label'].long().cuda())
         ct2 = time.time()
-        # print('batch size : ', img_s.size()[0])
-        #         if(batch_idx > 50):
-        #             break
-        if solver.args.clustering_only and cluster_batch is None:
-            cluster_batch = img_s
 
 
         ct3 = time.time()
@@ -98,10 +93,15 @@ def train_MSDA_soft(solver, epoch, graph_data, classifier_disc=True, record_file
         if img_s.size()[0] < solver.batch_size or img_t.size()[0] < solver.batch_size:
             #print('Breaking because of low batch size')
             break
-
-        classwise_data = next(classwise_dataset_iterator)
         ct5 = time.time()
-        img_s_cl = Variable(classwise_data['S'].squeeze(0).float().cuda())
+        if not solver.args.pretrained_clustering:
+            classwise_data = next(classwise_dataset_iterator)
+            img_s_cl = Variable(classwise_data['S'].squeeze(0).float().cuda())
+            if (img_s_cl.size()[0] <= 1):
+                # print('CLASS WISE is of size 1. Looping')
+                break
+        else:
+            img_s_cl = None
         ct6 = time.time()
 
         ct = (ct2 - ct1) + (ct4 - ct3) + (ct6 - ct5)
@@ -110,17 +110,6 @@ def train_MSDA_soft(solver, epoch, graph_data, classifier_disc=True, record_file
         cl_time = ct5 - ct4
         tot_classwisedata_time += cl_time
         # print('CLASSWISE DATA TIME', cl_time)
-        if (img_s_cl.size()[0] <= 1):
-            #print('CLASS WISE is of size 1. Looping')
-            break
-            classwise_data = next(classwise_dataset_iterator)
-            img_s_cl = Variable(classwise_data['S'].cuda())
-
-        # img_s_cl = img_s
-
-        if solver.args.clustering_only and classwise_batch is None:
-            classwise_batch = img_s_cl
-
         # print('BATCHES DONE!!', time.time()-tt)
         tot_dataloading_time += time.time() - tt
         tt = time.time()
