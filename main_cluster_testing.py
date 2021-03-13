@@ -127,6 +127,11 @@ parser.add_argument('--pseudo_label_mode', type=str, default='init_only', metava
                     help='gen_epoch, gen_best_epoch, perfect, init_only')
 parser.add_argument('--pseudo_logits_criteria', action='store_true', default=False,
                     help='Use raw logits to sort or probabilities?')
+parser.add_argument('--clustering mode', action='store_true', default=False,
+                    help='Is clustering mode?')
+
+parser.add_argument('--num_classes_per_batch', type=int, default=4,
+                    help='Number of classes per batch')
 
 args = parser.parse_args()
 args.cuda = not args.no_cuda and torch.cuda.is_available()
@@ -310,7 +315,7 @@ def main():
             if 0:
                 solver.sche_dp.step()
             count += num
-            if args.msda_wt<1e-8:
+            if solver.clustering_mode:
                 if solver.best_clus_loss > clus_loss and num>10:
                     print("Current best clustering loss {}".format(clus_loss))
                     solver.best_clus_loss = clus_loss
@@ -329,7 +334,7 @@ def main():
 
 
 
-            if (t % 1 == 0 or count>=total_it) and args.msda_wt>1e-8:
+            if (t % 1 == 0 or count>=total_it) and not solver.clustering_mode:
                 # print('testing now')
                 #if (args.dl_type == 'soft_cluster' or args.dl_type == 'classwise_ssda' or args.dl_type == 'classwise_msda'):
                     #plot_data(graph_data, loss_plot)

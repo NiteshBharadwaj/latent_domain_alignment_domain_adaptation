@@ -15,7 +15,7 @@ def return_dataset(target, birds_directory, is_target, seed_id):
 from image_list import ImageList
 import pre_process as prep
 import torch
-def birds_combined(target, batch_size, birds_directory, seed_id, num_workers):
+def birds_combined(target, batch_size, birds_directory, seed_id, num_workers, clustering_mode=False, num_classes_per_batch=4):
     T = {}
     T_test = {}
     T_valid = {}
@@ -64,7 +64,7 @@ def birds_combined(target, batch_size, birds_directory, seed_id, num_workers):
     scale = 256  # TODO
 
     train_loader = CombinedDataLoader()
-    train_loader.initialize(S, T, batch_size, batch_size, num_workers, scale=scale, split='Train')
+    train_loader.initialize(S, T, batch_size, batch_size, num_workers, scale=scale, split='Train', subset_sample=clustering_mode, num_classes_per_batch=num_classes_per_batch)
     dataset = train_loader.load_data()
     for i in range(len(domain_all)):
         S_test[i]['imgs'] = [S_test[i]['imgs'][0]]

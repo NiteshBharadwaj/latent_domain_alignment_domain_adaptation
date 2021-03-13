@@ -212,12 +212,13 @@ class Solver(object):
                 self.C1_T = Classifier_pacs(num_classes)
                 self.C2_T = Classifier_pacs(num_classes)
         elif args.data == 'birds':
+            self.clustering_mode = args.clustering_mode
             self.datasets, self.dataset_test, self.dataset_valid, self.classwise_dataset = birds_combined(
                 target,
                 self.batch_size,
                 args.pacs_directory,
                 args.seed,
-                args.num_workers)
+                args.num_workers, clustering_mode=self.clustering_mode, num_classes_per_batch=args.num_classes_per_batch)
             print('load finished!')
             self.entropy_wt = args.entropy_wt
             self.msda_wt = args.msda_wt
